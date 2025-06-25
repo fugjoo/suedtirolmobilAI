@@ -3,8 +3,20 @@
 import argparse
 from pprint import pprint
 
-from fahrplan_api import get_departures, search_connection, search_stop_or_address
-from nlp_parser import parse_user_input
+try:  # Support running as a script or as part of the package
+    from fahrplan_api import (
+        get_departures,
+        search_connection,
+        search_stop_or_address,
+    )
+    from nlp_parser import parse_user_input
+except ImportError:  # When imported via ``src`` package
+    from .fahrplan_api import (
+        get_departures,
+        search_connection,
+        search_stop_or_address,
+    )
+    from .nlp_parser import parse_user_input
 
 
 def handle_request(text: str):
