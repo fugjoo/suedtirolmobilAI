@@ -30,9 +30,9 @@ pip install -r requirements.txt
 python src/main.py "Wann fährt der nächste Bus von Bozen nach Meran?"
 ```
 
-The script parses your question, selects the appropriate API wrapper and prints
-a placeholder response. Replace the TODO sections in `fahrplan_api.py` with real
-calls to your Fahrplan API.
+The script parses your question, selects the appropriate API wrapper and calls
+the Südtirolmobil Fahrplan endpoints. Ensure you have network connectivity
+when running the example.
 
 ## Using with ChatGPT actions
 
