@@ -5,7 +5,8 @@ from typing import Any, Dict
 import requests
 
 
-BASE_URL = "http://efa.sta.bz.it/apb"
+# Use HTTPS to avoid connection issues when the server refuses plain HTTP.
+BASE_URL = "https://efa.sta.bz.it/apb"
 
 
 def _get(endpoint: str, params: Dict[str, Any]) -> Dict[str, Any]:
