@@ -1,7 +1,7 @@
 # suedtirolmobilAI
 
 A small Python project demonstrating how to parse text requests and call the
-S\u00fcdtirolmobil Fahrplan API. The code is intended as a starting point for
+Südtirolmobil Fahrplan API. The code is intended as a starting point for
 building a ChatGPT action or any other integration that replies with timetable
 information.
 
