@@ -29,6 +29,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Falls `pip` versucht, `pandas` aus dem Quellcode zu bauen und dabei
+`Cannot cythonize without Cython installed` meldet, installiere zuvor
+`Cython`:
+
+```bash
+pip install Cython
+pip install -r requirements.txt
+```
+
 Der Zugriff auf ChatGPT erfordert einen gültigen OpenAI API‑Key. Dieser muss
 als Umgebungsvariable `OPENAI_API_KEY` vor dem Start gesetzt sein, zum
 Beispiel:
