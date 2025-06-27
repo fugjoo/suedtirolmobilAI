@@ -1,10 +1,11 @@
-# Python
+# Byte-compiled files
 __pycache__/
-*.pyc
+*.py[cod]
 
-# Environments
+# Virtual environment
+env/
 venv/
-.env
 
-# Misc
-.DS_Store
+# Editor directories
+.idea/
+.vscode/
