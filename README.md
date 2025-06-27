@@ -4,6 +4,13 @@ Dieses Projekt stellt eine einfache Sprachschnittstelle für die Fahrplanauskunf
 von Südtirol (STA) bereit. Nutzende können Fragen in natürlicher Sprache stellen
 und erhalten passende Verbindungen über die EFA XML‑API.
 
+## Voraussetzungen
+
+Die Abhängigkeiten setzen **Python ≥ 3.7** voraus. Insbesondere
+`pandas>=1.2.3` ist erst ab dieser Version verfügbar. Unter Oracle Linux
+empfiehlt es sich daher, vor der Installation ein aktuelles Python
+(z. B. 3.9) über `dnf module install python:3.9` zu installieren.
+
 ## Struktur
 
 - `src/` – Python-Module
