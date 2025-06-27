@@ -22,7 +22,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Setze anschließend den OpenAI API‑Key über die Umgebungsvariable `OPENAI_API_KEY`.
+Der Zugriff auf ChatGPT erfordert einen gültigen OpenAI API‑Key. Dieser muss
+als Umgebungsvariable `OPENAI_API_KEY` vor dem Start gesetzt sein, zum
+Beispiel:
+
+```bash
+export OPENAI_API_KEY=<dein-geheimer-key>
+```
+
+Das Programm liest diese Variable beim Aufruf aus.
 
 ## Verwendung
 
