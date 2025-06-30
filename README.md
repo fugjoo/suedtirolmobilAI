@@ -1,5 +1,6 @@
 # suedtirolmobilAI
 
+
 ## Overview
 This project provides an NLP interface to the EFA/Mentz API, allowing users to query mobility information in natural language.
 
@@ -23,3 +24,10 @@ python cli.py --query "When is the next bus to Bolzano?"
 ```
 
 Replace the example query with your own question about local transit.
+=======
+This repository hosts the code for suedtirolmobilAI.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
