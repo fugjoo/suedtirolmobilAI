@@ -29,10 +29,10 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-Run the command-line interface to start interacting with the service:
+Use the helper script to install dependencies and run the program:
 
 ```bash
-python cli.py --query "When is the next bus to Bolzano?"
+bash install_and_run.sh "Wann fährt der nächste Bus von Meran nach Bozen?"
 ```
 
 Replace the example query with your own question about local transit.
