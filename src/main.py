@@ -42,7 +42,9 @@ def extract_intent(text: str) -> Optional[dict]:
         return None
 
 
-def fetch_schedule(origin: str, destination: str, time: Optional[str] = None) -> Optional[dict]:
+def fetch_schedule(
+    origin: str, destination: str, time: Optional[str] = None
+) -> Optional[dict]:
     """Fetch schedule information from the EFA API."""
     try:
         params = {
