@@ -23,9 +23,9 @@ def extract_intent(text: str) -> Optional[dict]:
         openai.api_key = api_key
 
         prompt = (
-            "Extract origin and destination from the user's travel request. "
-            "Return a JSON object with keys 'origin', 'destination' and "
-            "optional 'time'."
+            "Extract the origin and destination from the user's travel "
+            "request. Respond with a JSON object using the keys "
+            "'origin', 'destination' and optional 'time' (HH:MM)."
         )
         messages = [
             {"role": "system", "content": prompt},
@@ -43,44 +43,72 @@ def extract_intent(text: str) -> Optional[dict]:
         return None
 
 
-def fetch_schedule(
+def fetch_connections(
     origin: str, destination: str, time: Optional[str] = None
 ) -> Optional[dict]:
-    """Fetch schedule information from the EFA API."""
+    """Fetch connection information from the EFA API."""
     try:
         params = {
-            "format": "json",
-            "orig": origin,
-            "dest": destination,
+            "outputFormat": "JSON",
+            "type_origin": "any",
+            "name_origin": origin,
+            "type_destination": "any",
+            "name_destination": destination,
         }
         if time:
-            params["time"] = time
-        url = "https://efa.sta.bz.it/bin/query.exe/"
+            params["itdTime"] = time
+        url = "https://efa.sta.bz.it/bin/query.exe/dn"
         resp = requests.get(url, params=params, timeout=10)
         resp.raise_for_status()
         return resp.json()
     except Exception as exc:
-        logging.error("Failed to fetch schedule: %s", exc)
+        logging.error("Failed to fetch connections: %s", exc)
         return None
 
 
-def format_schedule(data: dict) -> str:
-    """Create a simple text representation of the schedule."""
+def format_connections(data: dict) -> str:
+    """Create a simple text representation of the returned connections."""
     if not data:
-        return "No schedule data available."
+        return "No connections found."
+
+    connections = (
+        data.get("connections")
+        or data.get("journeys")
+        or data.get("trips")
+        or []
+    )
 
     lines = []
-    for trip in data.get("trips", []):
-        dep = trip.get("departure", "unknown")
-        arr = trip.get("arrival", "unknown")
-        lines.append(f"{dep} -> {arr}")
+    for conn in connections:
+        dep_stop = (
+            conn.get("origin")
+            if isinstance(conn.get("origin"), str)
+            else conn.get("origin", {}).get("name")
+        )
+        dest_stop = (
+            conn.get("destination")
+            if isinstance(conn.get("destination"), str)
+            else conn.get("destination", {}).get("name")
+        )
+        dep_time = (
+            conn.get("departure", {}).get("time")
+            if isinstance(conn.get("departure"), dict)
+            else conn.get("departure")
+        )
+        arr_time = (
+            conn.get("arrival", {}).get("time")
+            if isinstance(conn.get("arrival"), dict)
+            else conn.get("arrival")
+        )
+        line = f"{dep_time} {dep_stop} -> {dest_stop} {arr_time}".strip()
+        lines.append(line)
 
-    return "\n".join(lines) if lines else "No trips found."
+    return "\n".join(lines) if lines else "No connections found."
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Query Suedtirolmobil schedule via natural language"
+        description="Query Suedtirolmobil via natural language"
     )
     parser.add_argument(
         "query",
@@ -103,12 +131,12 @@ def main() -> None:
         print("Incomplete request. Need origin and destination.")
         sys.exit(1)
 
-    data = fetch_schedule(origin, destination, time)
+    data = fetch_connections(origin, destination, time)
     if not data:
-        print("Failed to retrieve schedule.")
+        print("Failed to retrieve connections.")
         sys.exit(1)
 
-    print(format_schedule(data))
+    print(format_connections(data))
 
 
 if __name__ == "__main__":
