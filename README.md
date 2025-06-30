@@ -1,10 +1,16 @@
 # suedtirolmobilAI
 
 ## Overview
-This project provides an NLP interface to the EFA/Mentz API, allowing users to query mobility information in natural language.
+SuedtirolmobilAI is a cross-platform command line tool for querying the
+EFA/Mentz API using natural language. It lets you ask simple questions like
+"When is the next bus to Bolzano?" and returns the relevant schedule
+information. The application targets Linux, macOS and Windows systems and
+runs anywhere Python 3.8 or newer is available.
 
 ## Installation
-You can simply clone this repository. Using a Python virtual environment is optional but recommended to keep dependencies isolated.
+Clone this repository and install the Python dependencies. Using a virtual
+environment is optional but recommended to keep packages isolated from the
+rest of your system.
 
 ```bash
 # optional: create a virtual environment

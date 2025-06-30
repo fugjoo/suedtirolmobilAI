@@ -24,7 +24,8 @@ def extract_intent(text: str) -> Optional[dict]:
 
         prompt = (
             "Extract origin and destination from the user's travel request. "
-            "Return a JSON object with keys 'origin', 'destination' and optional 'time'."
+            "Return a JSON object with keys 'origin', 'destination' and "
+            "optional 'time'."
         )
         messages = [
             {"role": "system", "content": prompt},
@@ -81,7 +82,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Query Suedtirolmobil schedule via natural language"
     )
-    parser.add_argument("query", nargs="+", help="Travel request in natural language")
+    parser.add_argument(
+        "query",
+        nargs="+",
+        help="Travel request in natural language",
+    )
     args = parser.parse_args()
 
     text = " ".join(args.query)
