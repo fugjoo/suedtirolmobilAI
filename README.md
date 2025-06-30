@@ -12,12 +12,19 @@ Clone this repository and install the Python dependencies. Using a virtual
 environment is optional but recommended to keep packages isolated from the
 rest of your system.
 
+The tool depends on a few third‑party packages:
+
+- `openai`
+- `requests`
+
+Install them with `pip`:
+
 ```bash
 # optional: create a virtual environment
 python -m venv .venv
 source .venv/bin/activate
 
-# install requirements if any
+# install the required packages
 pip install -r requirements.txt
 ```
 
