@@ -38,11 +38,21 @@ bash install_and_run.sh "Wann fährt der nächste Bus von Meran nach Bozen?"
 Replace the example query with your own question about local transit.
 
 ## Contributing
-We welcome contributions! Report bugs or request features using the templates under `.github/ISSUE_TEMPLATE`. For code changes, create a feature branch and open a pull request using the [template](.github/PULL_REQUEST_TEMPLATE.md).
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines. Below is a short overview.
 
-Ensure Python code follows [PEP 8](https://peps.python.org/pep-0008/) and is formatted with [black](https://black.readthedocs.io/en/stable/). Lint your changes with [flake8](https://flake8.pycqa.org/).
+### Opening issues
+- Use the templates under `.github/ISSUE_TEMPLATE` to report bugs or request features.
+- Provide enough detail so we can reproduce or understand the request.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines.
+### Proposing pull requests
+- Create a feature branch from `main`.
+- Run formatting and linting checks before committing.
+- Push your branch and open a pull request using the [PR template](.github/PULL_REQUEST_TEMPLATE.md).
+
+### Coding style
+- Follow [PEP 8](https://peps.python.org/pep-0008/).
+- Format code with [black](https://black.readthedocs.io/en/stable/).
+- Check for issues with [flake8](https://flake8.pycqa.org/).
 
 ## License
 
