@@ -1,10 +1,29 @@
-# Project Template
+# suedtirolmobilAI
 
-This repository provides a clean starting point for your next project.
+This project provides a small FastAPI service that parses natural language
+queries for public transport connections and forwards them to a Mentz-EFA
+backend.
 
-## Getting Started
+## Installation
 
-1. Install dependencies listed in `requirements.txt`.
-2. Run `python src/main.py` to execute the starter script.
+```bash
+pip install -r requirements.txt
+# optionally download the German spaCy model
+python -m spacy download de_core_news_sm
+```
 
-Edit the files to begin building your own application.
+## Running the server
+
+Start the API using `uvicorn`:
+
+```bash
+uvicorn src.main:app --reload
+```
+
+## Testing
+
+Run the unit tests with `pytest`:
+
+```bash
+pytest
+```
