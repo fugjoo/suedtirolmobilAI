@@ -56,11 +56,18 @@ All requests automatically enable the EFA location server via
 
 ## Example requests
 
-After the server is running, you can query it with a POST request:
+After the server is running, you can query it with a POST request. By default
+the API returns JSON. Append `?format=text` to any endpoint for a short
+human‑readable summary:
 
 ```bash
-# Trip request
+# Trip request (JSON)
 curl -X POST http://localhost:8000/search \
+     -H 'Content-Type: application/json' \
+     -d '{"text": "Wie komme ich von Bozen nach Meran um 14:30?"}'
+
+# Trip request (plain text)
+curl -X POST 'http://localhost:8000/search?format=text' \
      -H 'Content-Type: application/json' \
      -d '{"text": "Wie komme ich von Bozen nach Meran um 14:30?"}'
 
@@ -69,8 +76,18 @@ curl -X POST http://localhost:8000/departures \
      -H 'Content-Type: application/json' \
      -d '{"stop": "Bozen", "limit": 5}'
 
+# Departure monitor (plain text)
+curl -X POST 'http://localhost:8000/departures?format=text' \
+     -H 'Content-Type: application/json' \
+     -d '{"stop": "Bozen", "limit": 5}'
+
 # Stop suggestions
 curl -X POST http://localhost:8000/stops \
+     -H 'Content-Type: application/json' \
+     -d '{"query": "Brixen"}'
+
+# Stop suggestions (plain text)
+curl -X POST 'http://localhost:8000/stops?format=text' \
      -H 'Content-Type: application/json' \
      -d '{"query": "Brixen"}'
 ```
