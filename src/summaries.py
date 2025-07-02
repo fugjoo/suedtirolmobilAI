@@ -38,75 +38,92 @@ def format_search_result(result: Dict[str, Any]) -> str:
             trips = [raw_trips]
 
     if not trips:
-        count = 0
+        header_parts = []
+        if from_stop:
+            header_parts.append(f"from {from_stop}")
+        if to_stop:
+            header_parts.append(f"to {to_stop}")
+        header = " ".join(header_parts) if header_parts else "found"
+        return f"0 trips {header}."
+
+    trip = trips[0]
+    legs = trip.get("legs") or trip.get("legList") or {}
+    if isinstance(legs, dict):
+        leg_items = legs.get("leg") or legs
     else:
-        count = len(trips)
+        leg_items = legs
+    if isinstance(leg_items, dict):
+        leg_list = [leg_items]
+    elif isinstance(leg_items, list):
+        leg_list = leg_items
+    else:
+        leg_list = []
 
-    header_parts = []
-    if from_stop:
-        header_parts.append(f"from {from_stop}")
-    if to_stop:
-        header_parts.append(f"to {to_stop}")
-    header = " ".join(header_parts) if header_parts else "found"
-
-    lines = [f"{count} {_plural('trip', count)} {header}:"] if trips else [f"0 trips {header}."]
-
-    for trip in trips:
-        legs = trip.get("legs") or trip.get("legList") or {}
-        if isinstance(legs, dict):
-            leg_items = legs.get("leg") or legs
+    lines: List[str] = []
+    if leg_list:
+        first_leg = leg_list[0]
+        origin = first_leg.get("origin") or first_leg.get("departure") or {}
+        dest = first_leg.get("destination") or first_leg.get("arrival") or {}
+        start_name = origin.get("name") or from_stop
+        start_time = origin.get("time") or ""
+        mode_name = (
+            (first_leg.get("mode") or {}).get("name")
+            or (first_leg.get("mode") or {}).get("number")
+            or ""
+        )
+        if not mode_name or "fuß" in mode_name.lower() or "walk" in mode_name.lower():
+            mode_desc = "zu Fuß"
         else:
-            leg_items = legs
-        if isinstance(leg_items, dict):
-            leg_list = [leg_items]
-        elif isinstance(leg_items, list):
-            leg_list = leg_items
+            mode_desc = f"mit {mode_name}"
+        origin_line = f"Von: {start_name}"
+        if start_time:
+            origin_line += f" um {start_time} Uhr {mode_desc}"
         else:
-            leg_list = []
+            origin_line += f" {mode_desc}"
+        lines.append(origin_line)
+        dest_name = dest.get("name") or to_stop
+        lines.append(f"Nach: {dest_name}")
+    else:
+        start_name = from_stop
+        lines.append(f"Von: {start_name}")
+        if to_stop:
+            lines.append(f"Nach: {to_stop}")
 
-        start_time = ""
-        end_time = ""
-        line_names: List[str] = []
-        if leg_list:
-            first = leg_list[0]
-            last = leg_list[-1]
-            start_time = (
-                (first.get("departure") or first.get("origin") or {}).get("time")
-                or ""
-            )
-            end_time = (
-                (last.get("arrival") or last.get("destination") or {}).get("time")
-                or ""
-            )
-            for leg in leg_list:
-                name = (
-                    (leg.get("mode") or {}).get("name")
-                    or (leg.get("mode") or {}).get("number")
-                )
-                if name:
-                    line_names.append(name)
+    if leg_list:
+        lines.append("")
+
+    for leg in leg_list:
+        origin = leg.get("origin") or leg.get("departure") or {}
+        dest = leg.get("destination") or leg.get("arrival") or {}
+        o_name = origin.get("name", "")
+        o_time = origin.get("time", "")
+        d_name = dest.get("name", "")
+        d_time = dest.get("time", "")
+        line_name = (
+            (leg.get("mode") or {}).get("name")
+            or (leg.get("mode") or {}).get("number")
+            or ""
+        )
+        if not line_name or "fuß" in line_name.lower() or "walk" in line_name.lower():
+            line_desc = "zu Fuß"
         else:
-            start_time = (
-                trip.get("departure", {}).get("time")
-                or trip.get("origin", {}).get("time")
-                or ""
-            )
-            end_time = (
-                trip.get("arrival", {}).get("time")
-                or trip.get("destination", {}).get("time")
-                or ""
-            )
-
-        duration = trip.get("duration") or ""
-        mode_str = " > ".join(line_names)
-        parts = [p for p in [start_time, end_time] if p]
-        time_range = " → ".join(parts)
-        info = f"{time_range}" if time_range else ""
-        if duration:
-            info = f"{info} ({duration})" if info else duration
-        if mode_str:
-            info = f"{info} {mode_str}" if info else mode_str
-        lines.append(f"- {info}".rstrip())
+            line_desc = f"mit {line_name}"
+            direction = (leg.get("mode") or {}).get("destination") or ""
+            if direction:
+                line_desc += f" Richtung {direction}"
+        dep_line = f"Ab: {o_name}"
+        if o_time:
+            dep_line += f" um {o_time} Uhr {line_desc}"
+        else:
+            dep_line += f" {line_desc}"
+        arr_line = f"An: {d_name}"
+        if d_time:
+            arr_line += f" um {d_time} Uhr"
+        platform = dest.get("platform") or dest.get("platformName")
+        if platform:
+            arr_line += f" auf Steig {platform}"
+        lines.append(dep_line)
+        lines.append(arr_line)
 
     return "\n".join(lines)
 
@@ -124,19 +141,52 @@ def format_departures_result(result: Dict[str, Any]) -> str:
         or ""
     )
 
-    departures = (
+    raw_departures = (
         result.get("departures")
         or result.get("departureList")
         or result.get("stopEvents")
     )
-    count = 0
-    if isinstance(departures, list):
-        count = len(departures)
-    elif departures:
-        count = 1
+    if isinstance(raw_departures, dict):
+        dep_items = raw_departures.get("departure") or raw_departures.get("stopEvent") or raw_departures
+    else:
+        dep_items = raw_departures
 
-    suffix = f" for '{stop_name}'" if stop_name else ""
-    return f"{count} {_plural('departure', count)}{suffix}."
+    departures: List[Dict[str, Any]] = []
+    if isinstance(dep_items, list):
+        departures = dep_items
+    elif isinstance(dep_items, dict):
+        departures = [dep_items]
+
+    if not departures:
+        suffix = f" for '{stop_name}'" if stop_name else ""
+        return f"0 departures{suffix}."
+
+    lines = [f"Abfahrten für {stop_name}:"] if stop_name else ["Abfahrten:"]
+
+    for dep in departures:
+        time = (
+            dep.get("time")
+            or dep.get("departure", {}).get("time")
+            or (dep.get("dateTime") or {}).get("time")
+            or ""
+        )
+        line_info = dep.get("servingLine") or dep.get("line") or {}
+        line_name = line_info.get("name") or line_info.get("number") or ""
+        direction = line_info.get("direction") or line_info.get("destination") or ""
+        platform = dep.get("platform") or dep.get("platformName")
+
+        entry = time
+        if entry:
+            entry += " Uhr"
+        if line_name:
+            entry += f" {line_name}"
+        if direction:
+            entry += f" Richtung {direction}"
+        if platform:
+            entry += f" Steig {platform}"
+        lines.append(entry.strip())
+
+    return "\n".join(lines)
 
 
 def format_stops_result(result: Dict[str, Any]) -> str:
@@ -149,20 +199,17 @@ def format_stops_result(result: Dict[str, Any]) -> str:
     points_data = stopfinder.get("points") or {}
     points = points_data.get("point") or result.get("stops")
     names: List[str] = []
-    count = 0
     if isinstance(points, list):
-        count = len(points)
         for p in points:
             if isinstance(p, dict) and p.get("name"):
                 names.append(p["name"])
     elif isinstance(points, dict):
-        count = 1
         if points.get("name"):
             names.append(points["name"])
 
-    if names:
-        shown = ", ".join(names[:3])
-        if len(names) > 3:
-            shown += " ..."
-        return f"{count} {_plural('stop', count)} found: {shown}"
-    return f"{count} {_plural('stop', count)} found."
+    if not names:
+        return "0 stops found."
+
+    lines = ["Gefundene Haltestellen:"]
+    lines.extend(names)
+    return "\n".join(lines)
