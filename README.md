@@ -60,6 +60,12 @@ For a deeper understanding of the Mentz‑EFA endpoints, see
 EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --host 0.0.0.0 --reload
 ```
 
+Example for a custom backend:
+
+```bash
+EFA_BASE_URL=https://example.com/api uvicorn src.main:app --host 0.0.0.0 --reload
+```
+
 All requests automatically enable the EFA location server via
 `locationServerActive=1`. Trip and departure monitor queries also send
 `odvMacro=true`.
@@ -69,6 +75,14 @@ The service exposes three POST endpoints:
 - `/search` – parse a natural language query for a trip
 - `/departures` – list upcoming departures for a stop
 - `/stops` – return stop name suggestions
+
+### Request parameters
+
+Each endpoint expects a JSON body with the following parameters:
+
+- `/search` – `{ "text": "Wie komme ich von Bozen nach Meran um 14:30?" }`
+- `/departures` – `{ "stop": "Bozen", "limit": 5 }`
+- `/stops` – `{ "query": "Brixen" }`
 
 
 After the server is running, you can query it with a POST request. By default
@@ -132,10 +146,13 @@ python -m src.cli stops "Brixen"
 ```
 
 By default the commands print a short text summary. Pass ``--format json`` to
-see the raw API response instead:
+see the raw API response or ``--format legs`` to only list the individual legs:
 
 ```bash
 python -m src.cli search "Bozen nach Meran" --format json
+python -m src.cli search "Bozen nach Meran" --format legs
+python -m src.cli departures "Bozen" --format json
+python -m src.cli stops "Brixen" --format json
 ```
 
 The script prints progress updates such as "Searching for stops..." before

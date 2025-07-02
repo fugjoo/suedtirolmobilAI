@@ -37,7 +37,8 @@ def search(req: SearchRequest, format: str = "json"):
     result = efa_api.search_efa(params)
     logger.debug("/search result: %s", result)
     if format == "text":
-        return PlainTextResponse(format_search_result(result))
+        # Pass legs_only explicitly for clarity and to aid testing
+        return PlainTextResponse(format_search_result(result, legs_only=False))
     if format == "legs":
         return PlainTextResponse(format_search_result(result, legs_only=True))
     return result

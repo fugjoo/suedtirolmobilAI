@@ -22,11 +22,6 @@ def _extract_time(data: Any) -> str:
     return ""
 
 
-def _plural(word: str, count: int) -> str:
-    """Return pluralized word depending on count."""
-    return word if count == 1 else f"{word}s"
-
-
 def format_search_result(result: Dict[str, Any], legs_only: bool = False) -> str:
     """Return a readable summary of a trip search result.
 
