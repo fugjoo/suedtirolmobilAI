@@ -40,6 +40,8 @@ def get_stop_code(query: str) -> str:
         if isinstance(points, dict):
             points = [points]
 
+        logger.info("StopFinder results for '%s': %s", query, points)
+
         best: Optional[Dict[str, Any]] = None
         best_quality = -1
         for p in points:
