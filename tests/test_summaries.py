@@ -13,3 +13,12 @@ def test_format_stops_result_handles_null_stopfinder():
 def test_format_stops_result_handles_null_points():
     result = {"stopFinder": {"points": None}}
     assert format_stops_result(result) == "0 stops found."
+
+
+def test_format_stops_result_handles_points_list():
+    result = {"stopFinder": {"points": [{"name": "A"}, {"name": "B"}]}}
+    assert (
+        format_stops_result(result)
+        == "Gefundene Haltestellen:\nA\nB"
+    )
+

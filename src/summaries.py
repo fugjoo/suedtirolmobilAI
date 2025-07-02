@@ -195,9 +195,20 @@ def format_stops_result(result: Dict[str, Any]) -> str:
         return str(result)
 
     # Gracefully handle missing or null fields in the nested structure
-    stopfinder = result.get("stopFinder") or {}
-    points_data = stopfinder.get("points") or {}
-    points = points_data.get("point") or result.get("stops")
+    stopfinder = result.get("stopFinder")
+    if not isinstance(stopfinder, dict):
+        stopfinder = {}
+
+    points_data = stopfinder.get("points")
+    if isinstance(points_data, dict):
+        points = points_data.get("point")
+    elif isinstance(points_data, list):
+        points = points_data
+    else:
+        points = None
+
+    if not points:
+        points = result.get("stops")
     names: List[str] = []
     if isinstance(points, list):
         for p in points:
