@@ -49,6 +49,10 @@ For a deeper understanding of the Mentz‑EFA endpoints, see
 EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --host 0.0.0.0 --reload
 ```
 
+All requests automatically enable the EFA location server via
+`locationServerActive=1`. Trip and departure monitor queries also send
+`odvMacro=true`.
+
 
 ## Example requests
 

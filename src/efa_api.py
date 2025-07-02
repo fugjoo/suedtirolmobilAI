@@ -23,6 +23,7 @@ def get_stop_code(query: str) -> str:
         "odvSugMacro": 1,
         "name_sf": query,
         "outputFormat": "JSON",
+        "locationServerActive": 1,
     }
 
     logger.debug("Requesting stop code for '%s'", query)
@@ -97,6 +98,8 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
         "type_destination": "any",
         "outputFormat": "JSON",
         "calcNumberOfTrips": 1,
+        "locationServerActive": 1,
+        "odvMacro": "true",
     }
 
     time = params.get("time")
@@ -127,6 +130,8 @@ def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
         "mode": "direct",
         "limit": limit,
         "outputFormat": "JSON",
+        "locationServerActive": 1,
+        "odvMacro": "true",
     }
 
     logger.debug("DM request params: %s", params)
