@@ -51,3 +51,31 @@ def test_search_efa_calls_requests(mock_get):
     assert efa_params['itdTime'] == '08:00'
     assert result == {'ok': True}
 
+
+@patch('src.efa_api._get_best_stop_name', return_value='Bozen')
+@patch('src.efa_api.requests.get')
+def test_dm_request_calls_requests(mock_get, mock_best):
+    mock_get.return_value = MagicMock(status_code=200, json=lambda: {'ok': True})
+
+    result = efa_api.dm_request('Bozen', limit=5)
+
+    mock_get.assert_called_once()
+    args, kwargs = mock_get.call_args
+    assert args[0].endswith('/XML_DM_REQUEST')
+    assert kwargs['params']['name_dm'] == 'Bozen'
+    assert kwargs['params']['limit'] == 5
+    assert result == {'ok': True}
+
+
+@patch('src.efa_api.requests.get')
+def test_stop_finder_returns_json(mock_get):
+    mock_get.return_value = MagicMock(status_code=200, json=lambda: {'stops': []})
+
+    result = efa_api.stop_finder('Bruneck')
+
+    mock_get.assert_called_once()
+    args, kwargs = mock_get.call_args
+    assert args[0].endswith('/XML_STOPFINDER_REQUEST')
+    assert kwargs['params']['name_sf'] == 'Bruneck'
+    assert result == {'stops': []}
+

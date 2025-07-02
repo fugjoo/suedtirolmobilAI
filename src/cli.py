@@ -29,8 +29,38 @@ def run_search(query: str) -> None:
     print(response)
 
 
+def run_departures(stop: str) -> None:
+    print("Querying departures...")
+    try:
+        result = efa_api.dm_request(stop)
+    except Exception as exc:
+        print(f"Error during request: {exc}")
+        return
+    print(result)
+
+
+def run_stop_finder(query: str) -> None:
+    print("Searching stops...")
+    try:
+        result = efa_api.stop_finder(query)
+    except Exception as exc:
+        print(f"Error during request: {exc}")
+        return
+    print(result)
+
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python -m src.cli 'your query'")
+    if len(sys.argv) < 3:
+        print("Usage: python -m src.cli [search|departures|stops] 'query'")
+        sys.exit(1)
+
+    command = sys.argv[1]
+    argument = " ".join(sys.argv[2:])
+    if command == "search":
+        run_search(argument)
+    elif command == "departures":
+        run_departures(argument)
+    elif command == "stops":
+        run_stop_finder(argument)
     else:
-        run_search(" ".join(sys.argv[1:]))
+        print(f"Unknown command: {command}")
