@@ -30,7 +30,20 @@ def test_search_endpoint_text(mock_parse_query, mock_search_efa, mock_format):
     response = client.post('/search?format=text', json={'text': 'foo'})
     assert response.status_code == 200
     assert response.text == 'summary'
-    mock_format.assert_called_once()
+    mock_format.assert_called_once_with({'dummy': True}, legs_only=False)
+
+
+@patch('src.main.format_search_result', return_value='legs')
+@patch('src.main.efa_api.search_efa')
+@patch('src.main.nlp_parser.parse_query')
+def test_search_endpoint_legs(mock_parse_query, mock_search_efa, mock_format):
+    mock_parse_query.return_value = {'from_stop': 'A', 'to_stop': 'B'}
+    mock_search_efa.return_value = {'dummy': True}
+    client = TestClient(app)
+    response = client.post('/search?format=legs', json={'text': 'foo'})
+    assert response.status_code == 200
+    assert response.text == 'legs'
+    mock_format.assert_called_once_with({'dummy': True}, legs_only=True)
 
 
 @patch('src.main.efa_api.dm_request')

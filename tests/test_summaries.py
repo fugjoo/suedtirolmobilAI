@@ -144,6 +144,27 @@ def test_format_search_result_structured_time():
     assert "um 10:35 Uhr" in summary
 
 
+def test_format_search_result_legs_only():
+    result = {
+        "trips": {
+            "trip": {
+                "legs": [
+                    {
+                        "origin": {"name": "A", "platformName": "1", "time": "08:00"},
+                        "destination": {"name": "B", "platformName": "2", "time": "08:30"},
+                        "mode": {"name": "Bus 10", "destination": "B"},
+                    }
+                ]
+            }
+        }
+    }
+
+    summary = format_search_result(result, legs_only=True)
+    assert summary.startswith("Bus 10 Richtung B")
+    assert "08:00: A von Steig 1" in summary
+    assert "08:30: B auf Steig 2" in summary
+
+
 def test_format_departures_result_structured_time():
     result = {
         "departures": {
