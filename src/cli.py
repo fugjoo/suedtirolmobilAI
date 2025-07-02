@@ -1,70 +1,77 @@
 import sys
+import argparse
+import logging
+
 from . import nlp_parser, efa_api
+from .logging_utils import setup_logging
+
+logger = logging.getLogger(__name__)
 
 
 def run_search(query: str) -> None:
     """Run a search for the given natural language query with progress output."""
-    print("Searching for stops...")
+    logger.info("Searching for stops...")
     params = nlp_parser.parse_query(query)
 
     if not params:
-        print("No parameters extracted from the query.")
+        logger.warning("No parameters extracted from the query.")
         return
 
-    print("Determining results...")
+    logger.info("Determining results...")
     try:
         response = efa_api.search_efa(params)
     except Exception as exc:
-        print(f"Error during search: {exc}")
+        logger.error("Error during search: %s", exc)
         return
 
-    print("Interpreting results...")
+    logger.info("Interpreting results...")
     if isinstance(response, dict) and "trips" in response:
         trips = response.get("trips") or []
-        print(f"Found {len(trips)} trips.")
+        logger.info("Found %d trips.", len(trips))
     else:
-        print("No trip data found.")
+        logger.info("No trip data found.")
 
-    print("Returning search results...")
+    logger.info("Returning search results...")
     print(response)
 
 
 def run_departures(stop: str) -> None:
     """Query the departure monitor and show progress messages."""
-    print(f"Haltestelle '{stop}' wird ermittelt...")
+    logger.info("Haltestelle '%s' wird ermittelt...", stop)
     try:
         result = efa_api.dm_request(stop)
     except Exception as exc:
-        print(f"Fehler bei der Abfrage: {exc}")
+        logger.error("Fehler bei der Abfrage: %s", exc)
         return
 
-    print("Suche wird gestartet...")
-    print("Ergebnisse gefunden.")
+    logger.info("Suche wird gestartet...")
+    logger.info("Ergebnisse gefunden.")
     print(result)
 
 
 def run_stop_finder(query: str) -> None:
-    print("Searching stops...")
+    logger.info("Searching stops...")
     try:
         result = efa_api.stop_finder(query)
     except Exception as exc:
-        print(f"Error during request: {exc}")
+        logger.error("Error during request: %s", exc)
         return
     print(result)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python -m src.cli [search|departures|stops] 'query'")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="suedtirolmobilAI CLI")
+    parser.add_argument("command", choices=["search", "departures", "stops"], help="Command to execute")
+    parser.add_argument("text", nargs="+", help="Query text or stop name")
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
-    command = sys.argv[1]
-    argument = " ".join(sys.argv[2:])
-    if command == "search":
+    args = parser.parse_args()
+    setup_logging(args.debug)
+
+    argument = " ".join(args.text)
+    if args.command == "search":
         run_search(argument)
-    elif command == "departures":
+    elif args.command == "departures":
         run_departures(argument)
-    elif command == "stops":
+    elif args.command == "stops":
         run_stop_finder(argument)
-    else:
-        print(f"Unknown command: {command}")
