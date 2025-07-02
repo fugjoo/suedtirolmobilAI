@@ -30,6 +30,7 @@ def test_get_stop_code(mock_get):
     mock_get.assert_called_once()
     args, kwargs = mock_get.call_args
     assert kwargs['params']['locationServerActive'] == 1
+    assert kwargs['params']['outputEncoding'] == 'UTF-8'
 
 
 @patch('src.efa_api.requests.get')
@@ -91,6 +92,7 @@ def test_search_efa_calls_requests(mock_get):
     assert efa_params['itdTime'] == '08:00'
     assert efa_params['locationServerActive'] == 1
     assert efa_params['odvMacro'] == 'true'
+    assert efa_params['outputEncoding'] == 'UTF-8'
     assert result == {'ok': True}
 
 
@@ -108,6 +110,7 @@ def test_dm_request_calls_requests(mock_get, mock_best):
     assert kwargs['params']['limit'] == 5
     assert kwargs['params']['locationServerActive'] == 1
     assert kwargs['params']['odvMacro'] == 'true'
+    assert kwargs['params']['outputEncoding'] == 'UTF-8'
     assert result == {'ok': True}
 
 
@@ -123,5 +126,6 @@ def test_stopfinder_request_returns_json(mock_get):
     assert kwargs['params']['name_sf'] == 'Bruneck'
     assert kwargs['params']['odvSugMacro'] == 'true'
     assert kwargs['params']['locationServerActive'] == 1
+    assert kwargs['params']['outputEncoding'] == 'UTF-8'
     assert result == {'stops': []}
 
