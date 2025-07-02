@@ -12,8 +12,17 @@ from .summaries import (
 logger = logging.getLogger(__name__)
 
 
-def run_search(query: str) -> None:
-    """Run a search for the given natural language query with progress output."""
+def run_search(query: str, output_format: str = "text") -> None:
+    """Run a search for the given natural language query.
+
+    Parameters
+    ----------
+    query: str
+        Natural language query describing the trip request.
+    output_format: str, optional
+        Either ``"text"`` or ``"json"``. ``"text"`` prints a short summary while
+        ``"json"`` dumps the raw API response.
+    """
     logger.info("Searching for stops...")
     params = nlp_parser.parse_query(query)
 
@@ -36,11 +45,24 @@ def run_search(query: str) -> None:
         logger.info("No trip data found.")
 
     logger.info("Returning search results...")
-    print(format_search_result(response))
+    if output_format == "json":
+        import json
+
+        print(json.dumps(response, ensure_ascii=False, indent=2))
+    else:
+        print(format_search_result(response))
 
 
-def run_departures(stop: str) -> None:
-    """Query the departure monitor and show progress messages."""
+def run_departures(stop: str, output_format: str = "text") -> None:
+    """Query the departure monitor and print the result.
+
+    Parameters
+    ----------
+    stop: str
+        Name of the stop to query.
+    output_format: str, optional
+        ``"text"`` for a short summary, ``"json"`` for the raw API response.
+    """
     logger.info("Haltestelle '%s' wird ermittelt...", stop)
     try:
         result = efa_api.dm_request(stop)
@@ -50,17 +72,28 @@ def run_departures(stop: str) -> None:
 
     logger.info("Suche wird gestartet...")
     logger.info("Ergebnisse gefunden.")
-    print(format_departures_result(result))
+    if output_format == "json":
+        import json
+
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(format_departures_result(result))
 
 
-def run_stop_finder(query: str) -> None:
+def run_stop_finder(query: str, output_format: str = "text") -> None:
+    """Query the stop finder and print the result."""
     logger.info("Searching stops...")
     try:
         result = efa_api.stopfinder_request(query)
     except Exception as exc:
         logger.error("Error during request: %s", exc)
         return
-    print(format_stops_result(result))
+    if output_format == "json":
+        import json
+
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(format_stops_result(result))
 
 
 if __name__ == "__main__":
@@ -68,14 +101,20 @@ if __name__ == "__main__":
     parser.add_argument("command", choices=["search", "departures", "stops"], help="Command to execute")
     parser.add_argument("text", nargs="+", help="Query text or stop name")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format",
+    )
 
     args = parser.parse_args()
     setup_logging(args.debug)
 
     argument = " ".join(args.text)
     if args.command == "search":
-        run_search(argument)
+        run_search(argument, args.format)
     elif args.command == "departures":
-        run_departures(argument)
+        run_departures(argument, args.format)
     elif args.command == "stops":
-        run_stop_finder(argument)
+        run_stop_finder(argument, args.format)

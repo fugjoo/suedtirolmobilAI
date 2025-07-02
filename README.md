@@ -116,8 +116,15 @@ python -m src.cli departures "Bozen"
 python -m src.cli stops "Brixen"
 ```
 
-The script prints progress updates such as "Searching for stops..." and shows
-the raw API response when finished.
+By default the commands print a short text summary. Pass ``--format json`` to
+see the raw API response instead:
+
+```bash
+python -m src.cli search "Bozen nach Meran" --format json
+```
+
+The script prints progress updates such as "Searching for stops..." before
+showing the results.
 
 ### Debug mode
 
