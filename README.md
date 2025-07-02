@@ -35,6 +35,20 @@ Running `python -m src.main` also starts the server but does not enable
 auto‑reloading.
 
 
+## Configuration
+
+The Mentz‑EFA endpoint can be configured via the `EFA_BASE_URL`
+environment variable. By default this project uses
+`https://efa-api.asw.io`, an aggregator for the official
+South Tyrol endpoint `https://efa.sta.bz.it/apb/`. You can point the
+API to any compatible service by setting `EFA_BASE_URL`.
+
+```bash
+EFA_BASE_URL=https://example.com/efa uvicorn src.main:app --reload
+```
+
+=======
+
 ## Example request
 
 After the server is running, you can query it with a POST request:
@@ -51,6 +65,7 @@ The response JSON mirrors the data returned by the underlying EFA service. Impor
 - `to_stop`: the detected destination stop
 - `time`: the requested departure time, if any
 - `trips`: a list of connection options with departure and arrival details
+
 
 ## Testing
 
