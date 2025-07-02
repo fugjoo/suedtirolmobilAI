@@ -57,6 +57,25 @@ def test_get_stop_code_handles_null_points(mock_get):
 
 
 @patch('src.efa_api.requests.get')
+def test_get_stop_code_handles_points_list(mock_get):
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.json.return_value = {
+        'stopFinder': {
+            'points': [
+                {'name': 'Bozen Hbf', 'quality': '800', 'stateless': 's1'},
+                {'name': 'Bozen, Stazione', 'quality': '990', 'stateless': 's2'},
+            ]
+        }
+    }
+    mock_get.return_value = resp
+
+    code = efa_api.get_stop_code('Bozen')
+    assert code == 's2'
+    mock_get.assert_called_once()
+
+
+@patch('src.efa_api.requests.get')
 def test_search_efa_calls_requests(mock_get):
     def side_effect(url, params=None, timeout=10):
         mock_resp = MagicMock()

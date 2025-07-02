@@ -33,10 +33,23 @@ def get_stop_code(query: str) -> str:
         logger.debug("StopFinder response status: %s", response.status_code)
         data = response.json()
         stopfinder = data.get("stopFinder") or {}
-        points: List[Dict[str, Any]] = (
-            (stopfinder.get("points") or {})
-            .get("point", [])
-        )
+        points_data = stopfinder.get("points")
+        if isinstance(points_data, dict):
+            points = points_data.get("point", [])
+        elif isinstance(points_data, list):
+            # Some endpoints return a list directly
+            points = []
+            for item in points_data:
+                if isinstance(item, dict) and "point" in item:
+                    p = item.get("point")
+                    if isinstance(p, list):
+                        points.extend(p)
+                    elif p:
+                        points.append(p)
+                elif isinstance(item, dict):
+                    points.append(item)
+        else:
+            points = []
         if isinstance(points, dict):
             points = [points]
 
