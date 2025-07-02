@@ -191,7 +191,7 @@ def format_departures_result(result: Dict[str, Any]) -> str:
         line_parts = [p for p in (line_name_part, line_number_part) if p]
         line_name = " ".join(line_parts)
         direction = line_info.get("direction") or line_info.get("destination") or ""
-        platform = dep.get("platformName") or dep.get("platform")
+        platform = dep.get("platformName")
 
         parts = []
         if line_name:
@@ -264,7 +264,7 @@ def format_stops_result(result: Dict[str, Any]) -> str:
     lines = ["Gefundene Haltestellen:"]
     for idx, entry in enumerate(entries):
         if best_idx is not None and idx == best_idx:
-            lines.append(f"{entry['text']} [TOP]")
+            lines.append(f"[TOP] {entry['text']}")
         else:
             lines.append(entry["text"])
     return "\n".join(lines)
