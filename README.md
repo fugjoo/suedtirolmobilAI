@@ -6,10 +6,18 @@ backend.
 
 ## Installation
 
+Run the provided `install.sh` script for a one-click setup:
+
+```bash
+./install.sh
+```
+
+The script creates a virtual environment, installs all dependencies and
+downloads the German spaCy model. If you prefer the manual steps, run:
+
 ```bash
 pip install -r requirements.txt
-# optionally download the German spaCy model
-python -m spacy download de_core_news_sm
+python -m spacy download de_core_news_sm  # optional
 ```
 
 ## Running the server
