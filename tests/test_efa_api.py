@@ -121,7 +121,7 @@ def test_stopfinder_request_returns_json(mock_get):
     args, kwargs = mock_get.call_args
     assert args[0].endswith('/XML_STOPFINDER_REQUEST')
     assert kwargs['params']['name_sf'] == 'Bruneck'
-    assert kwargs['params']['odvSugMacro'] == 1
+    assert kwargs['params']['odvSugMacro'] == 'true'
     assert kwargs['params']['locationServerActive'] == 1
     assert result == {'stops': []}
 

@@ -20,7 +20,7 @@ def get_stop_code(query: str) -> str:
     """
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     params = {
-        "odvSugMacro": 1,
+        "odvSugMacro": "true",
         "name_sf": query,
         "outputFormat": "JSON",
         "locationServerActive": 1,
@@ -152,7 +152,7 @@ def stopfinder_request(query: str) -> Dict[str, Any]:
     """Return stop suggestions for the given search string."""
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     params = {
-        "odvSugMacro": 1,
+        "odvSugMacro": "true",
         "name_sf": query,
         "outputFormat": "JSON",
         "locationServerActive": 1,
