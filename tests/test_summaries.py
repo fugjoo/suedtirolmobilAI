@@ -2,8 +2,12 @@ import os
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from src.summaries import format_stops_result
-from src.summaries import format_search_result, format_departures_result
+from src.summaries import (
+    format_stops_result,
+    format_search_result,
+    format_departures_result,
+    format_search_result_legs_only,
+)
 
 
 def test_format_stops_result_handles_null_stopfinder():
@@ -110,4 +114,53 @@ def test_format_departures_result_includes_number():
     summary = format_departures_result(result)
     assert "Bus sostitutivo B200" in summary
     assert "Steig F" in summary
+
+
+def test_format_search_result_legs_only():
+    result = {
+        "trips": {
+            "trip": {
+                "legs": [
+                    {
+                        "origin": {
+                            "name": "Bolzano, Stazione di Bolzano",
+                            "platformName": "1",
+                            "time": "16:36",
+                        },
+                        "destination": {
+                            "name": "Termeno sulla Strada del Vino, Stazione di Egna - Termeno",
+                            "platformName": "1",
+                            "time": "17:00",
+                        },
+                        "mode": {
+                            "name": "Treno regionale R 16697",
+                            "destination": "Verona Porta Nuova",
+                        },
+                    },
+                    {
+                        "origin": {
+                            "name": "Termeno sulla Strada del Vino, Stazione di Egna - Termeno",
+                            "time": "17:11",
+                        },
+                        "destination": {
+                            "name": "Villa, Villa di Sopra",
+                            "time": "17:18",
+                        },
+                        "mode": {
+                            "name": "Bus 142",
+                            "destination": "Aldino - Pietralba",
+                        },
+                    },
+                ]
+            }
+        }
+    }
+
+    summary = format_search_result_legs_only(result)
+    assert "Treno regionale R 16697 Richtung Verona Porta Nuova" in summary
+    assert "16:36: Bolzano, Stazione di Bolzano von Steig 1" in summary
+    assert "17:00: Termeno sulla Strada del Vino, Stazione di Egna - Termeno auf Steig 1" in summary
+    assert "Bus 142 Richtung Aldino - Pietralba" in summary
+    assert "17:11: Termeno sulla Strada del Vino, Stazione di Egna - Termeno" in summary
+    assert "17:18: Villa, Villa di Sopra" in summary
 

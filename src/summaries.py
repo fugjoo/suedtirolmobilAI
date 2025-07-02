@@ -143,6 +143,86 @@ def format_search_result(result: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def format_search_result_legs_only(result: Dict[str, Any]) -> str:
+    """Return only the legs of a search result as plain text."""
+    if not isinstance(result, dict):
+        return str(result)
+
+    raw_trips = result.get("trips")
+    trips: List[Dict[str, Any]] = []
+    if isinstance(raw_trips, list):
+        trips = raw_trips
+    elif isinstance(raw_trips, dict):
+        trip_data = raw_trips.get("trip")
+        if isinstance(trip_data, list):
+            trips = trip_data
+        elif isinstance(trip_data, dict):
+            trips = [trip_data]
+        elif raw_trips:
+            trips = [raw_trips]
+
+    if not trips:
+        return "0 legs found."
+
+    trip = trips[0]
+    legs = trip.get("legs") or trip.get("legList") or {}
+    if isinstance(legs, dict):
+        leg_items = legs.get("leg") or legs
+    else:
+        leg_items = legs
+    if isinstance(leg_items, dict):
+        leg_list = [leg_items]
+    elif isinstance(leg_items, list):
+        leg_list = leg_items
+    else:
+        leg_list = []
+
+    lines: List[str] = []
+    for idx, leg in enumerate(leg_list):
+        origin = leg.get("origin") or leg.get("departure") or {}
+        dest = leg.get("destination") or leg.get("arrival") or {}
+        points = leg.get("points")
+        if not origin and isinstance(points, list) and points:
+            origin = points[0]
+        if not dest and isinstance(points, list) and points:
+            dest = points[-1]
+
+        o_name = origin.get("name", "")
+        o_time = origin.get("time") or (origin.get("dateTime") or {}).get("time", "")
+        d_name = dest.get("name", "")
+        d_time = dest.get("time") or (dest.get("dateTime") or {}).get("time", "")
+
+        mode = leg.get("mode") or {}
+        line_name = mode.get("name") or mode.get("number") or ""
+        direction = mode.get("destination") or ""
+
+        if not line_name or "fuß" in line_name.lower() or "walk" in line_name.lower():
+            line_header = "Zu Fuß"
+        else:
+            line_header = line_name
+            if direction:
+                line_header += f" Richtung {direction}"
+
+        lines.append(line_header)
+
+        dep_line = f"{o_time}: {o_name}" if o_time else o_name
+        origin_platform = origin.get("platform") or origin.get("platformName")
+        if origin_platform:
+            dep_line += f" von Steig {origin_platform}"
+        lines.append(dep_line.strip())
+
+        arr_line = f"{d_time}: {d_name}" if d_time else d_name
+        platform = dest.get("platform") or dest.get("platformName")
+        if platform:
+            arr_line += f" auf Steig {platform}"
+        lines.append(arr_line.strip())
+
+        if idx < len(leg_list) - 1:
+            lines.append("")
+
+    return "\n".join(lines)
+
+
 def format_departures_result(result: Dict[str, Any]) -> str:
     """Return a readable summary of departures."""
     if not isinstance(result, dict):
