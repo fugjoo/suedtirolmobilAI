@@ -25,11 +25,14 @@ by running the above command again.
 
 ## Running the server
 
-Start the API using `uvicorn`:
+Start the API using `uvicorn` so that code changes are picked up automatically:
 
 ```bash
 uvicorn src.main:app --reload
 ```
+
+Running `python -m src.main` also starts the server but does not enable
+auto‑reloading.
 
 ## Testing
 
