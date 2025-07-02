@@ -60,6 +60,10 @@ def get_stop_code(query: str) -> str:
 
         logger.debug("Stop suggestions: %s", points)
         logger.debug("Best match: %s", best)
+        if best and best.get("stateless"):
+            logger.info(
+                "StopFinder stateless ID for '%s': %s", query, best["stateless"]
+            )
 
         if best:
             if best.get("stateless"):
