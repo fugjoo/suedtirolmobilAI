@@ -41,11 +41,11 @@ auto‑reloading.
 
 The Mentz‑EFA endpoint can be configured via the `EFA_BASE_URL`
 environment variable. By default this project uses the official
-South Tyrol endpoint `https://efa.sta.bz.it/apb/`. You can point the
+South Tyrol endpoint `https://efa.sta.bz.it/apb`. You can point the
 API to any compatible service by setting `EFA_BASE_URL`.
 
 ```bash
-EFA_BASE_URL=https://efa.sta.bz.it/apb/ uvicorn src.main:app --reload
+EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
 ```
 
 =======
