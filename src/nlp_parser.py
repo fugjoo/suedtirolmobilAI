@@ -9,13 +9,17 @@ logger = logging.getLogger(__name__)
 setup_logging()
 
 _nlp = None
+_RE_TIME = re.compile(r"([0-2]?\d[:.]\d{2})")
+_RE_FROM = re.compile(r"von\s+(\w+)", re.IGNORECASE)
+_RE_TO = re.compile(r"nach\s+(\w+)", re.IGNORECASE)
+_RE_TIME_TOKEN = re.compile(r"[0-2]?\d[:.]\d{2}")
 
-def _get_nlp():
+def _get_nlp() -> spacy.Language:
     global _nlp
     if _nlp is None:
         try:
             _nlp = spacy.load("de_core_news_sm")
-        except Exception:
+        except OSError:
             _nlp = spacy.blank("de")
     return _nlp
 
@@ -27,10 +31,10 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
     stops = [t.text for t in doc if t.pos_ == "PROPN"]
 
     # Filter out tokens that look like a time expression
-    stops = [s for s in stops if not re.fullmatch(r"[0-2]?\d[:.]\d{2}", s)]
+    stops = [s for s in stops if not _RE_TIME_TOKEN.fullmatch(s)]
 
-    m_from = re.search(r"von\s+(\w+)", text, re.IGNORECASE)
-    m_to = re.search(r"nach\s+(\w+)", text, re.IGNORECASE)
+    m_from = _RE_FROM.search(text)
+    m_to = _RE_TO.search(text)
 
     if m_from:
         from_stop = m_from.group(1)
@@ -46,7 +50,7 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
     else:
         to_stop = None
 
-    time_match = re.search(r"([0-2]?\d[:.]\d{2})", text)
+    time_match = _RE_TIME.search(text)
     time = time_match.group(1).replace('.', ':') if time_match else None
 
     result: Dict[str, Optional[str]] = {}
