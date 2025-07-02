@@ -22,3 +22,13 @@ def test_run_search_json(mock_parse, mock_search, capsys):
     cli.run_search('foo', output_format='json')
     captured = capsys.readouterr()
     assert json.loads(captured.out) == {'foo': 'bar'}
+
+
+@patch('src.cli.format_search_result', return_value='legs')
+@patch('src.cli.efa_api.search_efa', return_value={'ok': True})
+@patch('src.cli.nlp_parser.parse_query', return_value={'from_stop': 'A', 'to_stop': 'B'})
+def test_run_search_legs(mock_parse, mock_search, mock_format, capsys):
+    cli.run_search('foo', output_format='legs')
+    captured = capsys.readouterr()
+    assert captured.out.strip() == 'legs'
+    mock_format.assert_called_once_with({'ok': True}, legs_only=True)

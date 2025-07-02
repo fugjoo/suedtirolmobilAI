@@ -27,8 +27,17 @@ def _plural(word: str, count: int) -> str:
     return word if count == 1 else f"{word}s"
 
 
-def format_search_result(result: Dict[str, Any]) -> str:
-    """Return a readable summary of a trip search result."""
+def format_search_result(result: Dict[str, Any], legs_only: bool = False) -> str:
+    """Return a readable summary of a trip search result.
+
+    Parameters
+    ----------
+    result: dict
+        Parsed trip search response.
+    legs_only: bool, optional
+        If ``True`` only the individual trip legs are returned without the
+        introductory "Von"/"Nach" lines.
+    """
     if not isinstance(result, dict):
         return str(result)
 
@@ -79,7 +88,7 @@ def format_search_result(result: Dict[str, Any]) -> str:
         leg_list = []
 
     lines: List[str] = []
-    if leg_list:
+    if leg_list and not legs_only:
         first_leg = leg_list[0]
         origin = first_leg.get("origin") or first_leg.get("departure") or {}
         dest = first_leg.get("destination") or first_leg.get("arrival") or {}
@@ -107,13 +116,13 @@ def format_search_result(result: Dict[str, Any]) -> str:
         lines.append(origin_line)
         dest_name = dest.get("name") or to_stop
         lines.append(f"Nach: {dest_name}")
-    else:
+    elif not legs_only:
         start_name = from_stop
         lines.append(f"Von: {start_name}")
         if to_stop:
             lines.append(f"Nach: {to_stop}")
 
-    if leg_list:
+    if leg_list and not legs_only:
         lines.append("")
 
     for idx, leg in enumerate(leg_list):
@@ -134,28 +143,47 @@ def format_search_result(result: Dict[str, Any]) -> str:
             or ""
         )
         if not line_name or "fuß" in line_name.lower() or "walk" in line_name.lower():
-            line_desc = "zu Fuß"
+            if legs_only:
+                line_desc = "zu Fuß"
+            else:
+                line_desc = "zu Fuß"
         else:
-            line_desc = f"mit {line_name}"
+            if legs_only:
+                line_desc = line_name
+            else:
+                line_desc = f"mit {line_name}"
             direction = (leg.get("mode") or {}).get("destination") or ""
             if direction:
                 line_desc += f" Richtung {direction}"
-        dep_line = f"Ab: {o_name}"
-        if o_time:
-            dep_line += f" um {o_time} Uhr {line_desc}"
+        if legs_only:
+            lines.append(line_desc)
+            start_line = f"{o_time}: {o_name}" if o_time else o_name
+            origin_platform = origin.get("platform") or origin.get("platformName")
+            if origin_platform:
+                start_line += f" von Steig {origin_platform}"
+            lines.append(start_line)
+            end_line = f"{d_time}: {d_name}" if d_time else d_name
+            platform = dest.get("platform") or dest.get("platformName")
+            if platform:
+                end_line += f" auf Steig {platform}"
+            lines.append(end_line)
         else:
-            dep_line += f" {line_desc}"
-        origin_platform = origin.get("platform") or origin.get("platformName")
-        if origin_platform:
-            dep_line += f" von Steig {origin_platform}"
-        arr_line = f"An: {d_name}"
-        if d_time:
-            arr_line += f" um {d_time} Uhr"
-        platform = dest.get("platform") or dest.get("platformName")
-        if platform:
-            arr_line += f" auf Steig {platform}"
-        lines.append(dep_line)
-        lines.append(arr_line)
+            dep_line = f"Ab: {o_name}"
+            if o_time:
+                dep_line += f" um {o_time} Uhr {line_desc}"
+            else:
+                dep_line += f" {line_desc}"
+            origin_platform = origin.get("platform") or origin.get("platformName")
+            if origin_platform:
+                dep_line += f" von Steig {origin_platform}"
+            arr_line = f"An: {d_name}"
+            if d_time:
+                arr_line += f" um {d_time} Uhr"
+            platform = dest.get("platform") or dest.get("platformName")
+            if platform:
+                arr_line += f" auf Steig {platform}"
+            lines.append(dep_line)
+            lines.append(arr_line)
         if idx < len(leg_list) - 1:
             lines.append("")
 

@@ -38,6 +38,8 @@ def search(req: SearchRequest, format: str = "json"):
     logger.debug("/search result: %s", result)
     if format == "text":
         return PlainTextResponse(format_search_result(result))
+    if format == "legs":
+        return PlainTextResponse(format_search_result(result, legs_only=True))
     return result
 
 

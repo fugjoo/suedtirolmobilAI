@@ -20,8 +20,9 @@ def run_search(query: str, output_format: str = "text") -> None:
     query: str
         Natural language query describing the trip request.
     output_format: str, optional
-        Either ``"text"`` or ``"json"``. ``"text"`` prints a short summary while
-        ``"json"`` dumps the raw API response.
+        ``"text"`` prints a short summary,
+        ``"json"`` dumps the raw API response,
+        ``"legs"`` shows only the individual trip legs.
     """
     logger.info("Searching for stops...")
     params = nlp_parser.parse_query(query)
@@ -49,6 +50,8 @@ def run_search(query: str, output_format: str = "text") -> None:
         import json
 
         print(json.dumps(response, ensure_ascii=False, indent=2))
+    elif output_format == "legs":
+        print(format_search_result(response, legs_only=True))
     else:
         print(format_search_result(response))
 
@@ -103,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument(
         "--format",
-        choices=["text", "json"],
+        choices=["text", "json", "legs"],
         default="text",
         help="Output format",
     )
