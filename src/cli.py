@@ -30,12 +30,16 @@ def run_search(query: str) -> None:
 
 
 def run_departures(stop: str) -> None:
-    print("Querying departures...")
+    """Query the departure monitor and show progress messages."""
+    print(f"Haltestelle '{stop}' wird ermittelt...")
     try:
         result = efa_api.dm_request(stop)
     except Exception as exc:
-        print(f"Error during request: {exc}")
+        print(f"Fehler bei der Abfrage: {exc}")
         return
+
+    print("Suche wird gestartet...")
+    print("Ergebnisse gefunden.")
     print(result)
 
 
