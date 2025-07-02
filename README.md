@@ -20,6 +20,9 @@ pip install -r requirements.txt
 python -m spacy download de_core_news_sm  # optional
 ```
 
+If you upgrade to a newer release of this project, reinstall the dependencies
+by running the above command again.
+
 ## Running the server
 
 Start the API using `uvicorn`:
