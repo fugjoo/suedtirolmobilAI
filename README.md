@@ -67,6 +67,19 @@ The response JSON mirrors the data returned by the underlying EFA service. Impor
 - `time`: the requested departure time, if any
 - `trips`: a list of connection options with departure and arrival details
 
+## Command line usage
+
+This repository also includes a small helper script that performs a search and
+prints feedback messages while processing the query. Run it with Python's
+module syntax:
+
+```bash
+python -m src.cli "Wie komme ich von Bozen nach Meran um 14:30?"
+```
+
+The script prints progress updates such as "Searching for stops..." and shows
+the raw API response when finished.
+
 
 ## Testing
 
