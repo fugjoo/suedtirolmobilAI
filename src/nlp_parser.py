@@ -21,16 +21,16 @@ LANG_MODELS = {
 
 LANG_REGEX = {
     "de": {
-        "from": re.compile(r"von\s+(\w+)", re.IGNORECASE),
-        "to": re.compile(r"nach\s+(\w+)", re.IGNORECASE),
+        "from": re.compile(r"von\s+(.+?)(?=\s+nach\b|$)", re.IGNORECASE),
+        "to": re.compile(r"nach\s+(.+?)(?=\s+um\b|\?|\.|$)", re.IGNORECASE),
     },
     "en": {
-        "from": re.compile(r"from\s+(\w+)", re.IGNORECASE),
-        "to": re.compile(r"to\s+(\w+)", re.IGNORECASE),
+        "from": re.compile(r"from\s+(.+?)(?=\s+to\b|$)", re.IGNORECASE),
+        "to": re.compile(r"to\s+(.+?)(?=\s+at\b|\?|\.|$)", re.IGNORECASE),
     },
     "it": {
-        "from": re.compile(r"da\s+(\w+)", re.IGNORECASE),
-        "to": re.compile(r"\ba\s+(\w+)", re.IGNORECASE),
+        "from": re.compile(r"da\s+(.+?)(?=\s+a\b|$)", re.IGNORECASE),
+        "to": re.compile(r"\ba\s+(.+?)(?=\s+alle?\b|\?|\.|$)", re.IGNORECASE),
     },
 }
 
@@ -73,15 +73,26 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
     m_from = regex["from"].search(text)
     m_to = regex["to"].search(text)
 
+    if not m_from or not m_to:
+        for alt_lang, alt_regex in LANG_REGEX.items():
+            if alt_lang == lang:
+                continue
+            if not m_from:
+                m_from = alt_regex["from"].search(text)
+            if not m_to:
+                m_to = alt_regex["to"].search(text)
+            if m_from and m_to:
+                break
+
     if m_from:
-        from_stop = m_from.group(1)
+        from_stop = m_from.group(1).strip(" ,.")
     elif stops:
         from_stop = stops.pop(0)
     else:
         from_stop = None
 
     if m_to:
-        to_stop = m_to.group(1)
+        to_stop = m_to.group(1).strip(" ,.")
     elif stops:
         to_stop = stops.pop(0)
     else:
