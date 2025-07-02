@@ -34,8 +34,7 @@ def get_stop_code(query: str) -> str:
         data = response.json()
         stopfinder = data.get("stopFinder") or {}
         points: List[Dict[str, Any]] = (
-            stopfinder
-            .get("points", {})
+            (stopfinder.get("points") or {})
             .get("point", [])
         )
         if isinstance(points, dict):
