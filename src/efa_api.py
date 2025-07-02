@@ -5,12 +5,12 @@ import requests
 BASE_URL = os.environ.get("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
 
 
-def _get_best_stop_name(query: str) -> str:
-    """Lookup a stop using the StopFinder request and return the best match.
+def get_stop_code(query: str) -> str:
+    """Resolve a stop name to its stateless identifier using a StopFinder request.
 
-    The function prefers the ``stateless`` identifier of the best suggestion
-    so that the result can be used directly in subsequent requests. If the
-    lookup fails, the original query is returned unchanged.
+    The returned code can be used directly in subsequent trip or departure
+    requests. If the lookup fails, the original query string is returned
+    unchanged.
     """
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     params = {
@@ -70,10 +70,10 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
 
     from_stop = params.get("from_stop")
     if from_stop:
-        from_stop = _get_best_stop_name(from_stop)
+        from_stop = get_stop_code(from_stop)
     to_stop = params.get("to_stop")
     if to_stop:
-        to_stop = _get_best_stop_name(to_stop)
+        to_stop = get_stop_code(to_stop)
 
     efa_params = {
         "name_origin": from_stop,
@@ -99,7 +99,7 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
 def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
     """Query the departure monitor (DM) endpoint for a specific stop."""
     url = f"{BASE_URL}/XML_DM_REQUEST"
-    stop_name = _get_best_stop_name(stop_name)
+    stop_name = get_stop_code(stop_name)
     params = {
         "language": "de",
         "type_dm": "stop",
