@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from src import efa_api
 
 @patch('src.efa_api.requests.get')
-def test_get_best_stop_name(mock_get):
+def test_get_stop_code(mock_get):
     resp = MagicMock()
     resp.status_code = 200
     resp.json.return_value = {
@@ -22,8 +22,8 @@ def test_get_best_stop_name(mock_get):
     }
     mock_get.return_value = resp
 
-    best = efa_api._get_best_stop_name('Bozen')
-    assert best == 's2'
+    code = efa_api.get_stop_code('Bozen')
+    assert code == 's2'
 
 
 @patch('src.efa_api.requests.get')
@@ -62,7 +62,7 @@ def test_search_efa_calls_requests(mock_get):
     assert result == {'ok': True}
 
 
-@patch('src.efa_api._get_best_stop_name', return_value='Bozen')
+@patch('src.efa_api.get_stop_code', return_value='Bozen')
 @patch('src.efa_api.requests.get')
 def test_dm_request_calls_requests(mock_get, mock_best):
     mock_get.return_value = MagicMock(status_code=200, json=lambda: {'ok': True})
