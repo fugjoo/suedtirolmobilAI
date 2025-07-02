@@ -146,7 +146,7 @@ def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
         return {"text": response.text}
 
 
-def stop_finder(query: str) -> Dict[str, Any]:
+def stopfinder_request(query: str) -> Dict[str, Any]:
     """Return stop suggestions for the given search string."""
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     params = {"odvSugMacro": 1, "name_sf": query, "outputFormat": "JSON"}
@@ -157,4 +157,7 @@ def stop_finder(query: str) -> Dict[str, Any]:
     data = response.json()
     logger.debug("StopFinder response: %s", data)
     return data
+
+# Backwards compatibility
+stop_finder = stopfinder_request
 

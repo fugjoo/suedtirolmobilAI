@@ -28,12 +28,12 @@ def test_departures_endpoint(mock_dm_request):
     mock_dm_request.assert_called_once_with('Bozen', 5)
 
 
-@patch('src.main.efa_api.stop_finder')
-def test_stops_endpoint(mock_stop_finder):
+@patch('src.main.efa_api.stopfinder_request')
+def test_stops_endpoint(mock_stopfinder_request):
     expected = {'stops': []}
-    mock_stop_finder.return_value = expected
+    mock_stopfinder_request.return_value = expected
     client = TestClient(app)
     response = client.post('/stops', json={'query': 'Brixen'})
     assert response.status_code == 200
     assert response.json() == expected
-    mock_stop_finder.assert_called_once_with('Brixen')
+    mock_stopfinder_request.assert_called_once_with('Brixen')

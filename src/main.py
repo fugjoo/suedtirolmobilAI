@@ -50,7 +50,7 @@ def stops(req: StopFinderRequest):
     logger.info("/stops query='%s'", req.query)
     if not req.query:
         raise HTTPException(status_code=400, detail="Missing query")
-    result = efa_api.stop_finder(req.query)
+    result = efa_api.stopfinder_request(req.query)
     logger.debug("/stops result: %s", result)
     return result
 
