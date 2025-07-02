@@ -7,15 +7,13 @@ backend.
 ## Installation
 
 Run the provided `install.sh` script for a one-click setup. The
-script also tries to install the system build tools required by spaCy
-via `apt` or `yum`:
+script also tries to install the system build tools required:
 
 ```bash
 ./install.sh
 ```
 
-The script creates a virtual environment, installs all dependencies and
-downloads the German spaCy model. If you prefer the manual steps, run:
+If you prefer the manual steps, run:
 
 ```bash
 pip install -r requirements.txt
