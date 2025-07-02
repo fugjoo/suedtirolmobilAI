@@ -49,9 +49,7 @@ EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
 When a request is processed, the stop names are first resolved via the
 `XML_STOPFINDER_REQUEST` endpoint. The service selects the result with the best
 `quality` value and forwards the corresponding `stateless` identifier to the
-trip search. This avoids ambiguous stop names in the `XML_TRIP_REQUEST2` call.
-
-=======
+trip search.
 
 ## Example request
 
