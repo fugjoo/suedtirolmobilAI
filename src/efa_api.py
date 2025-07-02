@@ -2,7 +2,7 @@ import os
 from typing import Dict, Any
 import requests
 
-BASE_URL = os.environ.get("EFA_BASE_URL", "https://efa-api.asw.io")
+BASE_URL = os.environ.get("EFA_BASE_URL", "https://efa.sta.bz.it/apb/")
 
 
 def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
