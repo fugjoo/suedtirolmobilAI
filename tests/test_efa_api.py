@@ -10,16 +10,20 @@ def test_get_best_stop_name(mock_get):
         'stopFinder': {
             'points': {
                 'point': [
-                    {'name': 'Bozen Hbf', 'quality': '800'},
-                    {'name': 'Bozen, Stazione', 'quality': '990'},
+                    {'name': 'Bozen Hbf', 'quality': '800', 'stateless': 's1'},
+                    {
+                        'name': 'Bozen, Stazione',
+                        'quality': '990',
+                        'stateless': 's2',
+                    },
                 ]
             }
         }
     }
     mock_get.return_value = resp
 
-    name = efa_api._get_best_stop_name('Bozen')
-    assert name == 'Bozen, Stazione'
+    best = efa_api._get_best_stop_name('Bozen')
+    assert best == 's2'
 
 
 @patch('src.efa_api.requests.get')
@@ -30,7 +34,13 @@ def test_search_efa_calls_requests(mock_get):
         if url.endswith('XML_STOPFINDER_REQUEST'):
             mock_resp.json.return_value = {
                 'stopFinder': {
-                    'points': {'point': {'name': params['name_sf'], 'quality': '999'}}
+                    'points': {
+                        'point': {
+                            'name': params['name_sf'],
+                            'quality': '999',
+                            'stateless': params['name_sf'] + '_SL',
+                        }
+                    }
                 }
             }
         else:
@@ -46,8 +56,8 @@ def test_search_efa_calls_requests(mock_get):
     trip_call = mock_get.call_args_list[-1]
     assert trip_call[0][0].endswith('/XML_TRIP_REQUEST2')
     efa_params = trip_call[1]['params']
-    assert efa_params['name_origin'] == 'Bozen'
-    assert efa_params['name_destination'] == 'Meran'
+    assert efa_params['name_origin'] == 'Bozen_SL'
+    assert efa_params['name_destination'] == 'Meran_SL'
     assert efa_params['itdTime'] == '08:00'
     assert result == {'ok': True}
 
