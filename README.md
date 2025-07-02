@@ -62,7 +62,8 @@ EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --host 0.0.0.0 --rel
 
 All requests automatically enable the EFA location server via
 `locationServerActive=1`. Trip and departure monitor queries also send
-`odvMacro=true`.
+`odvMacro=true`. Starting with version 0.2 all requests specify
+`outputEncoding=UTF-8` to ensure UTF‑8 encoded responses.
 ## API endpoints
 
 The service exposes three POST endpoints:

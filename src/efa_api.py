@@ -24,6 +24,7 @@ def get_stop_code(query: str) -> str:
         "name_sf": query,
         "outputFormat": "JSON",
         "locationServerActive": 1,
+        "outputEncoding": "UTF-8",
     }
 
     logger.debug("Requesting stop code for '%s'", query)
@@ -111,6 +112,7 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
         "calcNumberOfTrips": 1,
         "locationServerActive": 1,
         "odvMacro": "true",
+        "outputEncoding": "UTF-8",
     }
 
     time = params.get("time")
@@ -143,6 +145,7 @@ def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
         "outputFormat": "JSON",
         "locationServerActive": 1,
         "odvMacro": "true",
+        "outputEncoding": "UTF-8",
     }
 
     logger.debug("DM request params: %s", params)
@@ -165,6 +168,7 @@ def stopfinder_request(query: str) -> Dict[str, Any]:
         "name_sf": query,
         "outputFormat": "JSON",
         "locationServerActive": 1,
+        "outputEncoding": "UTF-8",
     }
     logger.info("Stop finder for query '%s'", query)
     logger.debug("StopFinder params: %s", params)
