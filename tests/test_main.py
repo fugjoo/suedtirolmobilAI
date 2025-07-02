@@ -13,7 +13,7 @@ def test_search_endpoint(mock_parse_query, mock_search_efa):
     expected_result = {'result': 'ok'}
     mock_search_efa.return_value = expected_result
     client = TestClient(app)
-    response = client.post('/search', json={'text': 'Wie komme ich von Bozen nach Meran?'})
+    response = client.post('/search?format=json', json={'text': 'Wie komme ich von Bozen nach Meran?'})
     assert response.status_code == 200
     assert response.json() == expected_result
     mock_parse_query.assert_called_once_with('Wie komme ich von Bozen nach Meran?')
@@ -40,7 +40,7 @@ def test_search_endpoint_legs(mock_parse_query, mock_search_efa, mock_format):
     mock_parse_query.return_value = {'from_stop': 'A', 'to_stop': 'B'}
     mock_search_efa.return_value = {'dummy': True}
     client = TestClient(app)
-    response = client.post('/search?format=legs', json={'text': 'foo'})
+    response = client.post('/search', json={'text': 'foo'})
     assert response.status_code == 200
     assert response.text == 'legs'
     mock_format.assert_called_once_with({'dummy': True}, legs_only=True)

@@ -29,18 +29,18 @@ class StopFinderRequest(BaseModel):
     query: str
 
 @app.post("/search")
-def search(req: SearchRequest, format: str = "json"):
+def search(req: SearchRequest, format: str = "legs"):
     logger.info("/search text='%s'", req.text)
     params = nlp_parser.parse_query(req.text)
     if not params:
         raise HTTPException(status_code=400, detail="No parameters extracted")
     result = efa_api.search_efa(params)
     logger.debug("/search result: %s", result)
+    if format == "json":
+        return result
     if format == "text":
         return PlainTextResponse(format_search_result(result, legs_only=False))
-    if format == "legs":
-        return PlainTextResponse(format_search_result(result, legs_only=True))
-    return result
+    return PlainTextResponse(format_search_result(result, legs_only=True))
 
 
 @app.post("/departures")

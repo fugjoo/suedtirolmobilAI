@@ -12,7 +12,7 @@ from .summaries import (
 logger = logging.getLogger(__name__)
 
 
-def run_search(query: str, output_format: str = "text", debug: bool = False) -> None:
+def run_search(query: str, output_format: str = "legs", debug: bool = False) -> None:
     """Run a search for the given natural language query.
 
     Parameters
@@ -20,9 +20,9 @@ def run_search(query: str, output_format: str = "text", debug: bool = False) -> 
     query: str
         Natural language query describing the trip request.
     output_format: str, optional
-        ``"text"`` prints a short summary,
-        ``"json"`` dumps the raw API response,
-        ``"legs"`` shows only the individual trip legs.
+        ``"legs"`` prints only the individual trip legs,
+        ``"text"`` shows a longer summary,
+        ``"json"`` dumps the raw API response.
     """
     logger.info("Searching for stops...")
     params = nlp_parser.parse_query(query)
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--format",
         choices=["text", "json", "legs"],
-        default="text",
+        default="legs",
         help="Output format",
     )
 
