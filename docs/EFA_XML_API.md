@@ -13,7 +13,7 @@ The EFA XML-API allows access to various public transport functions via HTTP req
 - **Purpose**: Suggests stops based on a name input
 - **URL**: `http://efa.sta.bz.it/apb/XML_STOPFINDER_REQUEST`
 - **Parameters**:
-  - `odvSugMacro=1`
+  - `odvSugMacro=true`
   - `name_sf=bolzano stazione`
   - Optional: `quality`
 
@@ -58,8 +58,8 @@ The EFA XML-API allows access to various public transport functions via HTTP req
 
 - **language**: `de` | `it` | `en` | `ld1` | `ld2`
 - **locationServerActive=1**: Activates the location server
-- **odvMacro=true`
-- **odvSugMacro=true`
+- **odvMacro=true**
+- **odvSugMacro=true**
 - **coordOutputFormat**:
   - `APBV`
   - `PROJ[+init=epsg:<Code>]`
