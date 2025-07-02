@@ -95,3 +95,33 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
     except ValueError:
         return {"text": response.text}
 
+
+def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
+    """Query the departure monitor (DM) endpoint for a specific stop."""
+    url = f"{BASE_URL}/XML_DM_REQUEST"
+    stop_name = _get_best_stop_name(stop_name)
+    params = {
+        "language": "de",
+        "type_dm": "stop",
+        "name_dm": stop_name,
+        "mode": "direct",
+        "limit": limit,
+        "outputFormat": "JSON",
+    }
+
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    try:
+        return response.json()
+    except ValueError:
+        return {"text": response.text}
+
+
+def stop_finder(query: str) -> Dict[str, Any]:
+    """Return stop suggestions for the given search string."""
+    url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
+    params = {"odvSugMacro": 1, "name_sf": query, "outputFormat": "JSON"}
+    response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    return response.json()
+

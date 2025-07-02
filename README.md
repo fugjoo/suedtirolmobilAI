@@ -50,14 +50,25 @@ EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --host 0.0.0.0 --rel
 ```
 
 
-## Example request
+## Example requests
 
 After the server is running, you can query it with a POST request:
 
 ```bash
+# Trip request
 curl -X POST http://localhost:8000/search \
      -H 'Content-Type: application/json' \
      -d '{"text": "Wie komme ich von Bozen nach Meran um 14:30?"}'
+
+# Departure monitor
+curl -X POST http://localhost:8000/departures \
+     -H 'Content-Type: application/json' \
+     -d '{"stop": "Bozen", "limit": 5}'
+
+# Stop suggestions
+curl -X POST http://localhost:8000/stops \
+     -H 'Content-Type: application/json' \
+     -d '{"query": "Brixen"}'
 ```
 
 The response JSON mirrors the data returned by the underlying EFA service. Important fields include:
@@ -74,7 +85,14 @@ prints feedback messages while processing the query. Run it with Python's
 module syntax:
 
 ```bash
-python -m src.cli "Wie komme ich von Bozen nach Meran um 14:30?"
+# Trip request
+python -m src.cli search "Wie komme ich von Bozen nach Meran um 14:30?"
+
+# Departure monitor
+python -m src.cli departures "Bozen"
+
+# Stop suggestions
+python -m src.cli stops "Brixen"
 ```
 
 The script prints progress updates such as "Searching for stops..." and shows
