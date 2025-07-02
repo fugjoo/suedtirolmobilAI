@@ -97,7 +97,7 @@ def format_search_result(result: Dict[str, Any]) -> str:
     if leg_list:
         lines.append("")
 
-    for leg in leg_list:
+    for idx, leg in enumerate(leg_list):
         origin = leg.get("origin") or leg.get("departure") or {}
         dest = leg.get("destination") or leg.get("arrival") or {}
         points = leg.get("points")
@@ -137,6 +137,8 @@ def format_search_result(result: Dict[str, Any]) -> str:
             arr_line += f" auf Steig {platform}"
         lines.append(dep_line)
         lines.append(arr_line)
+        if idx < len(leg_list) - 1:
+            lines.append("")
 
     return "\n".join(lines)
 
@@ -184,9 +186,12 @@ def format_departures_result(result: Dict[str, Any]) -> str:
             or ""
         )
         line_info = dep.get("servingLine") or dep.get("line") or {}
-        line_name = line_info.get("name") or line_info.get("number") or ""
+        line_name_part = line_info.get("name")
+        line_number_part = line_info.get("number")
+        line_parts = [p for p in (line_name_part, line_number_part) if p]
+        line_name = " ".join(line_parts)
         direction = line_info.get("direction") or line_info.get("destination") or ""
-        platform = dep.get("platform") or dep.get("platformName")
+        platform = dep.get("platformName") or dep.get("platform")
 
         parts = []
         if line_name:
@@ -224,44 +229,42 @@ def format_stops_result(result: Dict[str, Any]) -> str:
 
     if not points:
         points = result.get("stops")
-    entries: List[str] = []
-    qualities: List[int] = []
+    entries: List[Dict[str, Any]] = []
+    best_entry = None
+    best_quality = -1
     if isinstance(points, list):
-        for p in points:
-            if not isinstance(p, dict) or not p.get("name"):
-                continue
-            entry = p["name"]
-            any_type = p.get("anyType") or p.get("type")
-            if any_type:
-                entry += f" ({any_type})"
-            entries.append(entry)
-            try:
-                qualities.append(int(p.get("quality")))
-            except (TypeError, ValueError):
-                qualities.append(-1)
+        iterable = points
     elif isinstance(points, dict):
-        if points.get("name"):
-            entry = points["name"]
-            any_type = points.get("anyType") or points.get("type")
-            if any_type:
-                entry += f" ({any_type})"
-            entries.append(entry)
-            try:
-                qualities.append(int(points.get("quality")))
-            except (TypeError, ValueError):
-                qualities.append(-1)
+        iterable = [points]
+    else:
+        iterable = []
+
+    for p in iterable:
+        if not isinstance(p, dict) or not p.get("name"):
+            continue
+        entry_text = p["name"]
+        any_type = p.get("anyType") or p.get("type") or ""
+        if any_type:
+            entry_text += f" ({any_type})"
+        try:
+            quality = int(p.get("quality"))
+        except (TypeError, ValueError):
+            quality = -1
+        entry = {"text": entry_text, "type": any_type, "quality": quality}
+        entries.append(entry)
+        if quality > best_quality:
+            best_quality = quality
+            best_entry = entry
 
     if not entries:
         return "0 stops found."
-
-    best_idx = None
-    if qualities and any(q >= 0 for q in qualities):
-        best_idx = max(range(len(qualities)), key=lambda i: qualities[i])
+    entries.sort(key=lambda e: e["type"])
+    best_idx = entries.index(best_entry) if best_entry in entries else None
 
     lines = ["Gefundene Haltestellen:"]
     for idx, entry in enumerate(entries):
         if best_idx is not None and idx == best_idx:
-            lines.append(f"{entry} [beste]")
+            lines.append(f"{entry['text']} [TOP]")
         else:
-            lines.append(entry)
+            lines.append(entry["text"])
     return "\n".join(lines)

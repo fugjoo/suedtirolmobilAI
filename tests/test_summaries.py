@@ -29,7 +29,7 @@ def test_format_stops_result_handles_points_list():
     assert "Gefundene Haltestellen:" in summary
     assert "A (stop)" in summary
     assert "B (location)" in summary
-    assert "[beste]" in summary
+    assert "[TOP]" in summary
 
 
 def test_format_search_result_handles_points_leg():
@@ -88,4 +88,26 @@ def test_format_departures_result_formats_line():
     assert (
         "Citybus 320.1 Richtung Milland KG Arcobaleno Steig A um 13:20 Uhr" in summary
     )
+
+
+def test_format_departures_result_includes_number():
+    result = {
+        "departures": {
+            "departure": [
+                {
+                    "time": "08:00",
+                    "servingLine": {
+                        "name": "Bus sostitutivo",
+                        "number": "B200",
+                        "direction": "Merano Express",
+                    },
+                    "platformName": "F",
+                }
+            ]
+        }
+    }
+
+    summary = format_departures_result(result)
+    assert "Bus sostitutivo B200" in summary
+    assert "Steig F" in summary
 
