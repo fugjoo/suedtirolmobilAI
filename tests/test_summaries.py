@@ -29,7 +29,9 @@ def test_format_stops_result_handles_points_list():
     assert "Gefundene Haltestellen:" in summary
     assert "A (stop)" in summary
     assert "B (location)" in summary
-    assert "[TOP]" in summary
+    lines = summary.splitlines()
+    top_line = [l for l in lines if l.startswith("[TOP]")][0]
+    assert top_line.startswith("[TOP] ")
 
 
 def test_format_search_result_handles_points_leg():
@@ -110,4 +112,51 @@ def test_format_departures_result_includes_number():
     summary = format_departures_result(result)
     assert "Bus sostitutivo B200" in summary
     assert "Steig F" in summary
+
+
+def test_format_search_result_structured_time():
+    result = {
+        "trips": {
+            "trip": {
+                "legs": [
+                    {
+                        "points": [
+                            {
+                                "name": "Start",
+                                "platformName": "B",
+                                "dateTime": {"hour": "10", "minute": "05"},
+                            },
+                            {
+                                "name": "End",
+                                "platformName": "C",
+                                "dateTime": {"hour": "10", "minute": "35"},
+                            },
+                        ],
+                        "mode": {"name": "Bus B1", "destination": "End"},
+                    }
+                ]
+            }
+        }
+    }
+
+    summary = format_search_result(result)
+    assert "um 10:05 Uhr" in summary
+    assert "um 10:35 Uhr" in summary
+
+
+def test_format_departures_result_structured_time():
+    result = {
+        "departures": {
+            "departure": [
+                {
+                    "dateTime": {"hour": "09", "minute": "15"},
+                    "servingLine": {"name": "Bus", "direction": "Town"},
+                    "platformName": "1",
+                }
+            ]
+        }
+    }
+
+    summary = format_departures_result(result)
+    assert "um 09:15 Uhr" in summary
 
