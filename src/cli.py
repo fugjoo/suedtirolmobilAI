@@ -12,7 +12,7 @@ from .summaries import (
 logger = logging.getLogger(__name__)
 
 
-def run_search(query: str, output_format: str = "text") -> None:
+def run_search(query: str, output_format: str = "legs") -> None:
     """Run a search for the given natural language query.
 
     Parameters
@@ -20,10 +20,9 @@ def run_search(query: str, output_format: str = "text") -> None:
     query: str
         Natural language query describing the trip request.
     output_format: str, optional
-        ``"text"`` prints a short summary,
-        ``"json"`` dumps the raw API response,
-        ``"legs"`` shows only the individual trip legs.
-    """
+        ``"text"`` prints a verbose summary,
+        ``"json"`` dumps the raw API response.
+        """
     logger.info("Searching for stops...")
     params = nlp_parser.parse_query(query)
 
@@ -50,10 +49,10 @@ def run_search(query: str, output_format: str = "text") -> None:
         import json
 
         print(json.dumps(response, ensure_ascii=False, indent=2))
-    elif output_format == "legs":
-        print(format_search_result(response, legs_only=True))
-    else:
+    elif output_format == "text":
         print(format_search_result(response))
+    else:
+        print(format_search_result(response, legs_only=True))
 
 
 def run_departures(stop: str, output_format: str = "text") -> None:
@@ -106,8 +105,8 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument(
         "--format",
-        choices=["text", "json", "legs"],
-        default="text",
+        choices=["text", "json"],
+        default="legs",
         help="Output format",
     )
 

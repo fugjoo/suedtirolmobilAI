@@ -71,17 +71,23 @@ The service exposes three POST endpoints:
 - `/stops` – return stop name suggestions
 
 
-After the server is running, you can query it with a POST request. By default
-the API returns JSON. Append `?format=text` to any endpoint for a short
-human‑readable summary:
+After the server is running, you can query it with a POST request. The `/search`
+endpoint returns a concise leg-by-leg summary by default. Append
+`?format=json` for the raw API response or `?format=text` for a more verbose
+version:
 
 ```bash
-# Trip request (JSON)
+# Trip request (leg summary)
 curl -X POST http://localhost:8000/search \
      -H 'Content-Type: application/json' \
      -d '{"text": "Wie komme ich von Bozen nach Meran um 14:30?"}'
 
-# Trip request (plain text)
+# Trip request (JSON)
+curl -X POST 'http://localhost:8000/search?format=json' \
+     -H 'Content-Type: application/json' \
+     -d '{"text": "Wie komme ich von Bozen nach Meran um 14:30?"}'
+
+# Trip request (verbose text)
 curl -X POST 'http://localhost:8000/search?format=text' \
      -H 'Content-Type: application/json' \
      -d '{"text": "Wie komme ich von Bozen nach Meran um 14:30?"}'
@@ -131,10 +137,11 @@ python -m src.cli departures "Bozen"
 python -m src.cli stops "Brixen"
 ```
 
-By default the commands print a short text summary. Pass ``--format json`` to
-see the raw API response instead:
+By default the commands print the leg-by-leg summary. Pass ``--format json`` to
+see the raw API response or ``--format text`` for the verbose version:
 
 ```bash
+python -m src.cli search "Bozen nach Meran"
 python -m src.cli search "Bozen nach Meran" --format json
 ```
 
