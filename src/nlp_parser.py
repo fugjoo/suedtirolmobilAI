@@ -2,39 +2,76 @@ from typing import Dict, Optional
 import re
 import logging
 import spacy
+from langdetect import detect, DetectorFactory
 
 from .logging_utils import setup_logging
 
 logger = logging.getLogger(__name__)
 setup_logging()
 
-_nlp = None
+DetectorFactory.seed = 0
+
+_nlp_cache: Dict[str, spacy.Language] = {}
+
+LANG_MODELS = {
+    "de": "de_core_news_sm",
+    "en": "en_core_web_sm",
+    "it": "it_core_news_sm",
+}
+
+LANG_REGEX = {
+    "de": {
+        "from": re.compile(r"von\s+(\w+)", re.IGNORECASE),
+        "to": re.compile(r"nach\s+(\w+)", re.IGNORECASE),
+    },
+    "en": {
+        "from": re.compile(r"from\s+(\w+)", re.IGNORECASE),
+        "to": re.compile(r"to\s+(\w+)", re.IGNORECASE),
+    },
+    "it": {
+        "from": re.compile(r"da\s+(\w+)", re.IGNORECASE),
+        "to": re.compile(r"\ba\s+(\w+)", re.IGNORECASE),
+    },
+}
+
 _RE_TIME = re.compile(r"([0-2]?\d[:.]\d{2})")
-_RE_FROM = re.compile(r"von\s+(\w+)", re.IGNORECASE)
-_RE_TO = re.compile(r"nach\s+(\w+)", re.IGNORECASE)
 _RE_TIME_TOKEN = re.compile(r"[0-2]?\d[:.]\d{2}")
 
-def _get_nlp() -> spacy.Language:
-    global _nlp
-    if _nlp is None:
+def _detect_language(text: str) -> str:
+    try:
+        return detect(text)
+    except Exception:
+        return "en"
+
+def _get_nlp(lang: str) -> spacy.Language:
+    if lang in _nlp_cache:
+        return _nlp_cache[lang]
+    model = LANG_MODELS.get(lang)
+    if model:
         try:
-            _nlp = spacy.load("de_core_news_sm")
+            nlp = spacy.load(model)
         except OSError:
-            _nlp = spacy.blank("de")
-    return _nlp
+            nlp = spacy.blank(lang)
+    else:
+        nlp = spacy.blank(lang)
+    _nlp_cache[lang] = nlp
+    return nlp
 
 def parse_query(text: str) -> Dict[str, Optional[str]]:
     """Extract stops and time from a natural language query."""
-    nlp = _get_nlp()
-    logger.debug("Parsing text: %s", text)
+    lang = _detect_language(text)
+    nlp = _get_nlp(lang)
+    regex = LANG_REGEX.get(lang, LANG_REGEX.get("en"))
+
+    logger.debug("Parsing text (%s): %s", lang, text)
     doc = nlp(text)
     stops = [t.text for t in doc if t.pos_ == "PROPN"]
 
     # Filter out tokens that look like a time expression
     stops = [s for s in stops if not _RE_TIME_TOKEN.fullmatch(s)]
 
-    m_from = _RE_FROM.search(text)
-    m_to = _RE_TO.search(text)
+    m_from = regex["from"].search(text)
+    m_to = regex["to"].search(text)
 
     if m_from:
         from_stop = m_from.group(1)

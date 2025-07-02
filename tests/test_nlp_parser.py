@@ -11,3 +11,17 @@ def test_parse_query_basic():
     assert result.get("to_stop") == "Meran"
     assert result.get("time") == "14:30"
 
+def test_parse_query_english():
+    text = "How do I get from Bolzano to Merano at 14:30?"
+    result = nlp_parser.parse_query(text)
+    assert result.get("from_stop") == "Bolzano"
+    assert result.get("to_stop") == "Merano"
+    assert result.get("time") == "14:30"
+
+def test_parse_query_italian():
+    text = "Come arrivo da Bolzano a Merano alle 14:30?"
+    result = nlp_parser.parse_query(text)
+    assert result.get("from_stop") == "Bolzano"
+    assert result.get("to_stop") == "Merano"
+    assert result.get("time") == "14:30"
+
