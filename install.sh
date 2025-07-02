@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -e
 
+
+# Install build tools if missing (for spaCy dependencies)
+if command -v apt-get >/dev/null; then
+    sudo apt-get update
+    sudo apt-get install -y build-essential python3-dev
+elif command -v yum >/dev/null; then
+    sudo yum groupinstall -y "Development Tools"
+    sudo yum install -y python3-devel
+fi
+
 # Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
     python3 -m venv venv

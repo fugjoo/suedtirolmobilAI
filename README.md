@@ -6,7 +6,9 @@ backend.
 
 ## Installation
 
-Run the provided `install.sh` script for a one-click setup:
+Run the provided `install.sh` script for a one-click setup. The
+script also tries to install the system build tools required by spaCy
+via `apt` or `yum`:
 
 ```bash
 ./install.sh
