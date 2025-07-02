@@ -20,8 +20,6 @@ pip install -r requirements.txt
 python -m spacy download de_core_news_sm  # optional
 ```
 
-This also installs `uvicorn`, which runs the FastAPI server.
-
 If you upgrade to a newer release of this project, reinstall the dependencies
 by running the above command again.
 
