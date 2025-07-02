@@ -3,3 +3,4 @@ requests
 spacy
 pydantic
 uvicorn
+pytest
