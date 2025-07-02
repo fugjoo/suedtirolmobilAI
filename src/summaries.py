@@ -64,8 +64,13 @@ def format_search_result(result: Dict[str, Any]) -> str:
         first_leg = leg_list[0]
         origin = first_leg.get("origin") or first_leg.get("departure") or {}
         dest = first_leg.get("destination") or first_leg.get("arrival") or {}
+        points = first_leg.get("points")
+        if not origin and isinstance(points, list) and points:
+            origin = points[0]
+        if not dest and isinstance(points, list) and points:
+            dest = points[-1]
         start_name = origin.get("name") or from_stop
-        start_time = origin.get("time") or ""
+        start_time = origin.get("time") or (origin.get("dateTime") or {}).get("time", "")
         mode_name = (
             (first_leg.get("mode") or {}).get("name")
             or (first_leg.get("mode") or {}).get("number")
@@ -95,10 +100,15 @@ def format_search_result(result: Dict[str, Any]) -> str:
     for leg in leg_list:
         origin = leg.get("origin") or leg.get("departure") or {}
         dest = leg.get("destination") or leg.get("arrival") or {}
+        points = leg.get("points")
+        if not origin and isinstance(points, list) and points:
+            origin = points[0]
+        if not dest and isinstance(points, list) and points:
+            dest = points[-1]
         o_name = origin.get("name", "")
-        o_time = origin.get("time", "")
+        o_time = origin.get("time") or (origin.get("dateTime") or {}).get("time", "")
         d_name = dest.get("name", "")
-        d_time = dest.get("time", "")
+        d_time = dest.get("time") or (dest.get("dateTime") or {}).get("time", "")
         line_name = (
             (leg.get("mode") or {}).get("name")
             or (leg.get("mode") or {}).get("number")
@@ -116,6 +126,9 @@ def format_search_result(result: Dict[str, Any]) -> str:
             dep_line += f" um {o_time} Uhr {line_desc}"
         else:
             dep_line += f" {line_desc}"
+        origin_platform = origin.get("platform") or origin.get("platformName")
+        if origin_platform:
+            dep_line += f" von Steig {origin_platform}"
         arr_line = f"An: {d_name}"
         if d_time:
             arr_line += f" um {d_time} Uhr"
@@ -175,15 +188,17 @@ def format_departures_result(result: Dict[str, Any]) -> str:
         direction = line_info.get("direction") or line_info.get("destination") or ""
         platform = dep.get("platform") or dep.get("platformName")
 
-        entry = time
-        if entry:
-            entry += " Uhr"
+        parts = []
         if line_name:
-            entry += f" {line_name}"
+            parts.append(line_name)
         if direction:
-            entry += f" Richtung {direction}"
+            parts.append(f"Richtung {direction}")
         if platform:
-            entry += f" Steig {platform}"
+            parts.append(f"Steig {platform}")
+        if time:
+            parts.append(f"um {time} Uhr")
+
+        entry = " ".join(parts)
         lines.append(entry.strip())
 
     return "\n".join(lines)
@@ -209,18 +224,44 @@ def format_stops_result(result: Dict[str, Any]) -> str:
 
     if not points:
         points = result.get("stops")
-    names: List[str] = []
+    entries: List[str] = []
+    qualities: List[int] = []
     if isinstance(points, list):
         for p in points:
-            if isinstance(p, dict) and p.get("name"):
-                names.append(p["name"])
+            if not isinstance(p, dict) or not p.get("name"):
+                continue
+            entry = p["name"]
+            any_type = p.get("anyType") or p.get("type")
+            if any_type:
+                entry += f" ({any_type})"
+            entries.append(entry)
+            try:
+                qualities.append(int(p.get("quality")))
+            except (TypeError, ValueError):
+                qualities.append(-1)
     elif isinstance(points, dict):
         if points.get("name"):
-            names.append(points["name"])
+            entry = points["name"]
+            any_type = points.get("anyType") or points.get("type")
+            if any_type:
+                entry += f" ({any_type})"
+            entries.append(entry)
+            try:
+                qualities.append(int(points.get("quality")))
+            except (TypeError, ValueError):
+                qualities.append(-1)
 
-    if not names:
+    if not entries:
         return "0 stops found."
 
+    best_idx = None
+    if qualities and any(q >= 0 for q in qualities):
+        best_idx = max(range(len(qualities)), key=lambda i: qualities[i])
+
     lines = ["Gefundene Haltestellen:"]
-    lines.extend(names)
+    for idx, entry in enumerate(entries):
+        if best_idx is not None and idx == best_idx:
+            lines.append(f"{entry} [beste]")
+        else:
+            lines.append(entry)
     return "\n".join(lines)

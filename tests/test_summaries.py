@@ -3,6 +3,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from src.summaries import format_stops_result
+from src.summaries import format_search_result, format_departures_result
 
 
 def test_format_stops_result_handles_null_stopfinder():
@@ -16,9 +17,75 @@ def test_format_stops_result_handles_null_points():
 
 
 def test_format_stops_result_handles_points_list():
-    result = {"stopFinder": {"points": [{"name": "A"}, {"name": "B"}]}}
+    result = {
+        "stopFinder": {
+            "points": [
+                {"name": "A", "anyType": "stop", "quality": "10"},
+                {"name": "B", "anyType": "location", "quality": "20"},
+            ]
+        }
+    }
+    summary = format_stops_result(result)
+    assert "Gefundene Haltestellen:" in summary
+    assert "A (stop)" in summary
+    assert "B (location)" in summary
+    assert "[beste]" in summary
+
+
+def test_format_search_result_handles_points_leg():
+    result = {
+        "trips": {
+            "trip": {
+                "legs": [
+                    {
+                        "points": [
+                            {
+                                "name": "Start",
+                                "platformName": "B",
+                                "dateTime": {"time": "10:00"},
+                            },
+                            {
+                                "name": "End",
+                                "platformName": "F",
+                                "dateTime": {"time": "10:30"},
+                            },
+                        ],
+                        "mode": {"name": "Bus B123", "destination": "End"},
+                    }
+                ]
+            }
+        }
+    }
+
+    summary = format_search_result(result)
+    assert "Ab: Start" in summary
+    assert "um 10:00 Uhr" in summary
+    assert "von Steig B" in summary
+    assert "An: End" in summary
+    assert "um 10:30 Uhr" in summary
+    assert "auf Steig F" in summary
+
+
+def test_format_departures_result_formats_line():
+    result = {
+        "stop_name": "Brixen",
+        "departures": {
+            "departure": [
+                {
+                    "time": "13:20",
+                    "servingLine": {
+                        "name": "Citybus 320.1",
+                        "direction": "Milland KG Arcobaleno",
+                    },
+                    "platformName": "A",
+                }
+            ]
+        },
+    }
+
+    summary = format_departures_result(result)
+    assert "Abfahrten f" in summary
     assert (
-        format_stops_result(result)
-        == "Gefundene Haltestellen:\nA\nB"
+        "Citybus 320.1 Richtung Milland KG Arcobaleno Steig A um 13:20 Uhr" in summary
     )
 
