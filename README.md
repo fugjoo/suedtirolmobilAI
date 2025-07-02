@@ -98,6 +98,15 @@ python -m src.cli stops "Brixen"
 The script prints progress updates such as "Searching for stops..." and shows
 the raw API response when finished.
 
+### Debug mode
+
+Enable verbose logging for both the CLI and the server by setting the
+`SM_DEBUG` environment variable or passing `--debug` to the CLI:
+
+```bash
+SM_DEBUG=1 python -m src.cli search "Bozen nach Meran"
+```
+
 
 ## Testing
 

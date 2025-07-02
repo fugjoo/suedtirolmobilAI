@@ -1,6 +1,12 @@
 from typing import Dict, Optional
 import re
+import logging
 import spacy
+
+from .logging_utils import setup_logging
+
+logger = logging.getLogger(__name__)
+setup_logging()
 
 _nlp = None
 
@@ -16,6 +22,7 @@ def _get_nlp():
 def parse_query(text: str) -> Dict[str, Optional[str]]:
     """Extract stops and time from a natural language query."""
     nlp = _get_nlp()
+    logger.debug("Parsing text: %s", text)
     doc = nlp(text)
     stops = [token.text for token in doc if token.pos_ == "PROPN"]
     if not stops:
@@ -37,5 +44,6 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
         result["to_stop"] = stops[1]
     if time:
         result["time"] = time
+    logger.debug("Parsed parameters: %s", result)
     return result
 

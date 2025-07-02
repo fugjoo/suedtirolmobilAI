@@ -1,6 +1,12 @@
 import os
 from typing import Dict, Any, List, Optional
+import logging
 import requests
+
+from .logging_utils import setup_logging
+
+logger = logging.getLogger(__name__)
+setup_logging()
 
 BASE_URL = os.environ.get("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
 
@@ -19,9 +25,11 @@ def get_stop_code(query: str) -> str:
         "outputFormat": "JSON",
     }
 
+    logger.debug("Requesting stop code for '%s'", query)
     try:
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
+        logger.debug("StopFinder response status: %s", response.status_code)
         data = response.json()
         points: List[Dict[str, Any]] = (
             data.get("stopFinder", {})
@@ -42,13 +50,18 @@ def get_stop_code(query: str) -> str:
                 best_quality = quality
                 best = p
 
+        logger.debug("Stop suggestions: %s", points)
+        logger.debug("Best match: %s", best)
+
         if best:
             if best.get("stateless"):
+                logger.debug("Using stateless code: %s", best["stateless"])
                 return best["stateless"]
             if best.get("name"):
+                logger.debug("Using stop name: %s", best["name"])
                 return best["name"]
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Stop code lookup failed for '%s': %s", query, exc)
 
     return query
 
@@ -67,6 +80,8 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
         JSON response from the API.
     """
     url = f"{BASE_URL}/XML_TRIP_REQUEST2"
+
+    logger.info("Searching trip: %s", params)
 
     from_stop = params.get("from_stop")
     if from_stop:
@@ -87,11 +102,15 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
     time = params.get("time")
     if time:
         efa_params["itdTime"] = time
+    logger.debug("Trip request params: %s", efa_params)
 
     response = requests.get(url, params=efa_params, timeout=10)
     response.raise_for_status()
+    logger.debug("Trip request status: %s", response.status_code)
     try:
-        return response.json()
+        data = response.json()
+        logger.debug("Trip response payload: %s", data)
+        return data
     except ValueError:
         return {"text": response.text}
 
@@ -99,6 +118,7 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
 def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
     """Query the departure monitor (DM) endpoint for a specific stop."""
     url = f"{BASE_URL}/XML_DM_REQUEST"
+    logger.info("Requesting departures for '%s'", stop_name)
     stop_name = get_stop_code(stop_name)
     params = {
         "language": "de",
@@ -109,10 +129,14 @@ def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
         "outputFormat": "JSON",
     }
 
+    logger.debug("DM request params: %s", params)
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
+    logger.debug("DM request status: %s", response.status_code)
     try:
-        return response.json()
+        data = response.json()
+        logger.debug("DM response payload: %s", data)
+        return data
     except ValueError:
         return {"text": response.text}
 
@@ -121,7 +145,11 @@ def stop_finder(query: str) -> Dict[str, Any]:
     """Return stop suggestions for the given search string."""
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     params = {"odvSugMacro": 1, "name_sf": query, "outputFormat": "JSON"}
+    logger.info("Stop finder for query '%s'", query)
+    logger.debug("StopFinder params: %s", params)
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
-    return response.json()
+    data = response.json()
+    logger.debug("StopFinder response: %s", data)
+    return data
 
