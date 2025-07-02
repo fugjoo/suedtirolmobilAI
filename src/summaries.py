@@ -60,45 +60,19 @@ def format_search_result(result: Dict[str, Any]) -> str:
         leg_list = []
 
     lines: List[str] = []
-    if leg_list:
-        first_leg = leg_list[0]
-        origin = first_leg.get("origin") or first_leg.get("departure") or {}
-        dest = first_leg.get("destination") or first_leg.get("arrival") or {}
-        start_name = origin.get("name") or from_stop
-        start_time = origin.get("time") or ""
-        mode_name = (
-            (first_leg.get("mode") or {}).get("name")
-            or (first_leg.get("mode") or {}).get("number")
-            or ""
-        )
-        if not mode_name or "fuß" in mode_name.lower() or "walk" in mode_name.lower():
-            mode_desc = "zu Fuß"
-        else:
-            mode_desc = f"mit {mode_name}"
-        origin_line = f"Von: {start_name}"
-        if start_time:
-            origin_line += f" um {start_time} Uhr {mode_desc}"
-        else:
-            origin_line += f" {mode_desc}"
-        lines.append(origin_line)
-        dest_name = dest.get("name") or to_stop
-        lines.append(f"Nach: {dest_name}")
-    else:
-        start_name = from_stop
-        lines.append(f"Von: {start_name}")
-        if to_stop:
-            lines.append(f"Nach: {to_stop}")
 
-    if leg_list:
-        lines.append("")
-
-    for leg in leg_list:
+    for idx, leg in enumerate(leg_list):
         origin = leg.get("origin") or leg.get("departure") or {}
         dest = leg.get("destination") or leg.get("arrival") or {}
+        points = leg.get("points")
+        if not origin and isinstance(points, list) and points:
+            origin = points[0]
+        if not dest and isinstance(points, list) and points:
+            dest = points[-1]
         o_name = origin.get("name", "")
-        o_time = origin.get("time", "")
+        o_time = origin.get("time") or (origin.get("dateTime") or {}).get("time", "")
         d_name = dest.get("name", "")
-        d_time = dest.get("time", "")
+        d_time = dest.get("time") or (dest.get("dateTime") or {}).get("time", "")
         line_name = (
             (leg.get("mode") or {}).get("name")
             or (leg.get("mode") or {}).get("number")
@@ -116,6 +90,9 @@ def format_search_result(result: Dict[str, Any]) -> str:
             dep_line += f" um {o_time} Uhr {line_desc}"
         else:
             dep_line += f" {line_desc}"
+        origin_platform = origin.get("platform") or origin.get("platformName")
+        if origin_platform:
+            dep_line += f" von Steig {origin_platform}"
         arr_line = f"An: {d_name}"
         if d_time:
             arr_line += f" um {d_time} Uhr"
@@ -124,6 +101,8 @@ def format_search_result(result: Dict[str, Any]) -> str:
             arr_line += f" auf Steig {platform}"
         lines.append(dep_line)
         lines.append(arr_line)
+        if idx < len(leg_list) - 1:
+            lines.append("")
 
     return "\n".join(lines)
 
@@ -171,19 +150,25 @@ def format_departures_result(result: Dict[str, Any]) -> str:
             or ""
         )
         line_info = dep.get("servingLine") or dep.get("line") or {}
-        line_name = line_info.get("name") or line_info.get("number") or ""
+        line_name = line_info.get("name") or ""
+        line_number = line_info.get("number") or ""
+        line_display = line_name
+        if line_number and line_number not in line_display:
+            line_display = f"{line_display} {line_number}".strip()
         direction = line_info.get("direction") or line_info.get("destination") or ""
-        platform = dep.get("platform") or dep.get("platformName")
+        platform = dep.get("platformName") or dep.get("platform")
 
-        entry = time
-        if entry:
-            entry += " Uhr"
-        if line_name:
-            entry += f" {line_name}"
+        parts = []
+        if line_display:
+            parts.append(line_display)
         if direction:
-            entry += f" Richtung {direction}"
+            parts.append(f"Richtung {direction}")
         if platform:
-            entry += f" Steig {platform}"
+            parts.append(f"Steig {platform}")
+        if time:
+            parts.append(f"um {time} Uhr")
+
+        entry = " ".join(parts)
         lines.append(entry.strip())
 
     return "\n".join(lines)
@@ -209,18 +194,47 @@ def format_stops_result(result: Dict[str, Any]) -> str:
 
     if not points:
         points = result.get("stops")
-    names: List[str] = []
+    results: List[Dict[str, Any]] = []
     if isinstance(points, list):
         for p in points:
-            if isinstance(p, dict) and p.get("name"):
-                names.append(p["name"])
+            if not isinstance(p, dict) or not p.get("name"):
+                continue
+            entry = p["name"]
+            any_type = p.get("anyType") or p.get("type")
+            if any_type:
+                entry += f" ({any_type})"
+            try:
+                quality = int(p.get("quality"))
+            except (TypeError, ValueError):
+                quality = -1
+            results.append({"entry": entry, "quality": quality, "type": any_type or ""})
     elif isinstance(points, dict):
         if points.get("name"):
-            names.append(points["name"])
+            entry = points["name"]
+            any_type = points.get("anyType") or points.get("type")
+            if any_type:
+                entry += f" ({any_type})"
+            try:
+                quality = int(points.get("quality"))
+            except (TypeError, ValueError):
+                quality = -1
+            results.append({"entry": entry, "quality": quality, "type": any_type or ""})
 
-    if not names:
+    if not results:
         return "0 stops found."
 
+    type_order = {"stop": 0, "location": 1, "address": 2, "street": 3}
+    results.sort(key=lambda r: (type_order.get(r["type"], 99), r["entry"]))
+
+    best_idx = None
+    if any(r["quality"] >= 0 for r in results):
+        best_idx = max(range(len(results)), key=lambda i: results[i]["quality"]) 
+
     lines = ["Gefundene Haltestellen:"]
-    lines.extend(names)
+    for idx, r in enumerate(results):
+        line = r["entry"]
+        if best_idx is not None and idx == best_idx:
+            line += " [beste]"
+        lines.append(line)
+
     return "\n".join(lines)
