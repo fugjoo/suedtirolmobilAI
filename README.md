@@ -42,6 +42,9 @@ environment variable. By default this project uses the official
 South Tyrol endpoint `https://efa.sta.bz.it/apb`. You can point the
 API to any compatible service by setting `EFA_BASE_URL`.
 
+For a deeper understanding of the Mentz‑EFA endpoints, see
+[docs/EFA_XML_API.md](docs/EFA_XML_API.md).
+
 ```bash
 EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
 ```
