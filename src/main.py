@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import logging
-import os
 
 from . import nlp_parser, efa_api
 from .summaries import (
@@ -12,7 +11,8 @@ from .summaries import (
 )
 from .logging_utils import setup_logging
 
-setup_logging(os.environ.get("SM_DEBUG") in {"1", "true", "True"})
+# Configure logging; debug mode is controlled solely via CLI arguments
+setup_logging()
 logger = logging.getLogger(__name__)
 
 app = FastAPI()

@@ -128,11 +128,11 @@ showing the results.
 
 ### Debug mode
 
-Enable verbose logging for both the CLI and the server by setting the
-`SM_DEBUG` environment variable or passing `--debug` to the CLI:
+Enable verbose logging for both the CLI and the server by passing
+`--debug` to the CLI. Logs are also written to `app.log`:
 
 ```bash
-SM_DEBUG=1 python -m src.cli search "Bozen nach Meran"
+python -m src.cli search "Bozen nach Meran" --debug
 ```
 
 
