@@ -19,7 +19,7 @@ def test_run_search_text(mock_parse, mock_search, mock_format, capsys):
 @patch('src.cli.efa_api.search_efa', return_value={'foo': 'bar'})
 @patch('src.cli.nlp_parser.parse_query', return_value={'from_stop': 'A'})
 def test_run_search_json(mock_parse, mock_search, capsys):
-    cli.run_search('foo', output_format='json')
+    cli.run_search('foo', output_format='json', debug=True)
     captured = capsys.readouterr()
     assert json.loads(captured.out) == {'foo': 'bar'}
 
