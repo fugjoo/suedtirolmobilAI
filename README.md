@@ -49,7 +49,6 @@ For a deeper understanding of the Mentz‑EFA endpoints, see
 EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
 ```
 
-=======
 
 ## Example request
 
