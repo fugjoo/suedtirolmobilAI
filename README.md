@@ -28,7 +28,7 @@ by running the above command again.
 Start the API using `uvicorn` so that code changes are picked up automatically:
 
 ```bash
-uvicorn src.main:app --reload
+uvicorn src.main:app --host 0.0.0.0 --reload
 ```
 
 Running `python -m src.main` also starts the server but does not enable
@@ -46,7 +46,7 @@ For a deeper understanding of the Mentz‑EFA endpoints, see
 [docs/EFA_XML_API.md](docs/EFA_XML_API.md).
 
 ```bash
-EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
+EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --host 0.0.0.0 --reload
 ```
 
 
