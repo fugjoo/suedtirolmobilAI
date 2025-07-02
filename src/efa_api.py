@@ -8,8 +8,9 @@ BASE_URL = os.environ.get("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
 def _get_best_stop_name(query: str) -> str:
     """Lookup a stop using the StopFinder request and return the best match.
 
-    If the request fails or returns no usable result, the original query is
-    returned unchanged.
+    The function prefers the ``stateless`` identifier of the best suggestion
+    so that the result can be used directly in subsequent requests. If the
+    lookup fails, the original query is returned unchanged.
     """
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     params = {
@@ -41,8 +42,11 @@ def _get_best_stop_name(query: str) -> str:
                 best_quality = quality
                 best = p
 
-        if best and best.get("name"):
-            return best["name"]
+        if best:
+            if best.get("stateless"):
+                return best["stateless"]
+            if best.get("name"):
+                return best["name"]
     except Exception:
         pass
 
