@@ -12,7 +12,7 @@ from .summaries import (
 logger = logging.getLogger(__name__)
 
 
-def run_search(query: str, output_format: str = "text") -> None:
+def run_search(query: str, output_format: str = "text", debug: bool = False) -> None:
     """Run a search for the given natural language query.
 
     Parameters
@@ -46,6 +46,8 @@ def run_search(query: str, output_format: str = "text") -> None:
         logger.info("No trip data found.")
 
     logger.info("Returning search results...")
+    if output_format == "json" and not debug:
+        output_format = "text"
     if output_format == "json":
         import json
 
@@ -56,7 +58,7 @@ def run_search(query: str, output_format: str = "text") -> None:
         print(format_search_result(response))
 
 
-def run_departures(stop: str, output_format: str = "text") -> None:
+def run_departures(stop: str, output_format: str = "text", debug: bool = False) -> None:
     """Query the departure monitor and print the result.
 
     Parameters
@@ -75,6 +77,8 @@ def run_departures(stop: str, output_format: str = "text") -> None:
 
     logger.info("Suche wird gestartet...")
     logger.info("Ergebnisse gefunden.")
+    if output_format == "json" and not debug:
+        output_format = "text"
     if output_format == "json":
         import json
 
@@ -83,7 +87,7 @@ def run_departures(stop: str, output_format: str = "text") -> None:
         print(format_departures_result(result))
 
 
-def run_stop_finder(query: str, output_format: str = "text") -> None:
+def run_stop_finder(query: str, output_format: str = "text", debug: bool = False) -> None:
     """Query the stop finder and print the result."""
     logger.info("Searching stops...")
     try:
@@ -91,6 +95,8 @@ def run_stop_finder(query: str, output_format: str = "text") -> None:
     except Exception as exc:
         logger.error("Error during request: %s", exc)
         return
+    if output_format == "json" and not debug:
+        output_format = "text"
     if output_format == "json":
         import json
 
@@ -116,8 +122,8 @@ if __name__ == "__main__":
 
     argument = " ".join(args.text)
     if args.command == "search":
-        run_search(argument, args.format)
+        run_search(argument, args.format, debug=args.debug)
     elif args.command == "departures":
-        run_departures(argument, args.format)
+        run_departures(argument, args.format, debug=args.debug)
     elif args.command == "stops":
-        run_stop_finder(argument, args.format)
+        run_stop_finder(argument, args.format, debug=args.debug)
