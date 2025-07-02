@@ -4,3 +4,4 @@ spacy
 pydantic
 uvicorn
 pytest
+httpx==0.24.1
