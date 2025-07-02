@@ -1,8 +1,9 @@
 import logging
 import os
+from typing import Optional
 
 
-def setup_logging(debug: bool | None = None) -> None:
+def setup_logging(debug: Optional[bool] = None) -> None:
     """Configure basic logging for the application."""
     if debug is None:
         debug = os.environ.get("SM_DEBUG") in {"1", "true", "True"}
