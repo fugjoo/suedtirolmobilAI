@@ -24,6 +24,9 @@ def test_get_stop_code(mock_get):
 
     code = efa_api.get_stop_code('Bozen')
     assert code == 's2'
+    mock_get.assert_called_once()
+    args, kwargs = mock_get.call_args
+    assert kwargs['params']['locationServerActive'] == 1
 
 
 @patch('src.efa_api.requests.get')
@@ -59,6 +62,8 @@ def test_search_efa_calls_requests(mock_get):
     assert efa_params['name_origin'] == 'Bozen_SL'
     assert efa_params['name_destination'] == 'Meran_SL'
     assert efa_params['itdTime'] == '08:00'
+    assert efa_params['locationServerActive'] == 1
+    assert efa_params['odvMacro'] == 'true'
     assert result == {'ok': True}
 
 
@@ -74,6 +79,8 @@ def test_dm_request_calls_requests(mock_get, mock_best):
     assert args[0].endswith('/XML_DM_REQUEST')
     assert kwargs['params']['name_dm'] == 'Bozen'
     assert kwargs['params']['limit'] == 5
+    assert kwargs['params']['locationServerActive'] == 1
+    assert kwargs['params']['odvMacro'] == 'true'
     assert result == {'ok': True}
 
 
