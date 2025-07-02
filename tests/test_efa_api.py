@@ -1,5 +1,8 @@
-import sys, os; sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from unittest.mock import patch, MagicMock
+import os
+import sys
+from unittest.mock import MagicMock, patch
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from src import efa_api
 
 @patch('src.efa_api.requests.get')
