@@ -21,8 +21,6 @@ source venv/bin/activate
 # Upgrade pip and install requirements
 pip install --upgrade pip
 pip install -r requirements.txt
-pip install pytest
-pip install httpx==0.24.1
 
 # Download spaCy model (ignore failures if already installed)
 python -m spacy download de_core_news_sm || true
