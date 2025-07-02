@@ -30,6 +30,18 @@ def test_get_stop_code(mock_get):
 
 
 @patch('src.efa_api.requests.get')
+def test_get_stop_code_handles_null_stopfinder(mock_get):
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.json.return_value = {'stopFinder': None}
+    mock_get.return_value = resp
+
+    code = efa_api.get_stop_code('Foo')
+    assert code == 'Foo'
+    mock_get.assert_called_once()
+
+
+@patch('src.efa_api.requests.get')
 def test_search_efa_calls_requests(mock_get):
     def side_effect(url, params=None, timeout=10):
         mock_resp = MagicMock()

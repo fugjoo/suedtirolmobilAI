@@ -32,8 +32,9 @@ def get_stop_code(query: str) -> str:
         response.raise_for_status()
         logger.debug("StopFinder response status: %s", response.status_code)
         data = response.json()
+        stopfinder = data.get("stopFinder") or {}
         points: List[Dict[str, Any]] = (
-            data.get("stopFinder", {})
+            stopfinder
             .get("points", {})
             .get("point", [])
         )
