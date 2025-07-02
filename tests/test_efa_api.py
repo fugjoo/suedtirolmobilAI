@@ -85,10 +85,10 @@ def test_dm_request_calls_requests(mock_get, mock_best):
 
 
 @patch('src.efa_api.requests.get')
-def test_stop_finder_returns_json(mock_get):
+def test_stopfinder_request_returns_json(mock_get):
     mock_get.return_value = MagicMock(status_code=200, json=lambda: {'stops': []})
 
-    result = efa_api.stop_finder('Bruneck')
+    result = efa_api.stopfinder_request('Bruneck')
 
     mock_get.assert_called_once()
     args, kwargs = mock_get.call_args

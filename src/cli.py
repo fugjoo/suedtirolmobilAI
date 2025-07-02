@@ -52,7 +52,7 @@ def run_departures(stop: str) -> None:
 def run_stop_finder(query: str) -> None:
     logger.info("Searching stops...")
     try:
-        result = efa_api.stop_finder(query)
+        result = efa_api.stopfinder_request(query)
     except Exception as exc:
         logger.error("Error during request: %s", exc)
         return
