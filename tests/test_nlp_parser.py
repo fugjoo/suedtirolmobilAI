@@ -25,3 +25,10 @@ def test_parse_query_italian():
     assert result.get("to_stop") == "Merano"
     assert result.get("time") == "14:30"
 
+
+def test_parse_query_multiple_tokens():
+    text = "from Bozen to Sterzing, Busbahnhof"
+    result = nlp_parser.parse_query(text)
+    assert result.get("from_stop") == "Bozen"
+    assert result.get("to_stop") == "Sterzing, Busbahnhof"
+
