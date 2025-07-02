@@ -14,7 +14,8 @@ def search(req: SearchRequest):
         raise HTTPException(status_code=400, detail="No parameters extracted")
     return efa_api.search_efa(params)
 
-if __name__ == "__main__":
+# Run via ``python -m src.main`` for debugging without auto-reload.
+if __name__ == "__main__" and __package__:
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
