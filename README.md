@@ -46,7 +46,7 @@ South Tyrol endpoint `https://efa.sta.bz.it/apb/`. You can point the
 API to any compatible service by setting `EFA_BASE_URL`.
 
 ```bash
-EFA_BASE_URL=https://example.com/efa uvicorn src.main:app --reload
+EFA_BASE_URL=[https://example.com/efa](https://efa.sta.bz.it/apb/) uvicorn src.main:app --reload
 ```
 
 =======
