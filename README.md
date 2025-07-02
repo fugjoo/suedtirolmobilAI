@@ -4,6 +4,9 @@ This project provides a small FastAPI service that parses natural language
 queries for public transport connections and forwards them to a Mentz-EFA
 backend.
 
+For a detailed overview of the available Mentz-EFA endpoints, see
+[docs/EFA_XML_API.md](docs/EFA_XML_API.md).
+
 ## Installation
 
 Run the provided `install.sh` script for a one-click setup. The
@@ -46,7 +49,6 @@ API to any compatible service by setting `EFA_BASE_URL`.
 EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
 ```
 
-=======
 
 ## Example request
 
