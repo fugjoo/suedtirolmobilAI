@@ -24,24 +24,36 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
     nlp = _get_nlp()
     logger.debug("Parsing text: %s", text)
     doc = nlp(text)
-    stops = [token.text for token in doc if token.pos_ == "PROPN"]
-    if not stops:
-        # fallback if POS tagging is not available
-        m_from = re.search(r"von\s+(\w+)", text, re.IGNORECASE)
-        m_to = re.search(r"nach\s+(\w+)", text, re.IGNORECASE)
-        if m_from:
-            stops.append(m_from.group(1))
-        if m_to:
-            stops.append(m_to.group(1))
+    stops = [t.text for t in doc if t.pos_ == "PROPN"]
+
+    # Filter out tokens that look like a time expression
+    stops = [s for s in stops if not re.fullmatch(r"[0-2]?\d[:.]\d{2}", s)]
+
+    m_from = re.search(r"von\s+(\w+)", text, re.IGNORECASE)
+    m_to = re.search(r"nach\s+(\w+)", text, re.IGNORECASE)
+
+    if m_from:
+        from_stop = m_from.group(1)
+    elif stops:
+        from_stop = stops.pop(0)
+    else:
+        from_stop = None
+
+    if m_to:
+        to_stop = m_to.group(1)
+    elif stops:
+        to_stop = stops.pop(0)
+    else:
+        to_stop = None
 
     time_match = re.search(r"([0-2]?\d[:.]\d{2})", text)
     time = time_match.group(1).replace('.', ':') if time_match else None
 
     result: Dict[str, Optional[str]] = {}
-    if stops:
-        result["from_stop"] = stops[0]
-    if len(stops) > 1:
-        result["to_stop"] = stops[1]
+    if from_stop:
+        result["from_stop"] = from_stop
+    if to_stop:
+        result["to_stop"] = to_stop
     if time:
         result["time"] = time
     logger.debug("Parsed parameters: %s", result)
