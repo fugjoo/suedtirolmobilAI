@@ -3,6 +3,25 @@
 from typing import Any, Dict, List
 
 
+def _extract_time(data: Any) -> str:
+    """Return a time string from different data structures."""
+    if isinstance(data, str):
+        return data
+    if isinstance(data, dict):
+        if data.get("time"):
+            return str(data.get("time"))
+        hour = data.get("hour")
+        minute = data.get("minute")
+        if hour is not None and minute is not None:
+            try:
+                hour_i = int(hour)
+                minute_i = int(minute)
+                return f"{hour_i:02d}:{minute_i:02d}"
+            except (TypeError, ValueError):
+                pass
+    return ""
+
+
 def _plural(word: str, count: int) -> str:
     """Return pluralized word depending on count."""
     return word if count == 1 else f"{word}s"
@@ -70,7 +89,7 @@ def format_search_result(result: Dict[str, Any]) -> str:
         if not dest and isinstance(points, list) and points:
             dest = points[-1]
         start_name = origin.get("name") or from_stop
-        start_time = origin.get("time") or (origin.get("dateTime") or {}).get("time", "")
+        start_time = _extract_time(origin.get("time")) or _extract_time(origin.get("dateTime"))
         mode_name = (
             (first_leg.get("mode") or {}).get("name")
             or (first_leg.get("mode") or {}).get("number")
@@ -106,9 +125,9 @@ def format_search_result(result: Dict[str, Any]) -> str:
         if not dest and isinstance(points, list) and points:
             dest = points[-1]
         o_name = origin.get("name", "")
-        o_time = origin.get("time") or (origin.get("dateTime") or {}).get("time", "")
+        o_time = _extract_time(origin.get("time")) or _extract_time(origin.get("dateTime"))
         d_name = dest.get("name", "")
-        d_time = dest.get("time") or (dest.get("dateTime") or {}).get("time", "")
+        d_time = _extract_time(dest.get("time")) or _extract_time(dest.get("dateTime"))
         line_name = (
             (leg.get("mode") or {}).get("name")
             or (leg.get("mode") or {}).get("number")
@@ -180,10 +199,10 @@ def format_departures_result(result: Dict[str, Any]) -> str:
 
     for dep in departures:
         time = (
-            dep.get("time")
-            or dep.get("departure", {}).get("time")
-            or (dep.get("dateTime") or {}).get("time")
-            or ""
+            _extract_time(dep.get("time"))
+            or _extract_time((dep.get("departure") or {}).get("time"))
+            or _extract_time(dep.get("dateTime"))
+            or _extract_time(dep.get("realDateTime"))
         )
         line_info = dep.get("servingLine") or dep.get("line") or {}
         line_name_part = line_info.get("name")
@@ -264,7 +283,7 @@ def format_stops_result(result: Dict[str, Any]) -> str:
     lines = ["Gefundene Haltestellen:"]
     for idx, entry in enumerate(entries):
         if best_idx is not None and idx == best_idx:
-            lines.append(f"{entry['text']} [TOP]")
+            lines.append(f"[TOP] {entry['text']}")
         else:
             lines.append(entry["text"])
     return "\n".join(lines)
