@@ -79,10 +79,10 @@ def format_stops_result(result: Dict[str, Any]) -> str:
     if not isinstance(result, dict):
         return str(result)
 
-    points = (
-        result.get("stopFinder", {}).get("points", {}).get("point")
-        or result.get("stops")
-    )
+    # Gracefully handle missing or null fields in the nested structure
+    stopfinder = result.get("stopFinder") or {}
+    points_data = stopfinder.get("points") or {}
+    points = points_data.get("point") or result.get("stops")
     names: List[str] = []
     count = 0
     if isinstance(points, list):
