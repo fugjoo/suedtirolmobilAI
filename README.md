@@ -4,18 +4,29 @@ This project provides a small FastAPI service that parses natural language
 queries for public transport connections and forwards them to a Mentz-EFA
 backend.
 
+## Requirements
+
+This project requires Python 3.8 or newer. We recommend installing it inside a
+virtual environment so that dependencies remain isolated.
+
+
 ## Installation
 
 Run the provided `install.sh` script for a one-click setup. The
-script also tries to install the system build tools required:
+script creates a virtual environment in `venv/` and installs all required
+dependencies:
 
 ```bash
 ./install.sh
+source venv/bin/activate
 ```
 
-If you prefer the manual steps, run:
+If you prefer the manual setup, create and activate a virtual environment
+yourself and install the dependencies:
 
 ```bash
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 python -m spacy download de_core_news_sm  # optional
 ```
@@ -52,9 +63,13 @@ EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --host 0.0.0.0 --rel
 All requests automatically enable the EFA location server via
 `locationServerActive=1`. Trip and departure monitor queries also send
 `odvMacro=true`.
+## API endpoints
 
+The service exposes three POST endpoints:
+- `/search` – parse a natural language query for a trip
+- `/departures` – list upcoming departures for a stop
+- `/stops` – return stop name suggestions
 
-## Example requests
 
 After the server is running, you can query it with a POST request. By default
 the API returns JSON. Append `?format=text` to any endpoint for a short
@@ -143,3 +158,7 @@ Run the unit tests with `pytest`:
 ```bash
 pytest
 ```
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
