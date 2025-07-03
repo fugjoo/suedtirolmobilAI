@@ -63,15 +63,13 @@ def run_search(query: str, output_format: str = "legs", debug: bool = False, use
         import json
 
         print(json.dumps(response, ensure_ascii=False, indent=2))
-    elif output_format == "legs":
-        text = format_search_result(response, legs_only=True)
-        if use_chatgpt:
-            text = chatgpt_helper.reformat_summary(text)
-        print(text)
     else:
-        text = format_search_result(response)
         if use_chatgpt:
-            text = chatgpt_helper.reformat_summary(text)
+            text = chatgpt_helper.narrative_trip_summary(response)
+        elif output_format == "legs":
+            text = format_search_result(response, legs_only=True)
+        else:
+            text = format_search_result(response)
         print(text)
 
 
@@ -156,7 +154,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--chatgpt",
         action="store_true",
-        help="Reformat the textual summary via ChatGPT",
+        help="Generate a short ChatGPT summary",
     )
 
     args = parser.parse_args()

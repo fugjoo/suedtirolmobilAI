@@ -42,15 +42,14 @@ def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = Fal
     logger.debug("/search result: %s", result)
     if format == "json":
         return result
+    if chatgpt:
+        text = chatgpt_helper.narrative_trip_summary(result)
+        return PlainTextResponse(text)
     if format == "text":
         text = format_search_result(result, legs_only=False)
-        if chatgpt:
-            text = chatgpt_helper.reformat_summary(text)
         return PlainTextResponse(text)
     # default plain-text response lists the individual legs
     text = format_search_result(result, legs_only=True)
-    if chatgpt:
-        text = chatgpt_helper.reformat_summary(text)
     return PlainTextResponse(text)
 
 

@@ -46,12 +46,11 @@ def test_search_endpoint_default(mock_parse_query, mock_search_efa, mock_format)
     mock_format.assert_called_once_with({'dummy': True}, legs_only=True)
 
 
-@patch('src.main.chatgpt_helper.reformat_summary', return_value='better')
-@patch('src.main.format_search_result', return_value='legs')
+@patch('src.main.chatgpt_helper.narrative_trip_summary', return_value='better')
 @patch('src.main.efa_api.search_efa')
 @patch('src.main.nlp_parser.parse_query')
 @patch('src.main.chatgpt_helper.parse_query_chatgpt', return_value={'from_stop': 'A', 'to_stop': 'B'})
-def test_search_endpoint_chatgpt(mock_parse_gpt, mock_parse_query, mock_search_efa, mock_format, mock_reformat):
+def test_search_endpoint_chatgpt(mock_parse_gpt, mock_parse_query, mock_search_efa, mock_narrative):
     mock_search_efa.return_value = {'dummy': True}
     client = TestClient(app)
     response = client.post('/search?chatgpt=true', json={'text': 'foo'})
@@ -59,8 +58,7 @@ def test_search_endpoint_chatgpt(mock_parse_gpt, mock_parse_query, mock_search_e
     assert response.text == 'better'
     mock_parse_gpt.assert_called_once_with('foo')
     mock_parse_query.assert_not_called()
-    mock_format.assert_called_once_with({'dummy': True}, legs_only=True)
-    mock_reformat.assert_called_once_with('legs')
+    mock_narrative.assert_called_once_with({'dummy': True})
 
 
 @patch('src.main.efa_api.search_efa')
