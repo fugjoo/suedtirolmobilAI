@@ -31,10 +31,7 @@ class StopFinderRequest(BaseModel):
 @app.post("/search")
 def search(req: SearchRequest, format: str | None = None, chatgpt: bool = False):
     logger.info("/search text='%s'", req.text)
-    if chatgpt:
-        params = chatgpt_helper.parse_query_chatgpt(req.text)
-    else:
-        params = nlp_parser.parse_query(req.text)
+    params = nlp_parser.parse_query(req.text)
     if not params:
         raise HTTPException(status_code=400, detail="No parameters extracted")
     result = efa_api.search_efa(params)
@@ -42,13 +39,19 @@ def search(req: SearchRequest, format: str | None = None, chatgpt: bool = False)
     if format == "json":
         return result
     if format == "text":
-        return PlainTextResponse(format_search_result(result, legs_only=False))
+        text = format_search_result(result, legs_only=False)
+        if chatgpt:
+            text = chatgpt_helper.reformat_summary(text)
+        return PlainTextResponse(text)
     # default plain-text response lists the individual legs
-    return PlainTextResponse(format_search_result(result, legs_only=True))
+    text = format_search_result(result, legs_only=True)
+    if chatgpt:
+        text = chatgpt_helper.reformat_summary(text)
+    return PlainTextResponse(text)
 
 
 @app.post("/departures")
-def departures(req: DMRequest, format: str = "json"):
+def departures(req: DMRequest, format: str = "json", chatgpt: bool = False):
     """Return upcoming departures for the given stop."""
     logger.info("/departures stop='%s' limit=%s", req.stop, req.limit)
     if not req.stop:
@@ -57,12 +60,15 @@ def departures(req: DMRequest, format: str = "json"):
     result = efa_api.dm_request(req.stop, req.limit, lang)
     logger.debug("/departures result: %s", result)
     if format == "text":
-        return PlainTextResponse(format_departures_result(result))
+        text = format_departures_result(result)
+        if chatgpt:
+            text = chatgpt_helper.reformat_summary(text)
+        return PlainTextResponse(text)
     return result
 
 
 @app.post("/stops")
-def stops(req: StopFinderRequest, format: str = "json"):
+def stops(req: StopFinderRequest, format: str = "json", chatgpt: bool = False):
     """Return stop suggestions for the given query."""
     logger.info("/stops query='%s'", req.query)
     if not req.query:
@@ -71,7 +77,10 @@ def stops(req: StopFinderRequest, format: str = "json"):
     result = efa_api.stopfinder_request(req.query, lang)
     logger.debug("/stops result: %s", result)
     if format == "text":
-        return PlainTextResponse(format_stops_result(result))
+        text = format_stops_result(result)
+        if chatgpt:
+            text = chatgpt_helper.reformat_summary(text)
+        return PlainTextResponse(text)
     return result
 
 # Run via ``python -m src.main`` for debugging without auto-reload.

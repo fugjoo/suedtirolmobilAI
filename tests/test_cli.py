@@ -34,14 +34,13 @@ def test_run_search_legs(mock_parse, mock_search, mock_format, capsys):
     mock_format.assert_called_once_with({'ok': True}, legs_only=True)
 
 
+@patch('src.cli.chatgpt_helper.reformat_summary', return_value='better')
 @patch('src.cli.format_search_result', return_value='legs')
 @patch('src.cli.efa_api.search_efa', return_value={'ok': True})
-@patch('src.cli.nlp_parser.parse_query')
-@patch('src.cli.chatgpt_helper.parse_query_chatgpt', return_value={'from_stop': 'A', 'to_stop': 'B'})
-def test_run_search_chatgpt(mock_chatgpt, mock_parse, mock_search, mock_format, capsys):
+@patch('src.cli.nlp_parser.parse_query', return_value={'from_stop': 'A', 'to_stop': 'B'})
+def test_run_search_chatgpt(mock_parse, mock_search, mock_format, mock_reformat, capsys):
     cli.run_search('foo', output_format='legs', use_chatgpt=True)
     captured = capsys.readouterr()
-    assert captured.out.strip() == 'legs'
-    mock_chatgpt.assert_called_once_with('foo')
-    mock_parse.assert_not_called()
+    assert captured.out.strip() == 'better'
+    mock_reformat.assert_called_once_with('legs')
     mock_format.assert_called_once_with({'ok': True}, legs_only=True)

@@ -65,12 +65,13 @@ All requests automatically enable the EFA location server via
 `odvMacro=true`. Starting with version 0.2 all requests specify
 `outputEncoding=UTF-8` to ensure UTF‑8 encoded responses.
 
-### ChatGPT query parsing
+### ChatGPT summaries
 
-Set the `OPENAI_API_KEY` environment variable to enable parsing of search
-queries via OpenAI's ChatGPT API. Queries will be sent to OpenAI's servers,
-which requires internet access and may incur usage fees. Use the `--chatgpt`
-flag in the CLI or pass `chatgpt=true` to the `/search` endpoint:
+Set the `OPENAI_API_KEY` environment variable to enable reformatting of the
+plain‑text summaries via OpenAI's ChatGPT API. Requests will be sent to
+OpenAI's servers, which requires internet access and may incur usage fees.
+Use the `--chatgpt` flag in the CLI or pass `chatgpt=true` to any endpoint that
+returns plain text:
 
 ```bash
 OPENAI_API_KEY=sk-... python -m src.cli search "Bozen nach Meran" --chatgpt
@@ -78,6 +79,8 @@ OPENAI_API_KEY=sk-... python -m src.cli search "Bozen nach Meran" --chatgpt
 # or for the API
 OPENAI_API_KEY=sk-... uvicorn src.main:app --host 0.0.0.0 --reload
 # POST /search?chatgpt=true
+# POST /departures?format=text&chatgpt=true
+# POST /stops?format=text&chatgpt=true
 ```
 ## API endpoints
 
