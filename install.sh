@@ -2,18 +2,41 @@
 set -e
 
 
-# Install build tools if missing (for spaCy dependencies)
-if command -v apt-get >/dev/null; then
-    sudo apt-get update
-    sudo apt-get install -y build-essential python3-dev
-elif command -v yum >/dev/null; then
-    sudo yum install gcc gcc-c++ make automake autoconf kernel-devel
-    sudo yum install -y python3-devel
+# Ensure Python 3.8+ and build tools (for spaCy dependencies)
+PYTHON_CMD=python3
+
+# check if python3 satisfies the version requirement
+if ! $PYTHON_CMD - <<'EOF'
+import sys
+sys.exit(0 if sys.version_info >= (3, 8) else 1)
+EOF
+then
+    echo "Python 3.8+ not found. Installing..."
+    if command -v apt-get >/dev/null; then
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3.8 python3.8-venv python3.8-dev
+        PYTHON_CMD=python3.8
+    elif command -v yum >/dev/null; then
+        sudo yum install -y gcc gcc-c++ make automake autoconf kernel-devel
+        sudo yum install -y python38 python38-devel
+        PYTHON_CMD=python3.8
+    else
+        echo "No supported package manager found. Please install Python 3.8 or newer manually." >&2
+        exit 1
+    fi
+else
+    if command -v apt-get >/dev/null; then
+        sudo apt-get update
+        sudo apt-get install -y build-essential python3-dev
+    elif command -v yum >/dev/null; then
+        sudo yum install gcc gcc-c++ make automake autoconf kernel-devel
+        sudo yum install -y python3-devel
+    fi
 fi
 
 # Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
+    $PYTHON_CMD -m venv venv
 fi
 
 source venv/bin/activate
