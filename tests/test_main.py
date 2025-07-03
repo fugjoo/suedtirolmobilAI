@@ -46,15 +46,16 @@ def test_search_endpoint_legs(mock_parse_query, mock_search_efa, mock_format):
     mock_format.assert_called_once_with({'dummy': True}, legs_only=True)
 
 
+@patch('src.main.nlp_parser.detect_language', return_value='de')
 @patch('src.main.efa_api.dm_request')
-def test_departures_endpoint(mock_dm_request):
+def test_departures_endpoint(mock_dm_request, mock_detect):
     expected = {'dm': 'ok'}
     mock_dm_request.return_value = expected
     client = TestClient(app)
     response = client.post('/departures', json={'stop': 'Bozen', 'limit': 5})
     assert response.status_code == 200
     assert response.json() == expected
-    mock_dm_request.assert_called_once_with('Bozen', 5)
+    mock_dm_request.assert_called_once_with('Bozen', 5, 'de')
 
 
 @patch('src.main.format_departures_result', return_value='dep')
@@ -68,15 +69,16 @@ def test_departures_endpoint_text(mock_dm_request, mock_format):
     mock_format.assert_called_once_with({'ok': True})
 
 
+@patch('src.main.nlp_parser.detect_language', return_value='de')
 @patch('src.main.efa_api.stopfinder_request')
-def test_stops_endpoint(mock_stopfinder_request):
+def test_stops_endpoint(mock_stopfinder_request, mock_detect):
     expected = {'stops': []}
     mock_stopfinder_request.return_value = expected
     client = TestClient(app)
     response = client.post('/stops', json={'query': 'Brixen'})
     assert response.status_code == 200
     assert response.json() == expected
-    mock_stopfinder_request.assert_called_once_with('Brixen')
+    mock_stopfinder_request.assert_called_once_with('Brixen', 'de')
 
 
 @patch('src.main.format_stops_result', return_value='stops')

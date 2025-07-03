@@ -4,6 +4,7 @@ import logging
 import requests
 
 from .logging_utils import setup_logging
+from . import nlp_parser
 
 logger = logging.getLogger(__name__)
 setup_logging()
@@ -11,13 +12,15 @@ setup_logging()
 BASE_URL = os.environ.get("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
 
 
-def get_stop_code(query: str) -> str:
+def get_stop_code(query: str, lang: Optional[str] = None) -> str:
     """Resolve a stop name to its stateless identifier using a StopFinder request.
 
     The returned code can be used directly in subsequent trip or departure
     requests. If the lookup fails, the original query string is returned
     unchanged.
     """
+    if lang is None:
+        lang = nlp_parser.detect_language(query)
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     params = {
         "odvSugMacro": "true",
@@ -26,6 +29,8 @@ def get_stop_code(query: str) -> str:
         "locationServerActive": 1,
         "outputEncoding": "UTF-8",
     }
+    if lang in ("de", "it"):
+        params["language"] = lang
 
     logger.debug("Requesting stop code for '%s'", query)
     try:
@@ -97,12 +102,13 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
 
     logger.info("Searching trip: %s", params)
 
+    lang = params.get("lang")
     from_stop = params.get("from_stop")
     if from_stop:
-        from_stop = get_stop_code(from_stop)
+        from_stop = get_stop_code(from_stop, lang)
     to_stop = params.get("to_stop")
     if to_stop:
-        to_stop = get_stop_code(to_stop)
+        to_stop = get_stop_code(to_stop, lang)
 
     efa_params = {
         "name_origin": from_stop,
@@ -115,6 +121,8 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
         "odvMacro": "true",
         "outputEncoding": "UTF-8",
     }
+    if lang in ("de", "it"):
+        efa_params["language"] = lang
 
     time = params.get("time")
     if time:
@@ -132,13 +140,14 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
         return {"text": response.text}
 
 
-def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
+def dm_request(stop_name: str, limit: int = 10, lang: Optional[str] = None) -> Dict[str, Any]:
     """Query the departure monitor (DM) endpoint for a specific stop."""
     url = f"{BASE_URL}/XML_DM_REQUEST"
     logger.info("Requesting departures for '%s'", stop_name)
-    stop_name = get_stop_code(stop_name)
+    if lang is None:
+        lang = nlp_parser.detect_language(stop_name)
+    stop_name = get_stop_code(stop_name, lang)
     params = {
-        "language": "de",
         "type_dm": "stop",
         "name_dm": stop_name,
         "mode": "direct",
@@ -148,6 +157,8 @@ def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
         "odvMacro": "true",
         "outputEncoding": "UTF-8",
     }
+    if lang in ("de", "it"):
+        params["language"] = lang
 
     logger.debug("DM request params: %s", params)
     response = requests.get(url, params=params, timeout=10)
@@ -161,9 +172,11 @@ def dm_request(stop_name: str, limit: int = 10) -> Dict[str, Any]:
         return {"text": response.text}
 
 
-def stopfinder_request(query: str) -> Dict[str, Any]:
+def stopfinder_request(query: str, lang: Optional[str] = None) -> Dict[str, Any]:
     """Return stop suggestions for the given search string."""
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
+    if lang is None:
+        lang = nlp_parser.detect_language(query)
     params = {
         "odvSugMacro": "true",
         "name_sf": query,
@@ -171,6 +184,8 @@ def stopfinder_request(query: str) -> Dict[str, Any]:
         "locationServerActive": 1,
         "outputEncoding": "UTF-8",
     }
+    if lang in ("de", "it"):
+        params["language"] = lang
     logger.info("Stop finder for query '%s'", query)
     logger.debug("StopFinder params: %s", params)
     response = requests.get(url, params=params, timeout=10)
