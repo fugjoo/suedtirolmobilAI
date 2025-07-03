@@ -46,6 +46,22 @@ def test_search_endpoint_default(mock_parse_query, mock_search_efa, mock_format)
     mock_format.assert_called_once_with({'dummy': True}, legs_only=True)
 
 
+@patch('src.main.format_search_result', return_value='legs')
+@patch('src.main.efa_api.search_efa')
+@patch('src.main.nlp_parser.parse_query')
+@patch('src.main.chatgpt_helper.parse_query_chatgpt')
+def test_search_endpoint_chatgpt(mock_chatgpt, mock_parse_query, mock_search_efa, mock_format):
+    mock_chatgpt.return_value = {'from_stop': 'A', 'to_stop': 'B'}
+    mock_search_efa.return_value = {'dummy': True}
+    client = TestClient(app)
+    response = client.post('/search?chatgpt=true', json={'text': 'foo'})
+    assert response.status_code == 200
+    assert response.text == 'legs'
+    mock_chatgpt.assert_called_once_with('foo')
+    mock_parse_query.assert_not_called()
+    mock_format.assert_called_once_with({'dummy': True}, legs_only=True)
+
+
 @patch('src.main.nlp_parser.detect_language', return_value='de')
 @patch('src.main.efa_api.dm_request')
 def test_departures_endpoint(mock_dm_request, mock_detect):

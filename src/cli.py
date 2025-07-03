@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from . import nlp_parser, efa_api
+from . import nlp_parser, efa_api, chatgpt_helper
 from .logging_utils import setup_logging
 from .summaries import (
     format_search_result,
@@ -12,7 +12,7 @@ from .summaries import (
 logger = logging.getLogger(__name__)
 
 
-def run_search(query: str, output_format: str = "legs", debug: bool = False) -> None:
+def run_search(query: str, output_format: str = "legs", debug: bool = False, use_chatgpt: bool = False) -> None:
     """Run a search for the given natural language query.
 
     Parameters
@@ -23,9 +23,14 @@ def run_search(query: str, output_format: str = "legs", debug: bool = False) -> 
         ``"legs"`` prints only the individual trip legs,
         ``"text"`` shows a longer summary,
         ``"json"`` dumps the raw API response.
+    use_chatgpt: bool, optional
+        If set, the query is parsed via the OpenAI API.
     """
     logger.info("Searching for stops...")
-    params = nlp_parser.parse_query(query)
+    if use_chatgpt:
+        params = chatgpt_helper.parse_query_chatgpt(query)
+    else:
+        params = nlp_parser.parse_query(query)
 
     if not params:
         logger.warning("No parameters extracted from the query.")
@@ -118,13 +123,18 @@ if __name__ == "__main__":
         default="legs",
         help="Output format",
     )
+    parser.add_argument(
+        "--chatgpt",
+        action="store_true",
+        help="Use ChatGPT for query parsing",
+    )
 
     args = parser.parse_args()
     setup_logging(args.debug)
 
     argument = " ".join(args.text)
     if args.command == "search":
-        run_search(argument, args.format, debug=args.debug)
+        run_search(argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt)
     elif args.command == "departures":
         run_departures(argument, args.format, debug=args.debug)
     elif args.command == "stops":
