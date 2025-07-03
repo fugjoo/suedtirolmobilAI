@@ -46,20 +46,20 @@ def test_search_endpoint_default(mock_parse_query, mock_search_efa, mock_format)
     mock_format.assert_called_once_with({'dummy': True}, legs_only=True)
 
 
+@patch('src.main.chatgpt_helper.reformat_summary', return_value='better')
 @patch('src.main.format_search_result', return_value='legs')
 @patch('src.main.efa_api.search_efa')
 @patch('src.main.nlp_parser.parse_query')
-@patch('src.main.chatgpt_helper.parse_query_chatgpt')
-def test_search_endpoint_chatgpt(mock_chatgpt, mock_parse_query, mock_search_efa, mock_format):
-    mock_chatgpt.return_value = {'from_stop': 'A', 'to_stop': 'B'}
+def test_search_endpoint_chatgpt(mock_parse_query, mock_search_efa, mock_format, mock_reformat):
+    mock_parse_query.return_value = {'from_stop': 'A', 'to_stop': 'B'}
     mock_search_efa.return_value = {'dummy': True}
     client = TestClient(app)
     response = client.post('/search?chatgpt=true', json={'text': 'foo'})
     assert response.status_code == 200
-    assert response.text == 'legs'
-    mock_chatgpt.assert_called_once_with('foo')
-    mock_parse_query.assert_not_called()
+    assert response.text == 'better'
+    mock_parse_query.assert_called_once_with('foo')
     mock_format.assert_called_once_with({'dummy': True}, legs_only=True)
+    mock_reformat.assert_called_once_with('legs')
 
 
 @patch('src.main.nlp_parser.detect_language', return_value='de')
@@ -85,6 +85,19 @@ def test_departures_endpoint_text(mock_dm_request, mock_format):
     mock_format.assert_called_once_with({'ok': True})
 
 
+@patch('src.main.chatgpt_helper.reformat_summary', return_value='better dep')
+@patch('src.main.format_departures_result', return_value='dep')
+@patch('src.main.efa_api.dm_request')
+def test_departures_endpoint_chatgpt(mock_dm_request, mock_format, mock_reformat):
+    mock_dm_request.return_value = {'ok': True}
+    client = TestClient(app)
+    response = client.post('/departures?format=text&chatgpt=true', json={'stop': 'B', 'limit': 1})
+    assert response.status_code == 200
+    assert response.text == 'better dep'
+    mock_format.assert_called_once_with({'ok': True})
+    mock_reformat.assert_called_once_with('dep')
+
+
 @patch('src.main.nlp_parser.detect_language', return_value='de')
 @patch('src.main.efa_api.stopfinder_request')
 def test_stops_endpoint(mock_stopfinder_request, mock_detect):
@@ -106,3 +119,16 @@ def test_stops_endpoint_text(mock_stopfinder_request, mock_format):
     assert response.status_code == 200
     assert response.text == 'stops'
     mock_format.assert_called_once_with({'foo': 'bar'})
+
+
+@patch('src.main.chatgpt_helper.reformat_summary', return_value='better stops')
+@patch('src.main.format_stops_result', return_value='stops')
+@patch('src.main.efa_api.stopfinder_request')
+def test_stops_endpoint_chatgpt(mock_stopfinder_request, mock_format, mock_reformat):
+    mock_stopfinder_request.return_value = {'foo': 'bar'}
+    client = TestClient(app)
+    response = client.post('/stops?format=text&chatgpt=true', json={'query': 'xyz'})
+    assert response.status_code == 200
+    assert response.text == 'better stops'
+    mock_format.assert_called_once_with({'foo': 'bar'})
+    mock_reformat.assert_called_once_with('stops')

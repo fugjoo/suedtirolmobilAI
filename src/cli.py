@@ -24,13 +24,10 @@ def run_search(query: str, output_format: str = "legs", debug: bool = False, use
         ``"text"`` shows a longer summary,
         ``"json"`` dumps the raw API response.
     use_chatgpt: bool, optional
-        If set, the query is parsed via the OpenAI API.
+        If set, the plain-text summary is reformatted via the OpenAI API.
     """
     logger.info("Searching for stops...")
-    if use_chatgpt:
-        params = chatgpt_helper.parse_query_chatgpt(query)
-    else:
-        params = nlp_parser.parse_query(query)
+    params = nlp_parser.parse_query(query)
 
     if not params:
         logger.warning("No parameters extracted from the query.")
@@ -58,12 +55,18 @@ def run_search(query: str, output_format: str = "legs", debug: bool = False, use
 
         print(json.dumps(response, ensure_ascii=False, indent=2))
     elif output_format == "legs":
-        print(format_search_result(response, legs_only=True))
+        text = format_search_result(response, legs_only=True)
+        if use_chatgpt:
+            text = chatgpt_helper.reformat_summary(text)
+        print(text)
     else:
-        print(format_search_result(response))
+        text = format_search_result(response)
+        if use_chatgpt:
+            text = chatgpt_helper.reformat_summary(text)
+        print(text)
 
 
-def run_departures(stop: str, output_format: str = "text", debug: bool = False) -> None:
+def run_departures(stop: str, output_format: str = "text", debug: bool = False, use_chatgpt: bool = False) -> None:
     """Query the departure monitor and print the result.
 
     Parameters
@@ -72,6 +75,8 @@ def run_departures(stop: str, output_format: str = "text", debug: bool = False) 
         Name of the stop to query.
     output_format: str, optional
         ``"text"`` for a short summary, ``"json"`` for the raw API response.
+    use_chatgpt: bool, optional
+        If set, the plain-text summary is reformatted via the OpenAI API.
     """
     logger.info("Haltestelle '%s' wird ermittelt...", stop)
     lang = nlp_parser.detect_language(stop)
@@ -90,11 +95,24 @@ def run_departures(stop: str, output_format: str = "text", debug: bool = False) 
 
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
-        print(format_departures_result(result))
+        text = format_departures_result(result)
+        if use_chatgpt:
+            text = chatgpt_helper.reformat_summary(text)
+        print(text)
 
 
-def run_stop_finder(query: str, output_format: str = "text", debug: bool = False) -> None:
-    """Query the stop finder and print the result."""
+def run_stop_finder(query: str, output_format: str = "text", debug: bool = False, use_chatgpt: bool = False) -> None:
+    """Query the stop finder and print the result.
+
+    Parameters
+    ----------
+    query: str
+        Text to search for stops.
+    output_format: str, optional
+        ``"text"`` for a short summary, ``"json"`` for the raw API response.
+    use_chatgpt: bool, optional
+        If set, the plain-text summary is reformatted via the OpenAI API.
+    """
     logger.info("Searching stops...")
     lang = nlp_parser.detect_language(query)
     try:
@@ -109,7 +127,10 @@ def run_stop_finder(query: str, output_format: str = "text", debug: bool = False
 
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
-        print(format_stops_result(result))
+        text = format_stops_result(result)
+        if use_chatgpt:
+            text = chatgpt_helper.reformat_summary(text)
+        print(text)
 
 
 if __name__ == "__main__":
@@ -126,7 +147,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--chatgpt",
         action="store_true",
-        help="Use ChatGPT for query parsing",
+        help="Reformat the textual summary via ChatGPT",
     )
 
     args = parser.parse_args()
@@ -136,6 +157,6 @@ if __name__ == "__main__":
     if args.command == "search":
         run_search(argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt)
     elif args.command == "departures":
-        run_departures(argument, args.format, debug=args.debug)
+        run_departures(argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt)
     elif args.command == "stops":
-        run_stop_finder(argument, args.format, debug=args.debug)
+        run_stop_finder(argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt)
