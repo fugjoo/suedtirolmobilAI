@@ -35,6 +35,7 @@ LANG_REGEX = {
 }
 
 _RE_TIME = re.compile(r"([0-2]?\d[:.]\d{2})")
+_RE_TIME_ALT = re.compile(r"(?:um\s*)?(\d{1,2})\s*uhr(?:\s*(\d{1,2}))?", re.IGNORECASE)
 _RE_TIME_TOKEN = re.compile(r"[0-2]?\d[:.]\d{2}")
 
 def _detect_language(text: str) -> str:
@@ -104,7 +105,21 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
         to_stop = None
 
     time_match = _RE_TIME.search(text)
-    time = time_match.group(1).replace('.', ':') if time_match else None
+    if time_match:
+        time = time_match.group(1).replace('.', ':')
+    else:
+        alt_match = _RE_TIME_ALT.search(text)
+        if alt_match:
+            hour = alt_match.group(1)
+            minute = alt_match.group(2) or "00"
+            try:
+                h = int(hour)
+                m = int(minute)
+                time = f"{h:02d}:{m:02d}"
+            except ValueError:
+                time = None
+        else:
+            time = None
 
     result: Dict[str, Optional[str]] = {}
     if from_stop:

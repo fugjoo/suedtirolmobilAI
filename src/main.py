@@ -29,7 +29,7 @@ class StopFinderRequest(BaseModel):
     query: str
 
 @app.post("/search")
-def search(req: SearchRequest, format: str = "legs"):
+def search(req: SearchRequest, format: str | None = None):
     logger.info("/search text='%s'", req.text)
     params = nlp_parser.parse_query(req.text)
     if not params:
@@ -40,6 +40,7 @@ def search(req: SearchRequest, format: str = "legs"):
         return result
     if format == "text":
         return PlainTextResponse(format_search_result(result, legs_only=False))
+    # default plain-text response lists the individual legs
     return PlainTextResponse(format_search_result(result, legs_only=True))
 
 

@@ -72,10 +72,10 @@ The service exposes three POST endpoints:
 - `/stops` – return stop name suggestions
 
 
-After the server is running, you can query it with a POST request. The `/search`
-endpoint returns a short plain‑text summary of the trip legs. Append
-`?format=json` if you need the raw JSON response. The other endpoints return
-JSON by default and accept `?format=text` for a short summary:
+After the server is running, you can query it with a POST request. All endpoints
+return JSON by default. The `/search` endpoint instead returns a plain‑text list
+of the connection legs. Append `?format=json` if you need the raw JSON. The
+other endpoints support `?format=text` for plain‑text output:
 
 ```bash
 # Trip request (plain text)

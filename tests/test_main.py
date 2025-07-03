@@ -36,7 +36,7 @@ def test_search_endpoint_text(mock_parse_query, mock_search_efa, mock_format):
 @patch('src.main.format_search_result', return_value='legs')
 @patch('src.main.efa_api.search_efa')
 @patch('src.main.nlp_parser.parse_query')
-def test_search_endpoint_legs(mock_parse_query, mock_search_efa, mock_format):
+def test_search_endpoint_default(mock_parse_query, mock_search_efa, mock_format):
     mock_parse_query.return_value = {'from_stop': 'A', 'to_stop': 'B'}
     mock_search_efa.return_value = {'dummy': True}
     client = TestClient(app)
