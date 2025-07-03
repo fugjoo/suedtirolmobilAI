@@ -86,3 +86,40 @@ def reformat_summary(text: str) -> str:
     logger.debug("ChatGPT reformatted summary: %s", content)
     return content
 
+
+def narrative_trip_summary(result: dict) -> str:
+    """Return a friendly ChatGPT summary for a trip search result."""
+    from .summaries import format_search_result
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set")
+
+    legs_text = format_search_result(result, legs_only=True)
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "gpt-3.5-turbo",
+        "temperature": 0,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Formuliere aus den folgenden Verbindungsdaten einen kurzen, freundlichen Text auf Deutsch. "
+                    "Sprich den Leser mit 'du' an und fasse dich kurz."
+                ),
+            },
+            {"role": "user", "content": legs_text},
+        ],
+    }
+
+    logger.debug("Sending narrative summary to ChatGPT: %s", legs_text)
+    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    content = data["choices"][0]["message"]["content"].strip()
+    logger.debug("ChatGPT narrative summary: %s", content)
+    return content
