@@ -4,5 +4,5 @@ spacy
 pydantic
 uvicorn
 pytest
-httpx
+httpx<0.25
 langdetect
