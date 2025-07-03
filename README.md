@@ -171,6 +171,20 @@ Enable verbose logging for both the CLI and the server by passing
 python -m src.cli search "Bozen nach Meran" --debug
 ```
 
+## Telegram bot
+
+A small example bot in `src/telegram_bot.py` forwards incoming Telegram messages to the running API and replies with the plain text result.
+
+Start the bot after setting your token:
+
+```bash
+export TELEGRAM_TOKEN=your_token
+python -m src.telegram_bot
+```
+
+Set `API_URL` if the API is reachable under a different address.
+
+
 
 ## Testing
 

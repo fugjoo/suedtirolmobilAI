@@ -6,3 +6,4 @@ uvicorn
 pytest
 httpx<0.25
 langdetect
+python-telegram-bot>=20
