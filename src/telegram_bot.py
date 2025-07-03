@@ -1,4 +1,9 @@
 import os
+import sys
+
+if sys.version_info < (3, 8):
+    raise RuntimeError("telegram_bot.py requires Python 3.8 or newer")
+
 import requests
 from telegram.ext import Application, MessageHandler, filters
 
