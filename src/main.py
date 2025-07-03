@@ -49,7 +49,8 @@ def departures(req: DMRequest, format: str = "json"):
     logger.info("/departures stop='%s' limit=%s", req.stop, req.limit)
     if not req.stop:
         raise HTTPException(status_code=400, detail="Missing stop name")
-    result = efa_api.dm_request(req.stop, req.limit)
+    lang = nlp_parser.detect_language(req.stop)
+    result = efa_api.dm_request(req.stop, req.limit, lang)
     logger.debug("/departures result: %s", result)
     if format == "text":
         return PlainTextResponse(format_departures_result(result))
@@ -62,7 +63,8 @@ def stops(req: StopFinderRequest, format: str = "json"):
     logger.info("/stops query='%s'", req.query)
     if not req.query:
         raise HTTPException(status_code=400, detail="Missing query")
-    result = efa_api.stopfinder_request(req.query)
+    lang = nlp_parser.detect_language(req.query)
+    result = efa_api.stopfinder_request(req.query, lang)
     logger.debug("/stops result: %s", result)
     if format == "text":
         return PlainTextResponse(format_stops_result(result))

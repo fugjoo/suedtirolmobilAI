@@ -43,6 +43,11 @@ def _detect_language(text: str) -> str:
     except Exception:
         return "en"
 
+
+def detect_language(text: str) -> str:
+    """Public wrapper to detect the language of ``text``."""
+    return _detect_language(text)
+
 def _get_nlp(lang: str) -> spacy.Language:
     if lang in _nlp_cache:
         return _nlp_cache[lang]
@@ -108,6 +113,7 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
         result["to_stop"] = to_stop
     if time:
         result["time"] = time
+    result["lang"] = lang
     logger.debug("Parsed parameters: %s", result)
     return result
 

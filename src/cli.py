@@ -69,8 +69,9 @@ def run_departures(stop: str, output_format: str = "text", debug: bool = False) 
         ``"text"`` for a short summary, ``"json"`` for the raw API response.
     """
     logger.info("Haltestelle '%s' wird ermittelt...", stop)
+    lang = nlp_parser.detect_language(stop)
     try:
-        result = efa_api.dm_request(stop)
+        result = efa_api.dm_request(stop, lang=lang)
     except Exception as exc:
         logger.error("Fehler bei der Abfrage: %s", exc)
         return
@@ -90,8 +91,9 @@ def run_departures(stop: str, output_format: str = "text", debug: bool = False) 
 def run_stop_finder(query: str, output_format: str = "text", debug: bool = False) -> None:
     """Query the stop finder and print the result."""
     logger.info("Searching stops...")
+    lang = nlp_parser.detect_language(query)
     try:
-        result = efa_api.stopfinder_request(query)
+        result = efa_api.stopfinder_request(query, lang=lang)
     except Exception as exc:
         logger.error("Error during request: %s", exc)
         return
