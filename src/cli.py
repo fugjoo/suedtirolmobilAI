@@ -27,7 +27,16 @@ def run_search(query: str, output_format: str = "legs", debug: bool = False, use
         If set, the plain-text summary is reformatted via the OpenAI API.
     """
     logger.info("Searching for stops...")
-    params = nlp_parser.parse_query(query)
+    params = {}
+    if use_chatgpt:
+        try:
+            params = chatgpt_helper.parse_query_chatgpt(query)
+        except Exception as exc:
+            logger.error("ChatGPT parsing failed: %s", exc)
+            params = {}
+
+    if not params:
+        params = nlp_parser.parse_query(query)
 
     if not params:
         logger.warning("No parameters extracted from the query.")
