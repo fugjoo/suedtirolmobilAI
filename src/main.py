@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
+from typing import Optional
 import logging
 
 from . import nlp_parser, efa_api, chatgpt_helper
@@ -29,7 +30,7 @@ class StopFinderRequest(BaseModel):
     query: str
 
 @app.post("/search")
-def search(req: SearchRequest, format: str | None = None, chatgpt: bool = False):
+def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = False):
     logger.info("/search text='%s'", req.text)
     params = nlp_parser.parse_query(req.text)
     if not params:
