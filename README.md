@@ -71,7 +71,9 @@ Set the `OPENAI_API_KEY` environment variable to enable reformatting of the
 plain‑text summaries via OpenAI's ChatGPT API. Requests will be sent to
 OpenAI's servers, which requires internet access and may incur usage fees.
 Use the `--chatgpt` flag in the CLI or pass `chatgpt=true` to any endpoint that
-returns plain text:
+returns plain text. When enabled for the `search` command or `/search` endpoint
+the query is first parsed via ChatGPT. The CLI falls back to the built‑in
+parser if this step fails:
 
 ```bash
 OPENAI_API_KEY=sk-... python -m src.cli search "Bozen nach Meran" --chatgpt

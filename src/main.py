@@ -32,7 +32,10 @@ class StopFinderRequest(BaseModel):
 @app.post("/search")
 def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = False):
     logger.info("/search text='%s'", req.text)
-    params = nlp_parser.parse_query(req.text)
+    if chatgpt:
+        params = chatgpt_helper.parse_query_chatgpt(req.text)
+    else:
+        params = nlp_parser.parse_query(req.text)
     if not params:
         raise HTTPException(status_code=400, detail="No parameters extracted")
     result = efa_api.search_efa(params)
