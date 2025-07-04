@@ -160,7 +160,7 @@ def narrative_trip_summary(result: dict) -> str:
                 "role": "system",
                 "content": (
                     "Formuliere aus den folgenden Verbindungsdaten einen freundlichen Text. "
-                    "Gib die Verbindungsdaten exakt wieder."
+                    "Gib die Verbindungsdaten exakt wieder und sprich die Person in Du-Form an."
                 ),
             },
             {"role": "user", "content": legs_text},
