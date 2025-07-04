@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import logging
 import requests
 
@@ -14,7 +14,7 @@ BASE_URL = EFA_BASE_URL
 
 
 def get_stop_code(query: str, lang: Optional[str] = None) -> str:
-    """Resolve a stop name to its stateless identifier using a StopFinder request.
+    """Resolve a stop name via a StopFinder request.
 
     The returned code can be used directly in subsequent trip or departure
     requests. If the lookup fails, the original query string is returned
@@ -53,7 +53,9 @@ def get_stop_code(query: str, lang: Optional[str] = None) -> str:
         if isinstance(points, dict):
             points = [points]
 
-        logger.info("StopFinder found %d suggestion(s) for '%s'", len(points), query)
+        logger.info(
+            "StopFinder found %d suggestion(s) for '%s'", len(points), query
+        )
         logger.debug("StopFinder results for '%s': %s", query, points)
 
         best: Optional[Dict[str, Any]] = None
@@ -71,7 +73,9 @@ def get_stop_code(query: str, lang: Optional[str] = None) -> str:
         logger.debug("Best match: %s", best)
         if best and best.get("stateless"):
             logger.info(
-                "StopFinder stateless ID for '%s': %s", query, best["stateless"]
+                "StopFinder stateless ID for '%s': %s",
+                query,
+                best["stateless"],
             )
 
         if best:
@@ -143,7 +147,9 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
         return {"text": response.text}
 
 
-def dm_request(stop_name: str, limit: int = 10, lang: Optional[str] = None) -> Dict[str, Any]:
+def dm_request(
+    stop_name: str, limit: int = 10, lang: Optional[str] = None
+) -> Dict[str, Any]:
     """Query the departure monitor (DM) endpoint for a specific stop."""
     url = f"{BASE_URL}/XML_DM_REQUEST"
     logger.info("Requesting departures for '%s'", stop_name)
@@ -176,7 +182,9 @@ def dm_request(stop_name: str, limit: int = 10, lang: Optional[str] = None) -> D
         return {"text": response.text}
 
 
-def stopfinder_request(query: str, lang: Optional[str] = None) -> Dict[str, Any]:
+def stopfinder_request(
+    query: str, lang: Optional[str] = None
+) -> Dict[str, Any]:
     """Return stop suggestions for the given search string."""
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     if lang is None:
@@ -201,4 +209,3 @@ def stopfinder_request(query: str, lang: Optional[str] = None) -> Dict[str, Any]
 
 # Backwards compatibility
 stop_finder = stopfinder_request
-

@@ -53,4 +53,3 @@ def test_classify_request_search():
     assert result["endpoint"] == "search"
     assert result.get("from_stop") == "Bozen"
     assert result.get("to_stop") == "Meran"
-

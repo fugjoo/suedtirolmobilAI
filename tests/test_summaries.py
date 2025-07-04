@@ -100,7 +100,8 @@ def test_format_departures_result_formats_line():
     summary = format_departures_result(result)
     assert "Abfahrten f" in summary
     assert (
-        "Citybus 320.1 Richtung Milland KG Arcobaleno Steig A um 13:20 Uhr" in summary
+        "Citybus 320.1 Richtung Milland KG Arcobaleno Steig A um "
+        "13:20 Uhr" in summary
     )
 
 
@@ -162,8 +163,16 @@ def test_format_search_result_legs_only():
             "trip": {
                 "legs": [
                     {
-                        "origin": {"name": "A", "platformName": "1", "time": "08:00"},
-                        "destination": {"name": "B", "platformName": "2", "time": "08:30"},
+                        "origin": {
+                            "name": "A",
+                            "platformName": "1",
+                            "time": "08:00",
+                        },
+                        "destination": {
+                            "name": "B",
+                            "platformName": "2",
+                            "time": "08:30",
+                        },
                         "mode": {"name": "Bus 10", "destination": "B"},
                     }
                 ]
@@ -210,4 +219,3 @@ def test_format_departures_result_english():
     summary = format_departures_result(result, lang="en")
     assert "Departures" in summary
     assert "Platform" in summary
-

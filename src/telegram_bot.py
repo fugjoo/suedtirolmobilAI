@@ -34,7 +34,9 @@ SEARCH, DEPARTURES = range(2)
 
 
 def parse_args(args=None):
-    parser = argparse.ArgumentParser(description="Telegram interface for suedtirolmobilAI")
+    parser = argparse.ArgumentParser(
+        description="Telegram interface for suedtirolmobilAI"
+    )
     parser.add_argument(
         "--api-url",
         default=API_URL,
@@ -94,7 +96,6 @@ async def handle_text(update, context):
     except Exception as exc:
         await update.message.reply_text(f"Request failed: {exc}")
 
-
 async def cmd_start(update, context):
     """Send a welcome message and show the command keyboard."""
     keyboard = [["/search", "/departures", "/stops"]]
@@ -138,7 +139,8 @@ async def cmd_departures(update, context):
     stop = update.message.text.partition(" ")[2].strip()
     if not stop:
         await update.message.reply_text(
-            "Please provide a stop name for /departures:", reply_markup=ForceReply()
+            "Please provide a stop name for /departures:",
+            reply_markup=ForceReply(),
         )
         return DEPARTURES
     return await handle_departures_query(update, context, stop)
@@ -167,7 +169,9 @@ async def handle_departures_query(update, context, stop=None):
 async def cmd_stops(update, context):
     query = update.message.text.partition(" ")[2].strip()
     if not query:
-        await update.message.reply_text("Please provide search text after /stops")
+        await update.message.reply_text(
+            "Please provide search text after /stops"
+        )
         return
     logger.info("/stops %s", query)
     try:
@@ -183,7 +187,6 @@ async def cmd_stops(update, context):
             await update.message.reply_text(f"Error: {resp.text}")
     except Exception as exc:
         await update.message.reply_text(f"Request failed: {exc}")
-
 
 def main() -> None:
     global API_URL, USE_CHATGPT
@@ -227,7 +230,8 @@ def main() -> None:
             states={
                 DEPARTURES: [
                     MessageHandler(
-                        filters.TEXT & ~filters.COMMAND, handle_departures_query
+                        filters.TEXT & ~filters.COMMAND,
+                        handle_departures_query,
                     )
                 ]
             },
@@ -243,8 +247,6 @@ def main() -> None:
     finally:
         if server_proc:
             server_proc.terminate()
-
-
 
 if __name__ == "__main__":
     main()

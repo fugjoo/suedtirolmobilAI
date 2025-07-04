@@ -35,7 +35,9 @@ LANG_REGEX = {
 }
 
 _RE_TIME = re.compile(r"([0-2]?\d[:.]\d{2})")
-_RE_TIME_ALT = re.compile(r"(?:um\s*)?(\d{1,2})\s*uhr(?:\s*(\d{1,2}))?", re.IGNORECASE)
+_RE_TIME_ALT = re.compile(
+    r"(?:um\s*)?(\d{1,2})\s*uhr(?:\s*(\d{1,2}))?", re.IGNORECASE
+)
 _RE_TIME_TOKEN = re.compile(r"[0-2]?\d[:.]\d{2}")
 
 def _detect_language(text: str) -> str:
@@ -170,4 +172,3 @@ def classify_request(text: str) -> Dict[str, str]:
     params = parse_query(text)
     params["endpoint"] = "search"
     return params
-

@@ -99,7 +99,9 @@ def test_search_efa_calls_requests(mock_get):
 @patch('src.efa_api.get_stop_code', return_value='Bozen')
 @patch('src.efa_api.requests.get')
 def test_dm_request_calls_requests(mock_get, mock_best):
-    mock_get.return_value = MagicMock(status_code=200, json=lambda: {'ok': True})
+    mock_get.return_value = MagicMock(
+        status_code=200, json=lambda: {'ok': True}
+    )
 
     result = efa_api.dm_request('Bozen', limit=5)
 
@@ -116,7 +118,9 @@ def test_dm_request_calls_requests(mock_get, mock_best):
 
 @patch('src.efa_api.requests.get')
 def test_stopfinder_request_returns_json(mock_get):
-    mock_get.return_value = MagicMock(status_code=200, json=lambda: {'stops': []})
+    mock_get.return_value = MagicMock(
+        status_code=200, json=lambda: {'stops': []}
+    )
 
     result = efa_api.stopfinder_request('Bruneck')
 
@@ -128,4 +132,3 @@ def test_stopfinder_request_returns_json(mock_get):
     assert kwargs['params']['locationServerActive'] == 1
     assert kwargs['params']['outputEncoding'] == 'UTF-8'
     assert result == {'stops': []}
-

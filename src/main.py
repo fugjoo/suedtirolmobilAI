@@ -30,7 +30,9 @@ class StopFinderRequest(BaseModel):
     query: str
 
 @app.post("/search")
-def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = False):
+def search(
+    req: SearchRequest, format: Optional[str] = None, chatgpt: bool = False
+):
     logger.info("/search text='%s'", req.text)
     if chatgpt:
         params = chatgpt_helper.parse_query_chatgpt(req.text)
@@ -91,4 +93,3 @@ def stops(req: StopFinderRequest, format: str = "json", chatgpt: bool = False):
 if __name__ == "__main__" and __package__:
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

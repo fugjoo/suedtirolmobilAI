@@ -148,19 +148,28 @@ def format_search_result(
         if not dest and isinstance(points, list) and points:
             dest = points[-1]
         start_name = origin.get("name") or from_stop
-        start_time = _extract_time(origin.get("time")) or _extract_time(origin.get("dateTime"))
+        start_time = (
+            _extract_time(origin.get("time"))
+            or _extract_time(origin.get("dateTime"))
+        )
         mode_name = (
             (first_leg.get("mode") or {}).get("name")
             or (first_leg.get("mode") or {}).get("number")
             or ""
         )
-        if not mode_name or "fuß" in mode_name.lower() or "walk" in mode_name.lower():
+        if (
+            not mode_name
+            or "fuß" in mode_name.lower()
+            or "walk" in mode_name.lower()
+        ):
             mode_desc = tl["on_foot"]
         else:
             mode_desc = tl["with"].format(mode=mode_name)
         origin_line = f"{tl['from']}: {start_name}"
         if start_time:
-            origin_line += " " + tl["at"].format(time=start_time) + f" {mode_desc}"
+            origin_line += (
+                " " + tl["at"].format(time=start_time) + f" {mode_desc}"
+            )
         else:
             origin_line += f" {mode_desc}"
         lines.append(origin_line)
@@ -184,15 +193,25 @@ def format_search_result(
         if not dest and isinstance(points, list) and points:
             dest = points[-1]
         o_name = origin.get("name", "")
-        o_time = _extract_time(origin.get("time")) or _extract_time(origin.get("dateTime"))
+        o_time = (
+            _extract_time(origin.get("time"))
+            or _extract_time(origin.get("dateTime"))
+        )
         d_name = dest.get("name", "")
-        d_time = _extract_time(dest.get("time")) or _extract_time(dest.get("dateTime"))
+        d_time = (
+            _extract_time(dest.get("time"))
+            or _extract_time(dest.get("dateTime"))
+        )
         line_name = (
             (leg.get("mode") or {}).get("name")
             or (leg.get("mode") or {}).get("number")
             or ""
         )
-        if not line_name or "fuß" in line_name.lower() or "walk" in line_name.lower():
+        if (
+            not line_name
+            or "fuß" in line_name.lower()
+            or "walk" in line_name.lower()
+        ):
             if legs_only:
                 line_desc = tl["on_foot"]
             else:
@@ -208,7 +227,9 @@ def format_search_result(
         if legs_only:
             lines.append(line_desc)
             start_line = f"{o_time}: {o_name}" if o_time else o_name
-            origin_platform = origin.get("platform") or origin.get("platformName")
+            origin_platform = (
+                origin.get("platform") or origin.get("platformName")
+            )
             if origin_platform:
                 start_line += f" von {tl['platform']} {origin_platform}"
             lines.append(start_line)
@@ -220,10 +241,14 @@ def format_search_result(
         else:
             dep_line = f"{tl['departure']} {o_name}"
             if o_time:
-                dep_line += " " + tl["at"].format(time=o_time) + f" {line_desc}"
+                dep_line += (
+                    " " + tl["at"].format(time=o_time) + f" {line_desc}"
+                )
             else:
                 dep_line += f" {line_desc}"
-            origin_platform = origin.get("platform") or origin.get("platformName")
+            origin_platform = (
+                origin.get("platform") or origin.get("platformName")
+            )
             if origin_platform:
                 dep_line += f" von {tl['platform']} {origin_platform}"
             arr_line = f"{tl['arrival']} {d_name}"
@@ -261,7 +286,11 @@ def format_departures_result(result: Dict[str, Any], lang: str = "de") -> str:
         or result.get("stopEvents")
     )
     if isinstance(raw_departures, dict):
-        dep_items = raw_departures.get("departure") or raw_departures.get("stopEvent") or raw_departures
+        dep_items = (
+            raw_departures.get("departure")
+            or raw_departures.get("stopEvent")
+            or raw_departures
+        )
     else:
         dep_items = raw_departures
 
@@ -275,7 +304,11 @@ def format_departures_result(result: Dict[str, Any], lang: str = "de") -> str:
         suffix = f" for '{stop_name}'" if stop_name else ""
         return f"0 departures{suffix}."
 
-    lines = [tl["departures_for"].format(stop=stop_name)] if stop_name else [tl["departures"]]
+    lines = (
+        [tl["departures_for"].format(stop=stop_name)]
+        if stop_name
+        else [tl["departures"]]
+    )
 
     for dep in departures:
         time = (
@@ -289,7 +322,9 @@ def format_departures_result(result: Dict[str, Any], lang: str = "de") -> str:
         line_number_part = line_info.get("number")
         line_parts = [p for p in (line_name_part, line_number_part) if p]
         line_name = " ".join(line_parts)
-        direction = line_info.get("direction") or line_info.get("destination") or ""
+        direction = (
+            line_info.get("direction") or line_info.get("destination") or ""
+        )
         platform = dep.get("platformName") or dep.get("platform")
 
         parts = []

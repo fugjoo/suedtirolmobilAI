@@ -12,7 +12,10 @@ from .summaries import (
 logger = logging.getLogger(__name__)
 
 
-def run_search(query: str, output_format: str = "legs", debug: bool = False, use_chatgpt: bool = False) -> None:
+def run_search(
+    query: str, output_format: str = "legs", debug: bool = False,
+    use_chatgpt: bool = False
+) -> None:
     """Run a search for the given natural language query.
 
     Parameters
@@ -73,7 +76,10 @@ def run_search(query: str, output_format: str = "legs", debug: bool = False, use
         print(text)
 
 
-def run_departures(stop: str, output_format: str = "text", debug: bool = False, use_chatgpt: bool = False) -> None:
+def run_departures(
+    stop: str, output_format: str = "text", debug: bool = False,
+    use_chatgpt: bool = False
+) -> None:
     """Query the departure monitor and print the result.
 
     Parameters
@@ -108,7 +114,10 @@ def run_departures(stop: str, output_format: str = "text", debug: bool = False, 
         print(text)
 
 
-def run_stop_finder(query: str, output_format: str = "text", debug: bool = False, use_chatgpt: bool = False) -> None:
+def run_stop_finder(
+    query: str, output_format: str = "text", debug: bool = False,
+    use_chatgpt: bool = False
+) -> None:
     """Query the stop finder and print the result.
 
     Parameters
@@ -142,9 +151,17 @@ def run_stop_finder(query: str, output_format: str = "text", debug: bool = False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="suedtirolmobilAI CLI")
-    parser.add_argument("command", choices=["search", "departures", "stops"], help="Command to execute")
+    parser.add_argument(
+        "command",
+        choices=["search", "departures", "stops"],
+        help="Command to execute",
+    )
     parser.add_argument("text", nargs="+", help="Query text or stop name")
-    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging",
+    )
     parser.add_argument(
         "--format",
         choices=["text", "json", "legs"],
@@ -162,8 +179,14 @@ if __name__ == "__main__":
 
     argument = " ".join(args.text)
     if args.command == "search":
-        run_search(argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt)
+        run_search(
+            argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt
+        )
     elif args.command == "departures":
-        run_departures(argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt)
+        run_departures(
+            argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt
+        )
     elif args.command == "stops":
-        run_stop_finder(argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt)
+        run_stop_finder(
+            argument, args.format, debug=args.debug, use_chatgpt=args.chatgpt
+        )

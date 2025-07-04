@@ -35,7 +35,9 @@ def parse_query_chatgpt(text: str) -> dict:
     }
 
     logger.debug("Sending query to ChatGPT: %s", text)
-    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    response = requests.post(
+        API_URL, headers=headers, json=payload, timeout=30
+    )
     response.raise_for_status()
     data = response.json()
     content = data["choices"][0]["message"]["content"].strip()
@@ -70,11 +72,11 @@ def classify_query_chatgpt(text: str) -> dict:
             {
                 "role": "system",
                 "content": (
-                    "Decide which public transport API endpoint is best suited "
-                    "for the user request. Choose between 'search', 'departures' "
-                    "and 'stops'. Return JSON with an 'endpoint' key. If the "
-                    "endpoint is 'search', also return 'from_stop', 'to_stop' "
-                    "and optionally 'time'. If it is 'departures', return "
+                    "Decide which API endpoint fits the request. "
+                    "Choose between 'search', 'departures' and 'stops'. "
+                    "Return JSON with an 'endpoint' key. If the endpoint "
+                    "is 'search', also return 'from_stop', 'to_stop' and "
+                    "optionally 'time'. If it is 'departures', return "
                     "'stop'. If it is 'stops', return 'query'."
                 ),
             },
@@ -83,7 +85,9 @@ def classify_query_chatgpt(text: str) -> dict:
     }
 
     logger.debug("Classifying query via ChatGPT: %s", text)
-    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    response = requests.post(
+        API_URL, headers=headers, json=payload, timeout=30
+    )
     response.raise_for_status()
     data = response.json()
     content = data["choices"][0]["message"]["content"].strip()
@@ -128,7 +132,9 @@ def reformat_summary(text: str) -> str:
     }
 
     logger.debug("Sending summary to ChatGPT: %s", text)
-    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    response = requests.post(
+        API_URL, headers=headers, json=payload, timeout=30
+    )
     response.raise_for_status()
     data = response.json()
     content = data["choices"][0]["message"]["content"].strip()
@@ -157,7 +163,8 @@ def narrative_trip_summary(result: dict) -> str:
             {
                 "role": "system",
                 "content": (
-                    "Formuliere aus den folgenden Verbindungsdaten einen kurzen, freundlichen Text auf Deutsch. "
+                    "Formuliere aus den folgenden Verbindungsdaten "
+                    "einen kurzen, freundlichen Text auf Deutsch. "
                     "Sprich den Leser mit 'du' an und fasse dich kurz."
                 ),
             },
@@ -166,7 +173,9 @@ def narrative_trip_summary(result: dict) -> str:
     }
 
     logger.debug("Sending narrative summary to ChatGPT: %s", legs_text)
-    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    response = requests.post(
+        API_URL, headers=headers, json=payload, timeout=30
+    )
     response.raise_for_status()
     data = response.json()
     content = data["choices"][0]["message"]["content"].strip()

@@ -9,7 +9,10 @@ from src import cli
 
 @patch('src.cli.format_search_result', return_value='summary')
 @patch('src.cli.efa_api.search_efa', return_value={'ok': True})
-@patch('src.cli.nlp_parser.parse_query', return_value={'from_stop': 'A', 'to_stop': 'B'})
+@patch(
+    'src.cli.nlp_parser.parse_query',
+    return_value={'from_stop': 'A', 'to_stop': 'B'},
+)
 def test_run_search_text(mock_parse, mock_search, mock_format, capsys):
     cli.run_search('foo', output_format='text')
     captured = capsys.readouterr()
@@ -26,7 +29,10 @@ def test_run_search_json(mock_parse, mock_search, capsys):
 
 @patch('src.cli.format_search_result', return_value='legs')
 @patch('src.cli.efa_api.search_efa', return_value={'ok': True})
-@patch('src.cli.nlp_parser.parse_query', return_value={'from_stop': 'A', 'to_stop': 'B'})
+@patch(
+    'src.cli.nlp_parser.parse_query',
+    return_value={'from_stop': 'A', 'to_stop': 'B'},
+)
 def test_run_search_legs(mock_parse, mock_search, mock_format, capsys):
     cli.run_search('foo', output_format='legs')
     captured = capsys.readouterr()
@@ -37,8 +43,13 @@ def test_run_search_legs(mock_parse, mock_search, mock_format, capsys):
 @patch('src.cli.chatgpt_helper.narrative_trip_summary', return_value='better')
 @patch('src.cli.efa_api.search_efa', return_value={'ok': True})
 @patch('src.cli.nlp_parser.parse_query')
-@patch('src.cli.chatgpt_helper.parse_query_chatgpt', return_value={'from_stop': 'A', 'to_stop': 'B'})
-def test_run_search_chatgpt(mock_parse_gpt, mock_parse, mock_search, mock_narrative, capsys):
+@patch(
+    'src.cli.chatgpt_helper.parse_query_chatgpt',
+    return_value={'from_stop': 'A', 'to_stop': 'B'},
+)
+def test_run_search_chatgpt(
+    mock_parse_gpt, mock_parse, mock_search, mock_narrative, capsys
+):
     cli.run_search('foo', output_format='legs', use_chatgpt=True)
     captured = capsys.readouterr()
     assert captured.out.strip() == 'better'
@@ -49,9 +60,17 @@ def test_run_search_chatgpt(mock_parse_gpt, mock_parse, mock_search, mock_narrat
 
 @patch('src.cli.chatgpt_helper.narrative_trip_summary', return_value='better')
 @patch('src.cli.efa_api.search_efa', return_value={'ok': True})
-@patch('src.cli.nlp_parser.parse_query', return_value={'from_stop': 'A', 'to_stop': 'B'})
-@patch('src.cli.chatgpt_helper.parse_query_chatgpt', return_value={})
-def test_run_search_chatgpt_fallback(mock_parse_gpt, mock_parse, mock_search, mock_narrative, capsys):
+@patch(
+    'src.cli.nlp_parser.parse_query',
+    return_value={'from_stop': 'A', 'to_stop': 'B'},
+)
+@patch(
+    'src.cli.chatgpt_helper.parse_query_chatgpt',
+    return_value={},
+)
+def test_run_search_chatgpt_fallback(
+    mock_parse_gpt, mock_parse, mock_search, mock_narrative, capsys
+):
     cli.run_search('foo', output_format='legs', use_chatgpt=True)
     captured = capsys.readouterr()
     assert captured.out.strip() == 'better'

@@ -1,11 +1,10 @@
+import os
 from dotenv import load_dotenv, find_dotenv
 
 # Load .env file if it exists
 _env_file = find_dotenv()
 if _env_file:
     load_dotenv(_env_file)
-
-import os
 
 EFA_BASE_URL = os.getenv("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

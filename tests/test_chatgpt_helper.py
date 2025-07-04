@@ -52,7 +52,11 @@ def test_classify_query_chatgpt_parses_json(mock_post):
     mock_resp.raise_for_status = MagicMock()
     mock_resp.json.return_value = {
         'choices': [
-            {'message': {'content': '{"endpoint": "departures", "stop": "Bozen"}'}}
+            {
+                'message': {
+                    'content': '{"endpoint": "departures", "stop": "Bozen"}'
+                }
+            }
         ]
     }
     mock_post.return_value = mock_resp
@@ -82,4 +86,3 @@ def test_classify_query_chatgpt_requires_key():
     with patch('src.chatgpt_helper.OPENAI_API_KEY', None):
         with pytest.raises(RuntimeError):
             chatgpt_helper.classify_query_chatgpt('hi')
-
