@@ -40,19 +40,27 @@ uvicorn src.main:app --host 0.0.0.0 --reload
 ```
 
 ## Configuration
+The service can be configured via the following environment variables:
+
 - `EFA_BASE_URL` – base URL of the Mentz‑EFA endpoint
+  ```bash
+  EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
+  ```
 - `OPENAI_API_KEY` – enable ChatGPT features
+  ```bash
+  OPENAI_API_KEY=sk-... python -m src.cli search "Bozen" --chatgpt
+  ```
 - `TELEGRAM_TOKEN` – required for the Telegram bot
+  ```bash
+  TELEGRAM_TOKEN=your_token python -m src.telegram_bot
+  ```
 - `API_URL` – base URL of the API used by the Telegram bot
+  ```bash
+  API_URL=http://localhost:8000 python -m src.telegram_bot
+  ```
 
 Environment variables can also be stored in a `.env` file in the project root.
 The file is loaded automatically and should not be committed to version control.
-
-Example:
-```bash
-EFA_BASE_URL=https://efa.sta.bz.it/apb \
-uvicorn src.main:app --host 0.0.0.0 --reload
-```
 
 ## Command line usage
 ### Search for a trip
@@ -67,8 +75,28 @@ python -m src.cli departures "Bozen"
 ```bash
 python -m src.cli stops "Brixen"
 ```
-Add `--format json` for JSON output, `--debug` for verbose logs and
-`--chatgpt` for ChatGPT summaries.
+
+### Flags
+- `--format` – choose the output format (`text`, `json` or `legs`)
+  ```bash
+  python -m src.cli search "Bozen Meran" --format json
+  ```
+- `--debug` – enable verbose logging
+  ```bash
+  python -m src.cli departures "Bozen" --debug
+  ```
+- `--chatgpt` – generate ChatGPT summaries
+  ```bash
+  python -m src.cli search "Brixen Meran" --chatgpt
+  ```
+- `--api-url` – API endpoint for the Telegram bot
+  ```bash
+  python -m src.telegram_bot --api-url http://localhost:8000
+  ```
+- `--start-server` – start the API automatically for the Telegram bot
+  ```bash
+  python -m src.telegram_bot --api-url http://localhost:8000 --start-server
+  ```
 
 ## API endpoints
 All endpoints accept POST requests.
