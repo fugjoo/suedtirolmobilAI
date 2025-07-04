@@ -1,6 +1,6 @@
 fastapi
 requests
-spacy
+spacy<3.8
 pydantic
 uvicorn
 pytest
