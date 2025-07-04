@@ -8,6 +8,8 @@ transport and forwards them to a Mentz‑EFA backend.
 - Search for public transport connections.
 - Monitor departures for a stop.
 - Return stop suggestions.
+- Automatically decide between trip search, departures and stop search
+  based on the entered text.
 - Optional ChatGPT summaries for nicer text output.
 - Command line client for quick access.
 - Simple Telegram bot for chat interaction.
@@ -75,6 +77,15 @@ python -m src.cli departures "Bozen"
 ```bash
 python -m src.cli stops "Brixen"
 ```
+
+### Automatic query detection
+When text is entered without explicitly choosing a command, the service tries to
+infer the best action automatically.  For example:
+
+* `Neumarkt Busbahnhof` → departures
+* `Bozen-Meran` → trip search
+
+Queries in German, English and Italian are supported.
 
 ### Flags
 - `--format` – choose the output format (`text`, `json` or `legs`)
