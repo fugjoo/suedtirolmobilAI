@@ -6,10 +6,8 @@ import logging
 import spacy
 from langdetect import detect, DetectorFactory
 
-from .logging_utils import setup_logging
-
 logger = logging.getLogger(__name__)
-setup_logging()
+
 
 DetectorFactory.seed = 0
 

@@ -25,7 +25,6 @@ from . import chatgpt_helper, nlp_parser
 from .logging_utils import setup_logging
 
 logger = logging.getLogger(__name__)
-setup_logging()
 
 API_URL = CONFIG_API_URL
 BOT_TOKEN = TELEGRAM_TOKEN
@@ -189,6 +188,8 @@ async def cmd_stops(update, context):
 
 def main() -> None:
     global API_URL, USE_CHATGPT
+
+    setup_logging()
 
     if not BOT_TOKEN:
         raise RuntimeError("TELEGRAM_TOKEN environment variable not set")

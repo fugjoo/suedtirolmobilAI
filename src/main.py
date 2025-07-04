@@ -14,8 +14,6 @@ from .summaries import (
 )
 from .logging_utils import setup_logging
 
-# Configure logging; debug mode is controlled solely via CLI arguments
-setup_logging()
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
@@ -91,6 +89,7 @@ def stops(req: StopFinderRequest, format: str = "json", chatgpt: bool = False):
 
 # Run via ``python -m src.main`` for debugging without auto-reload.
 if __name__ == "__main__" and __package__:
+    setup_logging()
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
