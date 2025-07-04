@@ -37,6 +37,7 @@ def get_stop_code(query: str, lang: Optional[str] = None) -> str:
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         logger.debug("StopFinder response status: %s", response.status_code)
+        response.encoding = "utf-8"
         data = response.json()
         stopfinder = data.get("stopFinder")
         if not isinstance(stopfinder, dict):
@@ -132,6 +133,7 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
     response = requests.get(url, params=efa_params, timeout=10)
     response.raise_for_status()
     logger.debug("Trip request status: %s", response.status_code)
+    response.encoding = "utf-8"
     try:
         data = response.json()
         logger.debug("Trip response payload: %s", data)
@@ -164,6 +166,7 @@ def dm_request(stop_name: str, limit: int = 10, lang: Optional[str] = None) -> D
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     logger.debug("DM request status: %s", response.status_code)
+    response.encoding = "utf-8"
     try:
         data = response.json()
         logger.debug("DM response payload: %s", data)
@@ -190,6 +193,7 @@ def stopfinder_request(query: str, lang: Optional[str] = None) -> Dict[str, Any]
     logger.debug("StopFinder params: %s", params)
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
+    response.encoding = "utf-8"
     data = response.json()
     logger.debug("StopFinder response: %s", data)
     return data
