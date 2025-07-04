@@ -1,3 +1,5 @@
+"""Configuration module loading environment variables for the service."""
+
 from dotenv import load_dotenv, find_dotenv
 
 # Load .env file if it exists

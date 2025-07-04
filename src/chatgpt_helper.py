@@ -1,3 +1,5 @@
+"""Helper functions for interacting with the OpenAI ChatGPT API."""
+
 import json
 import logging
 import requests
