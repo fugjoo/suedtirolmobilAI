@@ -159,7 +159,7 @@ def narrative_trip_summary(result: dict) -> str:
             {
                 "role": "system",
                 "content": (
-                    "Formuliere aus den folgenden Verbindungsdaten einen kurzen, freundlichen Text. "
+                    "Formuliere aus den folgenden Verbindungsdaten einen kurzen und freundlichen Text. "
                     "Gib die Verbindungsdaten exakt wieder und sprich die Person in Du-Form an."
                 ),
             },
