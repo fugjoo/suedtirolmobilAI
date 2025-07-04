@@ -108,6 +108,11 @@ Forward messages to the API using the example bot:
 export TELEGRAM_TOKEN=your_token
 python -m src.telegram_bot --api-url http://localhost:8000
 ```
+Add `--start-server` to launch the API with `uvicorn` automatically:
+```bash
+export TELEGRAM_TOKEN=your_token
+python -m src.telegram_bot --api-url http://localhost:8000 --start-server
+```
 Use `--api-url` to specify the address of the running API. The option
 defaults to the value of the `API_URL` environment variable or
 `http://localhost:8000` if unset.
