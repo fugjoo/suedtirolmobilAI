@@ -178,6 +178,12 @@ def classify_request(text: str) -> Dict[str, str]:
             return {"endpoint": "stops", "query": text, "lang": lang}
 
     params = parse_query(text)
+    stops = [params.get("from_stop"), params.get("to_stop")]
+    stops = [s for s in stops if s]
+
+    if len(stops) == 1:
+        return {"endpoint": "departures", "stop": stops[0], "lang": params.get("lang", lang)}
+
     params["endpoint"] = "search"
     return params
 
