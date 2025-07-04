@@ -31,6 +31,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 python -m spacy download de_core_news_sm  # optional
 ```
+spaCy is pinned to versions below 3.8 for compatibility.
 
 ## Running the API
 Start the server with:
