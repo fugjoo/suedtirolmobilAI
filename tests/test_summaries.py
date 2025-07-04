@@ -100,7 +100,7 @@ def test_format_departures_result_formats_line():
     summary = format_departures_result(result)
     assert "Abfahrten f" in summary
     assert (
-        "Citybus 320.1 Richtung Milland KG Arcobaleno Steig A um 13:20 Uhr" in summary
+        "13:20 Citybus 320.1 Richtung Milland KG Arcobaleno Steig A" in summary
     )
 
 
@@ -191,7 +191,7 @@ def test_format_departures_result_structured_time():
     }
 
     summary = format_departures_result(result)
-    assert "um 09:15 Uhr" in summary
+    assert "09:15 Bus Richtung Town Steig 1" in summary
 
 
 def test_format_departures_result_english():
