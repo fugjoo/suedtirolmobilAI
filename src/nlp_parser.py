@@ -157,6 +157,15 @@ _KEYWORDS_STOPS = {
     "it": ["fermata", "fermate"],
 }
 
+# Common suffixes indicating a stop or station.  If a text ends with one of
+# these, ``classify_request`` treats the full text as a stop name.
+_STOP_SUFFIXES = [
+    "bahnhof",
+    "busbahnhof",
+    "station",
+    "stazione",
+]
+
 
 def classify_request(text: str) -> Dict[str, str]:
     """Classify the user request and detect the language.
@@ -177,12 +186,27 @@ def classify_request(text: str) -> Dict[str, str]:
         if kw in text_l:
             return {"endpoint": "stops", "query": text, "lang": lang}
 
+    # direct pattern "<stop1>-<stop2>" handled before more expensive parsing
+    m_hyphen = re.fullmatch(r"\s*(.+?)\s*[-–]\s*(.+?)\s*", text)
+    if m_hyphen:
+        return {
+            "endpoint": "search",
+            "from_stop": m_hyphen.group(1).strip(),
+            "to_stop": m_hyphen.group(2).strip(),
+            "lang": lang,
+        }
+
     params = parse_query(text)
     stops = [params.get("from_stop"), params.get("to_stop")]
     stops = [s for s in stops if s]
 
     if len(stops) == 1:
         return {"endpoint": "departures", "stop": stops[0], "lang": params.get("lang", lang)}
+
+    if len(stops) == 2:
+        for stop in stops:
+            if any(stop.lower().endswith(suf) for suf in _STOP_SUFFIXES):
+                return {"endpoint": "departures", "stop": text, "lang": params.get("lang", lang)}
 
     params["endpoint"] = "search"
     return params

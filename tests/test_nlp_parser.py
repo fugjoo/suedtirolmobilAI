@@ -83,3 +83,18 @@ def test_classify_request_two_stops_search():
     assert result.get("from_stop") == "Bozen"
     assert result.get("to_stop") == "Meran"
 
+
+def test_classify_request_suffix_departures():
+    text = "Neumarkt Busbahnhof"
+    result = nlp_parser.classify_request(text)
+    assert result["endpoint"] == "departures"
+    assert result.get("stop") == text
+
+
+def test_classify_request_hyphen_search():
+    text = "Bozen-Meran"
+    result = nlp_parser.classify_request(text)
+    assert result["endpoint"] == "search"
+    assert result.get("from_stop") == "Bozen"
+    assert result.get("to_stop") == "Meran"
+
