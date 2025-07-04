@@ -178,6 +178,10 @@ def main() -> None:
 
     try:
         application = Application.builder().token(BOT_TOKEN).build()
+        application.add_handler(CommandHandler("start", cmd_start))
+        application.add_handler(CommandHandler("search", cmd_search))
+        application.add_handler(CommandHandler("departures", cmd_departures))
+        application.add_handler(CommandHandler("stops", cmd_stops))
         application.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text)
         )
@@ -185,14 +189,6 @@ def main() -> None:
     finally:
         if server_proc:
             server_proc.terminate()
-
-    application = Application.builder().token(BOT_TOKEN).build()
-    application.add_handler(CommandHandler("start", cmd_start))
-    application.add_handler(CommandHandler("search", cmd_search))
-    application.add_handler(CommandHandler("departures", cmd_departures))
-    application.add_handler(CommandHandler("stops", cmd_stops))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-    application.run_polling()
 
 
 
