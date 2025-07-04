@@ -1,5 +1,6 @@
-import logging
+"""Utility functions for configuring application logging."""
 
+import logging
 
 def setup_logging(debug: bool = False, log_file: str = "app.log") -> None:
     """Configure basic logging for the application."""

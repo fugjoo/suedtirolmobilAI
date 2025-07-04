@@ -1,3 +1,5 @@
+"""Simple NLP parser and classifier for public transport queries."""
+
 from typing import Dict, Optional
 import re
 import logging

@@ -1,3 +1,5 @@
+"""FastAPI application exposing endpoints for trip search and departures."""
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel

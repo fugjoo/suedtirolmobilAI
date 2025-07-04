@@ -1,3 +1,5 @@
+"""Telegram bot interface for interacting with the API service."""
+
 import sys
 import argparse
 import subprocess
