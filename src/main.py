@@ -42,9 +42,9 @@ def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = Fal
     logger.debug("/search result: %s", result)
     if format == "json":
         return result
-    lang = params.get("lang", "de")
+    lang = params.get("lang") or nlp_parser.detect_language(req.text)
     if chatgpt:
-        text = chatgpt_helper.narrative_trip_summary(result)
+        text = chatgpt_helper.narrative_trip_summary(result, lang=lang)
         return PlainTextResponse(text)
     if format == "text":
         text = format_search_result(result, legs_only=False, lang=lang)

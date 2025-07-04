@@ -30,7 +30,7 @@ def get_stop_code(query: str, lang: Optional[str] = None) -> str:
         "locationServerActive": 1,
         "outputEncoding": "UTF-8",
     }
-    if lang in ("de", "it"):
+    if lang in ("de", "it", "en"):
         params["language"] = lang
 
     logger.debug("Requesting stop code for '%s'", query)
@@ -123,7 +123,7 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
         "odvMacro": "true",
         "outputEncoding": "UTF-8",
     }
-    if lang in ("de", "it"):
+    if lang in ("de", "it", "en"):
         efa_params["language"] = lang
 
     time = params.get("time")
@@ -160,7 +160,7 @@ def dm_request(stop_name: str, limit: int = 10, lang: Optional[str] = None) -> D
         "odvMacro": "true",
         "outputEncoding": "UTF-8",
     }
-    if lang in ("de", "it"):
+    if lang in ("de", "it", "en"):
         params["language"] = lang
 
     logger.debug("DM request params: %s", params)
@@ -188,7 +188,7 @@ def stopfinder_request(query: str, lang: Optional[str] = None) -> Dict[str, Any]
         "locationServerActive": 1,
         "outputEncoding": "UTF-8",
     }
-    if lang in ("de", "it"):
+    if lang in ("de", "it", "en"):
         params["language"] = lang
     logger.info("Stop finder for query '%s'", query)
     logger.debug("StopFinder params: %s", params)
