@@ -117,6 +117,9 @@ Use `--api-url` to specify the address of the running API. The option
 defaults to the value of the `API_URL` environment variable or
 `http://localhost:8000` if unset.
 
+When selecting a command from the bot's keyboard without additional text,
+the bot will ask for the required input before sending the request.
+
 ## Testing
 ```bash
 pytest

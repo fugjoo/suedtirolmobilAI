@@ -9,8 +9,14 @@ if sys.version_info < (3, 8):
     raise RuntimeError("telegram_bot.py requires Python 3.8 or newer")
 
 import requests
-from telegram import ReplyKeyboardMarkup
-from telegram.ext import Application, MessageHandler, CommandHandler, filters
+from telegram import ReplyKeyboardMarkup, ForceReply
+from telegram.ext import (
+    Application,
+    MessageHandler,
+    CommandHandler,
+    ConversationHandler,
+    filters,
+)
 
 from . import chatgpt_helper, nlp_parser
 from .logging_utils import setup_logging
@@ -21,6 +27,9 @@ setup_logging()
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
 USE_CHATGPT = False
+
+# Conversation states for interactive commands
+SEARCH, DEPARTURES = range(2)
 
 
 def parse_args(args=None):
@@ -97,8 +106,16 @@ async def cmd_start(update, context):
 async def cmd_search(update, context):
     query = update.message.text.partition(" ")[2].strip()
     if not query:
-        await update.message.reply_text("Please provide a query after /search")
-        return
+        await update.message.reply_text(
+            "Please provide a query for /search:", reply_markup=ForceReply()
+        )
+        return SEARCH
+    return await handle_search_query(update, context, query)
+
+
+async def handle_search_query(update, context, query=None):
+    if query is None:
+        query = update.message.text.strip()
     logger.info("/search %s", query)
     try:
         url = f"{API_URL}/search"
@@ -113,13 +130,22 @@ async def cmd_search(update, context):
             await update.message.reply_text(f"Error: {resp.text}")
     except Exception as exc:
         await update.message.reply_text(f"Request failed: {exc}")
+    return ConversationHandler.END
 
 
 async def cmd_departures(update, context):
     stop = update.message.text.partition(" ")[2].strip()
     if not stop:
-        await update.message.reply_text("Please provide a stop name after /departures")
-        return
+        await update.message.reply_text(
+            "Please provide a stop name for /departures:", reply_markup=ForceReply()
+        )
+        return DEPARTURES
+    return await handle_departures_query(update, context, stop)
+
+
+async def handle_departures_query(update, context, stop=None):
+    if stop is None:
+        stop = update.message.text.strip()
     logger.info("/departures %s", stop)
     try:
         url = f"{API_URL}/departures?format=text"
@@ -134,6 +160,7 @@ async def cmd_departures(update, context):
             await update.message.reply_text(f"Error: {resp.text}")
     except Exception as exc:
         await update.message.reply_text(f"Request failed: {exc}")
+    return ConversationHandler.END
 
 
 async def cmd_stops(update, context):
@@ -182,8 +209,31 @@ def main() -> None:
     try:
         application = Application.builder().token(BOT_TOKEN).build()
         application.add_handler(CommandHandler("start", cmd_start))
-        application.add_handler(CommandHandler("search", cmd_search))
-        application.add_handler(CommandHandler("departures", cmd_departures))
+
+        search_conv = ConversationHandler(
+            entry_points=[CommandHandler("search", cmd_search)],
+            states={
+                SEARCH: [
+                    MessageHandler(
+                        filters.TEXT & ~filters.COMMAND, handle_search_query
+                    )
+                ]
+            },
+            fallbacks=[],
+        )
+        depart_conv = ConversationHandler(
+            entry_points=[CommandHandler("departures", cmd_departures)],
+            states={
+                DEPARTURES: [
+                    MessageHandler(
+                        filters.TEXT & ~filters.COMMAND, handle_departures_query
+                    )
+                ]
+            },
+            fallbacks=[],
+        )
+        application.add_handler(search_conv)
+        application.add_handler(depart_conv)
         application.add_handler(CommandHandler("stops", cmd_stops))
         application.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text)
