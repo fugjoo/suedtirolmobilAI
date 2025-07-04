@@ -32,3 +32,25 @@ def test_parse_query_multiple_tokens():
     assert result.get("from_stop") == "Bozen"
     assert result.get("to_stop") == "Sterzing, Busbahnhof"
 
+
+def test_classify_request_departures():
+    text = "Abfahrten Brixen"
+    result = nlp_parser.classify_request(text)
+    assert result["endpoint"] == "departures"
+    assert result["stop"] == text
+
+
+def test_classify_request_stops():
+    text = "Haltestelle Brixen"
+    result = nlp_parser.classify_request(text)
+    assert result["endpoint"] == "stops"
+    assert result["query"] == text
+
+
+def test_classify_request_search():
+    text = "Wie komme ich von Bozen nach Meran?"
+    result = nlp_parser.classify_request(text)
+    assert result["endpoint"] == "search"
+    assert result.get("from_stop") == "Bozen"
+    assert result.get("to_stop") == "Meran"
+

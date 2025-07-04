@@ -42,14 +42,15 @@ def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = Fal
     logger.debug("/search result: %s", result)
     if format == "json":
         return result
+    lang = params.get("lang", "de")
     if chatgpt:
         text = chatgpt_helper.narrative_trip_summary(result)
         return PlainTextResponse(text)
     if format == "text":
-        text = format_search_result(result, legs_only=False)
+        text = format_search_result(result, legs_only=False, lang=lang)
         return PlainTextResponse(text)
     # default plain-text response lists the individual legs
-    text = format_search_result(result, legs_only=True)
+    text = format_search_result(result, legs_only=True, lang=lang)
     return PlainTextResponse(text)
 
 
@@ -63,7 +64,7 @@ def departures(req: DMRequest, format: str = "json", chatgpt: bool = False):
     result = efa_api.dm_request(req.stop, req.limit, lang)
     logger.debug("/departures result: %s", result)
     if format == "text":
-        text = format_departures_result(result)
+        text = format_departures_result(result, lang=lang)
         if chatgpt:
             text = chatgpt_helper.reformat_summary(text)
         return PlainTextResponse(text)
@@ -80,7 +81,7 @@ def stops(req: StopFinderRequest, format: str = "json", chatgpt: bool = False):
     result = efa_api.stopfinder_request(req.query, lang)
     logger.debug("/stops result: %s", result)
     if format == "text":
-        text = format_stops_result(result)
+        text = format_stops_result(result, lang=lang)
         if chatgpt:
             text = chatgpt_helper.reformat_summary(text)
         return PlainTextResponse(text)

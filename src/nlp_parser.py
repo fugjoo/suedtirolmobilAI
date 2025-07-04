@@ -132,3 +132,42 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
     logger.debug("Parsed parameters: %s", result)
     return result
 
+
+# --- new helper for endpoint detection ---
+
+_KEYWORDS_DEPARTURES = {
+    "de": ["abfahrt", "abfahrten"],
+    "en": ["departure", "departures"],
+    "it": ["partenza", "partenze"],
+}
+
+_KEYWORDS_STOPS = {
+    "de": ["haltestelle", "haltestellen", "stop", "stops"],
+    "en": ["stop", "stops", "station", "stations"],
+    "it": ["fermata", "fermate"],
+}
+
+
+def classify_request(text: str) -> Dict[str, str]:
+    """Classify the user request and detect the language.
+
+    The returned dictionary contains an ``endpoint`` key with one of
+    ``"search"``, ``"departures"`` or ``"stops"``.  Additional parameters
+    may be included for the chosen endpoint, similar to the ChatGPT helper.
+    """
+
+    lang = _detect_language(text)
+    text_l = text.lower()
+
+    for kw in _KEYWORDS_DEPARTURES.get(lang, []):
+        if kw in text_l:
+            return {"endpoint": "departures", "stop": text, "lang": lang}
+
+    for kw in _KEYWORDS_STOPS.get(lang, []):
+        if kw in text_l:
+            return {"endpoint": "stops", "query": text, "lang": lang}
+
+    params = parse_query(text)
+    params["endpoint"] = "search"
+    return params
+
