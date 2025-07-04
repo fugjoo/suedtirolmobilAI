@@ -8,3 +8,4 @@ __pycache__/
 # Editor directories
 .vscode/
 .idea/
+.env

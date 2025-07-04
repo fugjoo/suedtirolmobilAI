@@ -1,4 +1,3 @@
-import os
 import sys
 import argparse
 import subprocess
@@ -9,6 +8,8 @@ if sys.version_info < (3, 8):
     raise RuntimeError("telegram_bot.py requires Python 3.8 or newer")
 
 import requests
+
+from .config import API_URL as CONFIG_API_URL, TELEGRAM_TOKEN
 from telegram import ReplyKeyboardMarkup, ForceReply
 from telegram.ext import (
     Application,
@@ -24,8 +25,8 @@ from .logging_utils import setup_logging
 logger = logging.getLogger(__name__)
 setup_logging()
 
-API_URL = os.getenv("API_URL", "http://localhost:8000")
-BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
+API_URL = CONFIG_API_URL
+BOT_TOKEN = TELEGRAM_TOKEN
 USE_CHATGPT = False
 
 # Conversation states for interactive commands
