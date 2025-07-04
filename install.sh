@@ -34,8 +34,20 @@ else
     fi
 fi
 
-# Create virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
+# Create virtual environment if needed or outdated
+if [ -x "venv/bin/python" ]; then
+    VENV_VERSION=$(venv/bin/python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+    if ! venv/bin/python - <<'EOF'
+import sys
+sys.exit(0 if sys.version_info >= (3, 8) else 1)
+EOF
+    then
+        NEW_VERSION=$($PYTHON_CMD -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+        echo "Recreating venv with Python $NEW_VERSION (was $VENV_VERSION)"
+        rm -rf venv
+        $PYTHON_CMD -m venv venv
+    fi
+else
     $PYTHON_CMD -m venv venv
 fi
 

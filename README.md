@@ -22,6 +22,8 @@ Python 3.8 or newer is required.
 ./install.sh
 source venv/bin/activate
 ```
+The script reuses an existing `venv` if it already runs on Python 3.8 or newer
+and automatically recreates it when an older interpreter is detected.
 ### Manual setup
 ```bash
 python3 -m venv venv
