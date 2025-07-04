@@ -104,6 +104,23 @@ def test_format_departures_result_formats_line():
     )
 
 
+def test_format_departures_result_extracts_stop_from_events():
+    result = {
+        "stopEvents": {
+            "stopEvent": {
+                "stop": {"name": "Bozen, Bahnhof"},
+                "time": "12:00",
+                "servingLine": {"name": "Bus", "direction": "Town"},
+                "platformName": "1",
+            }
+        }
+    }
+
+    summary = format_departures_result(result)
+    assert summary.startswith("Abfahrten Bozen, Bahnhof:")
+    assert "12:00 Bus Richtung Town Steig 1" in summary
+
+
 def test_format_departures_result_includes_number():
     result = {
         "departures": {
