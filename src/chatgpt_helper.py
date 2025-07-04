@@ -10,6 +10,24 @@ logger = logging.getLogger(__name__)
 
 API_URL = "https://api.openai.com/v1/chat/completions"
 
+# System prompts in different languages for narrative summaries
+_PROMPTS = {
+    "de": (
+        "Formuliere aus den folgenden Verbindungsdaten einen kurzen und "
+        "freundlichen Text. Gib die Verbindungsdaten exakt wieder und "
+        "sprich die Person in Du-Form an."
+    ),
+    "en": (
+        "Write a short and friendly summary of the following trip details. "
+        "Repeat the details exactly and address the person informally."
+    ),
+    "it": (
+        "Formula dai seguenti dati di viaggio un breve testo cordiale. "
+        "Riporta esattamente i dati di viaggio e rivolgiti alla persona "
+        "in modo informale."
+    ),
+}
+
 
 def parse_query_chatgpt(text: str) -> dict:
     """Parse the query text via the OpenAI ChatGPT API."""
@@ -138,15 +156,24 @@ def reformat_summary(text: str) -> str:
     return content
 
 
-def narrative_trip_summary(result: dict) -> str:
-    """Return a friendly ChatGPT summary for a trip search result."""
+def narrative_trip_summary(result: dict, lang: str = "de") -> str:
+    """Return a friendly ChatGPT summary for a trip search result.
+
+    Parameters
+    ----------
+    result: dict
+        Parsed trip search response.
+    lang: str, optional
+        Language code for the summary. Defaults to ``"de"``.
+    """
     from .summaries import format_search_result
 
     api_key = OPENAI_API_KEY
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
 
-    legs_text = format_search_result(result, legs_only=True)
+    legs_text = format_search_result(result, legs_only=True, lang=lang)
+    prompt = _PROMPTS.get(lang, _PROMPTS["en"])
 
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -156,13 +183,7 @@ def narrative_trip_summary(result: dict) -> str:
         "model": "gpt-3.5-turbo",
         "temperature": 0,
         "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Formuliere aus den folgenden Verbindungsdaten einen kurzen und freundlichen Text. "
-                    "Gib die Verbindungsdaten exakt wieder und sprich die Person in Du-Form an."
-                ),
-            },
+            {"role": "system", "content": prompt},
             {"role": "user", "content": legs_text},
         ],
     }

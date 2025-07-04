@@ -67,7 +67,8 @@ def run_search(query: str, output_format: str = "legs", debug: bool = False, use
         print(json.dumps(response, ensure_ascii=False, indent=2))
     else:
         if use_chatgpt:
-            text = chatgpt_helper.narrative_trip_summary(response)
+            lang = params.get("lang") or nlp_parser.detect_language(query)
+            text = chatgpt_helper.narrative_trip_summary(response, lang=lang)
         elif output_format == "legs":
             text = format_search_result(response, legs_only=True)
         else:
