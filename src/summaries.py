@@ -3,6 +3,52 @@
 from typing import Any, Dict, List
 
 
+_TL = {
+    "de": {
+        "from": "Von",
+        "to": "Nach",
+        "departures_for": "Abfahrten f\u00fcr {stop}",
+        "departures": "Abfahrten:",
+        "direction": "Richtung",
+        "platform": "Steig",
+        "at": "um {time} Uhr",
+        "on_foot": "zu Fu\u00df",
+        "with": "mit {mode}",
+        "stops_found": "Gefundene Haltestellen:",
+        "arrival": "An:",
+        "departure": "Ab:",
+    },
+    "en": {
+        "from": "From",
+        "to": "To",
+        "departures_for": "Departures for {stop}",
+        "departures": "Departures:",
+        "direction": "Direction",
+        "platform": "Platform",
+        "at": "at {time}",
+        "on_foot": "on foot",
+        "with": "with {mode}",
+        "stops_found": "Stops found:",
+        "arrival": "Arr:",
+        "departure": "Dep:",
+    },
+    "it": {
+        "from": "Da",
+        "to": "A",
+        "departures_for": "Partenze per {stop}",
+        "departures": "Partenze:",
+        "direction": "Direzione",
+        "platform": "Banchina",
+        "at": "alle {time}",
+        "on_foot": "a piedi",
+        "with": "con {mode}",
+        "stops_found": "Fermate trovate:",
+        "arrival": "Arrivo:",
+        "departure": "Partenza:",
+    },
+}
+
+
 def _extract_time(data: Any) -> str:
     """Return a time string from different data structures."""
     if isinstance(data, str):
@@ -27,7 +73,9 @@ def _plural(word: str, count: int) -> str:
     return word if count == 1 else f"{word}s"
 
 
-def format_search_result(result: Dict[str, Any], legs_only: bool = False) -> str:
+def format_search_result(
+    result: Dict[str, Any], legs_only: bool = False, lang: str = "de"
+) -> str:
     """Return a readable summary of a trip search result.
 
     Parameters
@@ -40,6 +88,8 @@ def format_search_result(result: Dict[str, Any], legs_only: bool = False) -> str
     """
     if not isinstance(result, dict):
         return str(result)
+
+    tl = _TL.get(lang, _TL["en"])
 
     from_stop = (
         result.get("from_stop")
@@ -68,9 +118,9 @@ def format_search_result(result: Dict[str, Any], legs_only: bool = False) -> str
     if not trips:
         header_parts = []
         if from_stop:
-            header_parts.append(f"from {from_stop}")
+            header_parts.append(f"{tl['from'].lower()} {from_stop}")
         if to_stop:
-            header_parts.append(f"to {to_stop}")
+            header_parts.append(f"{tl['to'].lower()} {to_stop}")
         header = " ".join(header_parts) if header_parts else "found"
         return f"0 trips {header}."
 
@@ -105,22 +155,22 @@ def format_search_result(result: Dict[str, Any], legs_only: bool = False) -> str
             or ""
         )
         if not mode_name or "fuß" in mode_name.lower() or "walk" in mode_name.lower():
-            mode_desc = "zu Fuß"
+            mode_desc = tl["on_foot"]
         else:
-            mode_desc = f"mit {mode_name}"
-        origin_line = f"Von: {start_name}"
+            mode_desc = tl["with"].format(mode=mode_name)
+        origin_line = f"{tl['from']}: {start_name}"
         if start_time:
-            origin_line += f" um {start_time} Uhr {mode_desc}"
+            origin_line += " " + tl["at"].format(time=start_time) + f" {mode_desc}"
         else:
             origin_line += f" {mode_desc}"
         lines.append(origin_line)
         dest_name = dest.get("name") or to_stop
-        lines.append(f"Nach: {dest_name}")
+        lines.append(f"{tl['to']}: {dest_name}")
     elif not legs_only:
         start_name = from_stop
-        lines.append(f"Von: {start_name}")
+        lines.append(f"{tl['from']}: {start_name}")
         if to_stop:
-            lines.append(f"Nach: {to_stop}")
+            lines.append(f"{tl['to']}: {to_stop}")
 
     if leg_list and not legs_only:
         lines.append("")
@@ -144,44 +194,44 @@ def format_search_result(result: Dict[str, Any], legs_only: bool = False) -> str
         )
         if not line_name or "fuß" in line_name.lower() or "walk" in line_name.lower():
             if legs_only:
-                line_desc = "zu Fuß"
+                line_desc = tl["on_foot"]
             else:
                 line_desc = "zu Fuß"
         else:
             if legs_only:
                 line_desc = line_name
             else:
-                line_desc = f"mit {line_name}"
+                line_desc = tl["with"].format(mode=line_name)
             direction = (leg.get("mode") or {}).get("destination") or ""
             if direction:
-                line_desc += f" Richtung {direction}"
+                line_desc += f" {tl['direction']} {direction}"
         if legs_only:
             lines.append(line_desc)
             start_line = f"{o_time}: {o_name}" if o_time else o_name
             origin_platform = origin.get("platform") or origin.get("platformName")
             if origin_platform:
-                start_line += f" von Steig {origin_platform}"
+                start_line += f" von {tl['platform']} {origin_platform}"
             lines.append(start_line)
             end_line = f"{d_time}: {d_name}" if d_time else d_name
             platform = dest.get("platform") or dest.get("platformName")
             if platform:
-                end_line += f" auf Steig {platform}"
+                end_line += f" auf {tl['platform']} {platform}"
             lines.append(end_line)
         else:
-            dep_line = f"Ab: {o_name}"
+            dep_line = f"{tl['departure']} {o_name}"
             if o_time:
-                dep_line += f" um {o_time} Uhr {line_desc}"
+                dep_line += " " + tl["at"].format(time=o_time) + f" {line_desc}"
             else:
                 dep_line += f" {line_desc}"
             origin_platform = origin.get("platform") or origin.get("platformName")
             if origin_platform:
-                dep_line += f" von Steig {origin_platform}"
-            arr_line = f"An: {d_name}"
+                dep_line += f" von {tl['platform']} {origin_platform}"
+            arr_line = f"{tl['arrival']} {d_name}"
             if d_time:
-                arr_line += f" um {d_time} Uhr"
+                arr_line += " " + tl["at"].format(time=d_time)
             platform = dest.get("platform") or dest.get("platformName")
             if platform:
-                arr_line += f" auf Steig {platform}"
+                arr_line += f" auf {tl['platform']} {platform}"
             lines.append(dep_line)
             lines.append(arr_line)
         if idx < len(leg_list) - 1:
@@ -190,10 +240,12 @@ def format_search_result(result: Dict[str, Any], legs_only: bool = False) -> str
     return "\n".join(lines)
 
 
-def format_departures_result(result: Dict[str, Any]) -> str:
+def format_departures_result(result: Dict[str, Any], lang: str = "de") -> str:
     """Return a readable summary of departures."""
     if not isinstance(result, dict):
         return str(result)
+
+    tl = _TL.get(lang, _TL["en"])
 
     stop_name = (
         result.get("stop_name")
@@ -223,7 +275,7 @@ def format_departures_result(result: Dict[str, Any]) -> str:
         suffix = f" for '{stop_name}'" if stop_name else ""
         return f"0 departures{suffix}."
 
-    lines = [f"Abfahrten für {stop_name}:"] if stop_name else ["Abfahrten:"]
+    lines = [tl["departures_for"].format(stop=stop_name)] if stop_name else [tl["departures"]]
 
     for dep in departures:
         time = (
@@ -244,11 +296,11 @@ def format_departures_result(result: Dict[str, Any]) -> str:
         if line_name:
             parts.append(line_name)
         if direction:
-            parts.append(f"Richtung {direction}")
+            parts.append(f"{tl['direction']} {direction}")
         if platform:
-            parts.append(f"Steig {platform}")
+            parts.append(f"{tl['platform']} {platform}")
         if time:
-            parts.append(f"um {time} Uhr")
+            parts.append(tl["at"].format(time=time))
 
         entry = " ".join(parts)
         lines.append(entry.strip())
@@ -256,10 +308,12 @@ def format_departures_result(result: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def format_stops_result(result: Dict[str, Any]) -> str:
+def format_stops_result(result: Dict[str, Any], lang: str = "de") -> str:
     """Return a readable summary of stop suggestions."""
     if not isinstance(result, dict):
         return str(result)
+
+    tl = _TL.get(lang, _TL["en"])
 
     # Gracefully handle missing or null fields in the nested structure
     stopfinder = result.get("stopFinder")
@@ -308,7 +362,7 @@ def format_stops_result(result: Dict[str, Any]) -> str:
     entries.sort(key=lambda e: e["type"])
     best_idx = entries.index(best_entry) if best_entry in entries else None
 
-    lines = ["Gefundene Haltestellen:"]
+    lines = [tl["stops_found"]]
     for idx, entry in enumerate(entries):
         if best_idx is not None and idx == best_idx:
             lines.append(f"[TOP] {entry['text']}")

@@ -34,6 +34,18 @@ def test_format_stops_result_handles_points_list():
     assert top_line.startswith("[TOP] ")
 
 
+def test_format_stops_result_english():
+    result = {
+        "stopFinder": {
+            "points": [
+                {"name": "A", "anyType": "stop", "quality": "10"}
+            ]
+        }
+    }
+    summary = format_stops_result(result, lang="en")
+    assert "Stops found:" in summary
+
+
 def test_format_search_result_handles_points_leg():
     result = {
         "trips": {
@@ -180,4 +192,22 @@ def test_format_departures_result_structured_time():
 
     summary = format_departures_result(result)
     assert "um 09:15 Uhr" in summary
+
+
+def test_format_departures_result_english():
+    result = {
+        "departures": {
+            "departure": [
+                {
+                    "time": "08:00",
+                    "servingLine": {"name": "Bus", "direction": "Town"},
+                    "platformName": "1",
+                }
+            ]
+        }
+    }
+
+    summary = format_departures_result(result, lang="en")
+    assert "Departures" in summary
+    assert "Platform" in summary
 

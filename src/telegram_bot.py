@@ -12,7 +12,7 @@ import requests
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import Application, MessageHandler, CommandHandler, filters
 
-from . import chatgpt_helper
+from . import chatgpt_helper, nlp_parser
 from .logging_utils import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,10 @@ async def handle_text(update, context):
     text = update.message.text
     logger.info("Received message: %s", text)
     try:
-        info = chatgpt_helper.classify_query_chatgpt(text) if USE_CHATGPT else {}
+        if USE_CHATGPT:
+            info = chatgpt_helper.classify_query_chatgpt(text)
+        else:
+            info = nlp_parser.classify_request(text)
     except Exception as exc:
         logger.error("ChatGPT classification failed: %s", exc)
         info = {}
