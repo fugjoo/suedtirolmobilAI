@@ -73,7 +73,9 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
 
     logger.debug("Parsing text (%s): %s", lang, text)
     doc = nlp(text)
-    stops = [t.text for t in doc if t.pos_ == "PROPN"]
+    stops = [t.text for t in doc if t.pos_ in {"PROPN", "NOUN"}]
+    if not stops:
+        stops = [t.text for t in doc if t.text and t.text[0].isupper()]
 
     # Filter out tokens that look like a time expression
     stops = [s for s in stops if not _RE_TIME_TOKEN.fullmatch(s)]
@@ -94,6 +96,14 @@ def parse_query(text: str) -> Dict[str, Optional[str]]:
 
     if m_from:
         from_stop = m_from.group(1).strip(" ,.")
+    elif m_to:
+        before = text[:m_to.start()].strip()
+        if before:
+            from_stop = before.split()[-1].strip(" ,.")
+        elif stops:
+            from_stop = stops.pop(0)
+        else:
+            from_stop = None
     elif stops:
         from_stop = stops.pop(0)
     else:
@@ -170,6 +180,12 @@ def classify_request(text: str) -> Dict[str, str]:
             return {"endpoint": "stops", "query": text, "lang": lang}
 
     params = parse_query(text)
+    stops = [params.get("from_stop"), params.get("to_stop")]
+    stops = [s for s in stops if s]
+
+    if len(stops) == 1:
+        return {"endpoint": "departures", "stop": stops[0], "lang": params.get("lang", lang)}
+
     params["endpoint"] = "search"
     return params
 
