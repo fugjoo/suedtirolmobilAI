@@ -4,11 +4,9 @@ import requests
 
 from .config import EFA_BASE_URL
 
-from .logging_utils import setup_logging
 from . import nlp_parser
 
 logger = logging.getLogger(__name__)
-setup_logging()
 
 BASE_URL = EFA_BASE_URL
 
