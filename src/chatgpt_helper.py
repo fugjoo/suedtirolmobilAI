@@ -1,7 +1,8 @@
-import os
 import json
 import logging
 import requests
+
+from .config import OPENAI_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +11,7 @@ API_URL = "https://api.openai.com/v1/chat/completions"
 
 def parse_query_chatgpt(text: str) -> dict:
     """Parse the query text via the OpenAI ChatGPT API."""
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = OPENAI_API_KEY
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
 
@@ -54,7 +55,7 @@ def classify_query_chatgpt(text: str) -> dict:
     is one of ``"search"``, ``"departures"`` or ``"stops"``.  Additional keys
     provide the extracted parameters for the chosen endpoint.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = OPENAI_API_KEY
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
 
@@ -102,7 +103,7 @@ def reformat_summary(text: str) -> str:
     response as plain text. The API key is read from the ``OPENAI_API_KEY``
     environment variable.
     """
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = OPENAI_API_KEY
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
 
@@ -139,7 +140,7 @@ def narrative_trip_summary(result: dict) -> str:
     """Return a friendly ChatGPT summary for a trip search result."""
     from .summaries import format_search_result
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = OPENAI_API_KEY
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
 

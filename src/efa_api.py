@@ -1,7 +1,8 @@
-import os
 from typing import Dict, Any, List, Optional
 import logging
 import requests
+
+from .config import EFA_BASE_URL
 
 from .logging_utils import setup_logging
 from . import nlp_parser
@@ -9,7 +10,7 @@ from . import nlp_parser
 logger = logging.getLogger(__name__)
 setup_logging()
 
-BASE_URL = os.environ.get("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
+BASE_URL = EFA_BASE_URL
 
 
 def get_stop_code(query: str, lang: Optional[str] = None) -> str:

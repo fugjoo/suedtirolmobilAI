@@ -42,6 +42,11 @@ uvicorn src.main:app --host 0.0.0.0 --reload
 ## Configuration
 - `EFA_BASE_URL` – base URL of the Mentz‑EFA endpoint
 - `OPENAI_API_KEY` – enable ChatGPT features
+- `TELEGRAM_TOKEN` – required for the Telegram bot
+- `API_URL` – base URL of the API used by the Telegram bot
+
+Environment variables can also be stored in a `.env` file in the project root.
+The file is loaded automatically and should not be committed to version control.
 
 Example:
 ```bash
