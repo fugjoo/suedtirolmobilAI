@@ -1,0 +1,116 @@
+openapi: 3.0.1
+info:
+  title: suedtirolmobilAI
+  description: API for public transport queries.
+  version: "1.0"
+servers:
+  - url: http://localhost:8000
+paths:
+  /search:
+    post:
+      summary: Search for a trip
+      operationId: searchTrip
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [text, json]
+        - in: query
+          name: chatgpt
+          schema:
+            type: boolean
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+              required:
+                - text
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+            text/plain:
+              schema:
+                type: string
+  /departures:
+    post:
+      summary: Upcoming departures for a stop
+      operationId: listDepartures
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [text, json]
+        - in: query
+          name: chatgpt
+          schema:
+            type: boolean
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stop:
+                  type: string
+                limit:
+                  type: integer
+                  default: 10
+              required:
+                - stop
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+            text/plain:
+              schema:
+                type: string
+  /stops:
+    post:
+      summary: Suggest stop names
+      operationId: listStops
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [text, json]
+        - in: query
+          name: chatgpt
+          schema:
+            type: boolean
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+              required:
+                - query
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+            text/plain:
+              schema:
+                type: string

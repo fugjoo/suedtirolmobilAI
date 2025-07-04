@@ -11,6 +11,7 @@ transport and forwards them to a Mentz‑EFA backend.
 - Automatically decide between trip search, departures and stop search
   based on the entered text.
 - Optional ChatGPT summaries for nicer text output.
+- ChatGPT plugin manifest for webhook integration.
 - Command line client for quick access.
 - Simple Telegram bot for chat interaction.
 - Configurable Mentz‑EFA base URL via `EFA_BASE_URL`.
@@ -145,6 +146,12 @@ OPENAI_API_KEY=sk-... python -m src.cli search "Bozen nach Meran" --chatgpt
 # or for the server
 OPENAI_API_KEY=sk-... uvicorn src.main:app --host 0.0.0.0 --reload
 ```
+
+## ChatGPT plugin
+The repository includes a plugin manifest and OpenAPI file in the
+`.well-known/` directory. When the server is running they are served under
+`/.well-known/ai-plugin.json` and `/.well-known/openapi.yaml` for easy
+integration with ChatGPT.
 
 ## Telegram bot
 Forward messages to the API using the example bot:

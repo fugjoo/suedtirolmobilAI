@@ -2,6 +2,8 @@
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from pydantic import BaseModel
 from typing import Optional
 import logging
@@ -17,6 +19,11 @@ from .logging_utils import setup_logging
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+app.mount(
+    "/.well-known",
+    StaticFiles(directory=Path(__file__).resolve().parent.parent / ".well-known"),
+    name="well-known",
+)
 
 class SearchRequest(BaseModel):
     text: str
