@@ -98,10 +98,27 @@ def test_format_departures_result_formats_line():
     }
 
     summary = format_departures_result(result)
-    assert "Abfahrten f" in summary
+    assert summary.startswith("Abfahrten Brixen:")
     assert (
         "13:20 Citybus 320.1 Richtung Milland KG Arcobaleno Steig A" in summary
     )
+
+
+def test_format_departures_result_extracts_stop_from_events():
+    result = {
+        "stopEvents": {
+            "stopEvent": {
+                "stop": {"name": "Bozen, Bahnhof"},
+                "time": "12:00",
+                "servingLine": {"name": "Bus", "direction": "Town"},
+                "platformName": "1",
+            }
+        }
+    }
+
+    summary = format_departures_result(result)
+    assert summary.startswith("Abfahrten Bozen, Bahnhof:")
+    assert "12:00 Bus Richtung Town Steig 1" in summary
 
 
 def test_format_departures_result_includes_number():

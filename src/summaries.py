@@ -7,7 +7,7 @@ _TL = {
     "de": {
         "from": "Von",
         "to": "Nach",
-        "departures_for": "Abfahrten f\u00fcr {stop}",
+        "departures_for": "Abfahrten {stop}:",
         "departures": "Abfahrten:",
         "direction": "Richtung",
         "platform": "Steig",
@@ -21,7 +21,7 @@ _TL = {
     "en": {
         "from": "From",
         "to": "To",
-        "departures_for": "Departures for {stop}",
+        "departures_for": "Departures {stop}:",
         "departures": "Departures:",
         "direction": "Direction",
         "platform": "Platform",
@@ -35,7 +35,7 @@ _TL = {
     "it": {
         "from": "Da",
         "to": "A",
-        "departures_for": "Partenze per {stop}",
+        "departures_for": "Partenze {stop}:",
         "departures": "Partenze:",
         "direction": "Direzione",
         "platform": "Banchina",
@@ -250,10 +250,33 @@ def format_departures_result(result: Dict[str, Any], lang: str = "de") -> str:
     stop_name = (
         result.get("stop_name")
         or result.get("stopName")
-        or result.get("stop", {}).get("name")
+        or (result.get("stop") or {}).get("name")
         or result.get("name")
         or ""
     )
+
+    if not stop_name:
+        dep_list = result.get("departureList")
+        if isinstance(dep_list, dict):
+            stop_name = (
+                (dep_list.get("stop") or {}).get("name")
+                or dep_list.get("stopName")
+                or ""
+            )
+
+    if not stop_name:
+        stop_events = result.get("stopEvents")
+        if isinstance(stop_events, dict):
+            event = stop_events.get("stopEvent")
+            if isinstance(event, list) and event:
+                event = event[0]
+            if isinstance(event, dict):
+                stop_name = (
+                    (event.get("stop") or {}).get("name")
+                    or (event.get("location") or {}).get("name")
+                    or event.get("stopName")
+                    or ""
+                )
 
     raw_departures = (
         result.get("departures")
