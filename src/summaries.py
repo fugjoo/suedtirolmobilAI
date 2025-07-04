@@ -7,7 +7,7 @@ _TL = {
     "de": {
         "from": "Von",
         "to": "Nach",
-        "departures_for": "Abfahrten f\u00fcr {stop}",
+        "departures_for": "Abfahrten {stop}:",
         "departures": "Abfahrten:",
         "direction": "Richtung",
         "platform": "Steig",
@@ -21,7 +21,7 @@ _TL = {
     "en": {
         "from": "From",
         "to": "To",
-        "departures_for": "Departures for {stop}",
+        "departures_for": "Departures {stop}:",
         "departures": "Departures:",
         "direction": "Direction",
         "platform": "Platform",
@@ -35,7 +35,7 @@ _TL = {
     "it": {
         "from": "Da",
         "to": "A",
-        "departures_for": "Partenze per {stop}",
+        "departures_for": "Partenze {stop}:",
         "departures": "Partenze:",
         "direction": "Direzione",
         "platform": "Banchina",
