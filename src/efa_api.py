@@ -1,3 +1,5 @@
+"""Wrapper functions for accessing the Mentz-EFA public transport API."""
+
 from typing import Dict, Any, List, Optional
 import logging
 import requests

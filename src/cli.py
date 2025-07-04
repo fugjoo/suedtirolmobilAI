@@ -1,3 +1,5 @@
+"""Command line interface for querying the public transport API."""
+
 import argparse
 import logging
 
