@@ -98,7 +98,7 @@ def test_format_departures_result_formats_line():
     }
 
     summary = format_departures_result(result)
-    assert "Abfahrten f" in summary
+    assert summary.startswith("Abfahrten Brixen:")
     assert (
         "13:20 Citybus 320.1 Richtung Milland KG Arcobaleno Steig A" in summary
     )
