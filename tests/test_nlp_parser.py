@@ -68,3 +68,18 @@ def test_classify_request_search():
     assert result.get("from_stop") == "Bozen"
     assert result.get("to_stop") == "Meran"
 
+
+def test_classify_request_single_stop_departures():
+    text = "Bozen"
+    result = nlp_parser.classify_request(text)
+    assert result["endpoint"] == "departures"
+    assert result.get("stop") == "Bozen"
+
+
+def test_classify_request_two_stops_search():
+    text = "Bozen Meran"
+    result = nlp_parser.classify_request(text)
+    assert result["endpoint"] == "search"
+    assert result.get("from_stop") == "Bozen"
+    assert result.get("to_stop") == "Meran"
+
