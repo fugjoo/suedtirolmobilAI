@@ -278,12 +278,33 @@ def format_departures_result(result: Dict[str, Any], lang: str = "de") -> str:
     lines = [tl["departures_for"].format(stop=stop_name)] if stop_name else [tl["departures"]]
 
     for dep in departures:
-        time = (
-            _extract_time(dep.get("time"))
+        planned_time = (
+            _extract_time(dep.get("dateTime"))
+            or _extract_time(dep.get("time"))
             or _extract_time((dep.get("departure") or {}).get("time"))
-            or _extract_time(dep.get("dateTime"))
-            or _extract_time(dep.get("realDateTime"))
         )
+        real_time = (
+            _extract_time(dep.get("realDateTime"))
+            or _extract_time((dep.get("departure") or {}).get("realDateTime"))
+            or planned_time
+        )
+        delay = dep.get("servingLine", {}).get("delay")
+        if delay is None and real_time and planned_time and real_time != planned_time:
+            try:
+                r_h, r_m = map(int, real_time.split(":"))
+                p_h, p_m = map(int, planned_time.split(":"))
+                delay = r_h * 60 + r_m - (p_h * 60 + p_m)
+            except (ValueError, TypeError):
+                delay = None
+        try:
+            delay = int(delay) if delay is not None else 0
+        except (TypeError, ValueError):
+            delay = 0
+        if delay:
+            sign = "+" if delay > 0 else "-"
+            time = f"{real_time} ({planned_time} {sign}{abs(delay)})"
+        else:
+            time = real_time
         line_info = dep.get("servingLine") or dep.get("line") or {}
         line_name_part = line_info.get("name")
         line_number_part = line_info.get("number")
@@ -293,14 +314,14 @@ def format_departures_result(result: Dict[str, Any], lang: str = "de") -> str:
         platform = dep.get("platformName") or dep.get("platform")
 
         parts = []
+        if time:
+            parts.append(time)
         if line_name:
             parts.append(line_name)
         if direction:
             parts.append(f"{tl['direction']} {direction}")
         if platform:
             parts.append(f"{tl['platform']} {platform}")
-        if time:
-            parts.append(tl["at"].format(time=time))
 
         entry = " ".join(parts)
         lines.append(entry.strip())
