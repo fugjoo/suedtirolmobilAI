@@ -47,6 +47,54 @@ def parse_query_chatgpt(text: str) -> dict:
         return {}
 
 
+def classify_query_chatgpt(text: str) -> dict:
+    """Classify the user text and extract request parameters via ChatGPT.
+
+    The function returns a dictionary with at least the key ``endpoint`` which
+    is one of ``"search"``, ``"departures"`` or ``"stops"``.  Additional keys
+    provide the extracted parameters for the chosen endpoint.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set")
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "gpt-3.5-turbo",
+        "temperature": 0,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "Decide which public transport API endpoint is best suited "
+                    "for the user request. Choose between 'search', 'departures' "
+                    "and 'stops'. Return JSON with an 'endpoint' key. If the "
+                    "endpoint is 'search', also return 'from_stop', 'to_stop' "
+                    "and optionally 'time'. If it is 'departures', return "
+                    "'stop'. If it is 'stops', return 'query'."
+                ),
+            },
+            {"role": "user", "content": text},
+        ],
+    }
+
+    logger.debug("Classifying query via ChatGPT: %s", text)
+    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    content = data["choices"][0]["message"]["content"].strip()
+    try:
+        parsed = json.loads(content)
+        logger.debug("ChatGPT classified query: %s", parsed)
+        return parsed
+    except json.JSONDecodeError:
+        logger.warning("Unexpected ChatGPT response: %s", content)
+        return {}
+
+
 def reformat_summary(text: str) -> str:
     """Return a ChatGPT reformatted version of ``text``.
 
