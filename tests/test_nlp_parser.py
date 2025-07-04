@@ -33,6 +33,20 @@ def test_parse_query_multiple_tokens():
     assert result.get("to_stop") == "Sterzing, Busbahnhof"
 
 
+def test_parse_query_german_short():
+    text = "Meran nach Bozen"
+    result = nlp_parser.parse_query(text)
+    assert result.get("from_stop") == "Meran"
+    assert result.get("to_stop") == "Bozen"
+
+
+def test_parse_query_two_tokens():
+    text = "Meran Bozen"
+    result = nlp_parser.parse_query(text)
+    assert result.get("from_stop") == "Meran"
+    assert result.get("to_stop") == "Bozen"
+
+
 def test_classify_request_departures():
     text = "Abfahrten Brixen"
     result = nlp_parser.classify_request(text)
