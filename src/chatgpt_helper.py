@@ -13,18 +13,24 @@ API_URL = "https://api.openai.com/v1/chat/completions"
 # System prompts in different languages for narrative summaries
 _PROMPTS = {
     "de": (
-        "Formuliere aus den folgenden Verbindungsdaten einen kurzen und "
-        "freundlichen Text. Gib die Verbindungsdaten exakt wieder und "
+        "Formuliere aus den folgenden Verbindungsdaten einen h\u00f6flichen "
+        "Vorschlag. Beginne mit einem Satz wie 'Du k\u00f6nntest von A nach B "
+        "fahren.' Danach liste strukturiert die Verbindungen mit "
+        "Abfahrts- und Ankunftszeiten auf. Gib die Daten exakt wieder und "
         "sprich die Person in Du-Form an."
     ),
     "en": (
-        "Write a short and friendly summary of the following trip details. "
-        "Repeat the details exactly and address the person informally."
+        "Create a polite suggestion from the trip details. Start with a "
+        "sentence such as 'You could travel from A to B.' Then list the "
+        "connections with departure and arrival times in a structured way. "
+        "Repeat all details exactly and address the person informally."
     ),
     "it": (
-        "Formula dai seguenti dati di viaggio un breve testo cordiale. "
-        "Riporta esattamente i dati di viaggio e rivolgiti alla persona "
-        "in modo informale."
+        "Formula un suggerimento cortese usando i seguenti dati di viaggio. "
+        "Inizia con una frase come 'Potresti andare da A a B.' Quindi elenca "
+        "in modo chiaro le connessioni con orari di partenza e arrivo. "
+        "Riporta i dati esattamente e rivolgiti alla persona in modo "
+        "informale."
     ),
 }
 
@@ -173,6 +179,24 @@ def narrative_trip_summary(result: dict, lang: str = "de") -> str:
         raise RuntimeError("OPENAI_API_KEY not set")
 
     legs_text = format_search_result(result, legs_only=True, lang=lang)
+
+    from_stop = (
+        result.get("from_stop")
+        or (result.get("origin") or {}).get("name")
+    )
+    to_stop = (
+        result.get("to_stop")
+        or (result.get("destination") or {}).get("name")
+    )
+    if from_stop or to_stop:
+        if lang == "de":
+            intro = f"von {from_stop or ''} nach {to_stop or ''}".strip()
+        elif lang == "it":
+            intro = f"da {from_stop or ''} a {to_stop or ''}".strip()
+        else:
+            intro = f"from {from_stop or ''} to {to_stop or ''}".strip()
+        legs_text = f"{intro}\n{legs_text}".strip()
+
     prompt = _PROMPTS.get(lang, _PROMPTS["en"])
 
     headers = {
