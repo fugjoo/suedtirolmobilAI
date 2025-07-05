@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
+# Activate existing virtual environment if present
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+fi
 
 # Ensure Python 3.8+ and build tools (for spaCy dependencies)
 PYTHON_CMD=python3
