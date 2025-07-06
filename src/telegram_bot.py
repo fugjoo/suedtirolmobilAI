@@ -35,6 +35,15 @@ SEARCH, DEPARTURES = range(2)
 
 
 def parse_args(args=None):
+    """Parse command line arguments for the Telegram bot.
+
+    Args:
+        args: Optional list of argument strings. If ``None`` the values are
+            taken from ``sys.argv``.
+
+    Returns:
+        argparse.Namespace containing the parsed options.
+    """
     parser = argparse.ArgumentParser(description="Telegram interface for suedtirolmobilAI")
     parser.add_argument(
         "--api-url",
