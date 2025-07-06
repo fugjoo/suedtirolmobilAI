@@ -38,6 +38,14 @@ class StopFinderRequest(BaseModel):
 
 @app.post("/search")
 def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = False):
+    """Handle trip searches based on natural language input.
+
+    Expects a :class:`SearchRequest` containing the user text. Setting
+    ``format="json"`` returns the raw JSON result. With ``chatgpt=True`` a
+    narrative text summary is produced. ``format="text"`` yields a plain text
+    summary of all legs, while the default response lists just the individual
+    legs.
+    """
     logger.info("/search text='%s'", req.text)
     if chatgpt:
         params = chatgpt_helper.parse_query_chatgpt(req.text)
