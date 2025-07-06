@@ -63,7 +63,9 @@ The service can be configured via the following environment variables:
   ```
 
 Environment variables can also be stored in a `.env` file in the project root.
-The file is loaded automatically and should not be committed to version control.
+A `.env.example` file is included as a template. Copy it to `.env` and fill in
+your credentials. The `.env` file is loaded automatically and should not be
+committed to version control.
 
 ## Command line usage
 ### Search for a trip
