@@ -63,36 +63,74 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 async def handle_text(update, context):
-    """Handle free text by classifying the request via ChatGPT."""
+    """Handle free text and maintain conversation context."""
     text = update.message.text
     logger.info("Received message: %s", text)
+
+    history = context.user_data.get("history", [])
     try:
         if USE_CHATGPT:
-            info = chatgpt_helper.classify_query_chatgpt(text)
+            info = chatgpt_helper.classify_query_chatgpt(text, history=history)
         else:
             info = nlp_parser.classify_request(text)
     except Exception as exc:
-        logger.error("ChatGPT classification failed: %s", exc)
+        logger.error("Classification failed: %s", exc)
         info = {}
 
+    history.append(text)
+    context.user_data["history"] = history[-5:]
+
     endpoint = (info.get("endpoint") or "search").lower()
+
     if endpoint == "departures":
-        stop = info.get("stop") or text
+        stop = info.get("stop") or context.user_data.get("stop") or text
+        context.user_data["stop"] = stop
         url = f"{API_URL}/departures?format=text"
         if USE_CHATGPT:
             url += "&chatgpt=true"
         payload = {"stop": stop}
+
     elif endpoint == "stops":
         query = info.get("query") or text
         url = f"{API_URL}/stops?format=text"
         if USE_CHATGPT:
             url += "&chatgpt=true"
         payload = {"query": query}
+
     else:
-        url = f"{API_URL}/search"
-        if USE_CHATGPT:
-            url += "?chatgpt=true"
-        payload = {"text": text}
+        params = context.user_data.get("search_params", {})
+        for key in ("from_stop", "to_stop", "time", "lang"):
+            if info.get(key):
+                params[key] = info[key]
+        context.user_data["search_params"] = params
+
+        from_stop = params.get("from_stop")
+        to_stop = params.get("to_stop")
+        time_str = params.get("time")
+        lang = params.get("lang") or nlp_parser.detect_language(text)
+
+        if from_stop and to_stop:
+            if lang == "de":
+                query_text = f"von {from_stop} nach {to_stop}"
+                if time_str:
+                    query_text += f" um {time_str}"
+            elif lang == "it":
+                query_text = f"da {from_stop} a {to_stop}"
+                if time_str:
+                    query_text += f" alle {time_str}"
+            else:
+                query_text = f"from {from_stop} to {to_stop}"
+                if time_str:
+                    query_text += f" at {time_str}"
+            url = f"{API_URL}/search"
+            if USE_CHATGPT:
+                url += "?chatgpt=true"
+            payload = {"text": query_text}
+        else:
+            await update.message.reply_text(
+                "Please provide both origin and destination stops."
+            )
+            return
 
     logger.info("Sending request to %s with payload %s", url, payload)
     try:
@@ -195,6 +233,12 @@ async def cmd_stops(update, context):
         await update.message.reply_text(f"Request failed: {exc}")
 
 
+async def cmd_reset(update, context):
+    """Clear the stored conversation state."""
+    context.user_data.clear()
+    await update.message.reply_text("Conversation reset.")
+
+
 def main() -> None:
     global API_URL, USE_CHATGPT
 
@@ -248,6 +292,7 @@ def main() -> None:
         application.add_handler(search_conv)
         application.add_handler(depart_conv)
         application.add_handler(CommandHandler("stops", cmd_stops))
+        application.add_handler(CommandHandler("reset", cmd_reset))
         application.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text)
         )
