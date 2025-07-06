@@ -74,12 +74,20 @@ def parse_query_chatgpt(text: str) -> dict:
         return {}
 
 
-def classify_query_chatgpt(text: str) -> dict:
+def classify_query_chatgpt(text: str, history=None) -> dict:
     """Classify the user text and extract request parameters via ChatGPT.
 
-    The function returns a dictionary with at least the key ``endpoint`` which
-    is one of ``"search"``, ``"departures"`` or ``"stops"``.  Additional keys
-    provide the extracted parameters for the chosen endpoint.
+    Parameters
+    ----------
+    text: str
+        The latest user input.
+    history: list[str] | None, optional
+        Previous user messages to provide conversation context.
+
+    Returns
+    -------
+    dict
+        Parsed request information containing at least the key ``endpoint``.
     """
     api_key = OPENAI_API_KEY
     if not api_key:
@@ -89,23 +97,28 @@ def classify_query_chatgpt(text: str) -> dict:
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "Decide which public transport API endpoint is best suited "
+                "for the user request. Choose between 'search', 'departures' "
+                "and 'stops'. Return JSON with an 'endpoint' key. If the "
+                "endpoint is 'search', also return 'from_stop', 'to_stop' "
+                "and optionally 'time'. If it is 'departures', return "
+                "'stop'. If it is 'stops', return 'query'."
+            ),
+        }
+    ]
+    if history:
+        for msg in history[-5:]:
+            messages.append({"role": "user", "content": msg})
+    messages.append({"role": "user", "content": text})
+
     payload = {
         "model": "gpt-3.5-turbo",
         "temperature": 0,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "Decide which public transport API endpoint is best suited "
-                    "for the user request. Choose between 'search', 'departures' "
-                    "and 'stops'. Return JSON with an 'endpoint' key. If the "
-                    "endpoint is 'search', also return 'from_stop', 'to_stop' "
-                    "and optionally 'time'. If it is 'departures', return "
-                    "'stop'. If it is 'stops', return 'query'."
-                ),
-            },
-            {"role": "user", "content": text},
-        ],
+        "messages": messages,
     }
 
     logger.debug("Classifying query via ChatGPT: %s", text)
