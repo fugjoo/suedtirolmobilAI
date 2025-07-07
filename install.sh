@@ -55,8 +55,6 @@ else
     $PYTHON_CMD -m venv venv
 fi
 
-source venv/bin/activate
-
 # Upgrade pip and install requirements
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -64,6 +62,8 @@ pip install -r requirements.txt
 # Download spaCy model (ignore failures if already installed)
 python -m spacy download de_core_news_sm || true
 
+source venv/bin/activate
+
 echo "\nInstallation complete."
-echo "Activate the environment with 'source venv/bin/activate'."
+echo "Activate the environment with source venv/bin/activate."
 echo "Run the server using: uvicorn src.main:app --host 0.0.0.0 --reload"
