@@ -155,6 +155,23 @@ The repository includes a plugin manifest and OpenAPI file in the
 `/.well-known/ai-plugin.json` and `/.well-known/openapi.yaml` for easy
 integration with ChatGPT.
 
+### Schrittweise Integration in ChatGPT
+1. **API-Server starten**
+    ```bash
+    uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    ```
+2. **Plugin-Dateien bereitstellen** – die Dateien
+   `.well-known/ai-plugin.json` und `.well-known/openapi.yaml` müssen
+   per HTTPS erreichbar sein. Wenn der Server z.B. unter
+   `https://example.com` läuft, finden sich die Dateien unter
+   `https://example.com/.well-known/`.
+3. **Plugin in ChatGPT hinzufügen** – in ChatGPT den Plugin-Store öffnen,
+   „Develop your own plugin“ wählen und die Basis‑URL des Servers
+   eingeben (z.B. `https://example.com`).
+4. **Installation bestätigen** – ChatGPT lädt die Manifestdatei und
+   führt durch die Bestätigung. Danach kann die API über ChatGPT genutzt
+   werden.
+
 ## Telegram bot
 Forward messages to the API using the example bot:
 ```bash
