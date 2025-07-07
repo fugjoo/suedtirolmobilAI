@@ -4,6 +4,7 @@ info:
   description: API for public transport queries.
   version: "1.0"
 servers:
+  - url: /
   - url: http://localhost:8000
 paths:
   /search:
@@ -38,6 +39,7 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: true
             text/plain:
               schema:
                 type: string
@@ -76,6 +78,7 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: true
             text/plain:
               schema:
                 type: string
@@ -111,6 +114,7 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: true
             text/plain:
               schema:
                 type: string
