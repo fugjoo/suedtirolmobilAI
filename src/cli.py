@@ -14,6 +14,23 @@ from .summaries import (
 logger = logging.getLogger(__name__)
 
 
+def _describe_search(params: dict) -> str:
+    """Return a short human readable description of search parameters."""
+    from_stop = params.get("from_stop")
+    to_stop = params.get("to_stop")
+    time = params.get("time")
+    parts = []
+    if from_stop and to_stop:
+        parts.append(f"Von {from_stop} nach {to_stop}")
+    elif from_stop:
+        parts.append(f"Von {from_stop}")
+    elif to_stop:
+        parts.append(f"Nach {to_stop}")
+    if time:
+        parts.append(f"um {time} Uhr")
+    return " ".join(parts)
+
+
 def run_search(query: str, output_format: str = "legs", debug: bool = False, use_chatgpt: bool = False) -> None:
     """Run a search for the given natural language query.
 
@@ -43,6 +60,10 @@ def run_search(query: str, output_format: str = "legs", debug: bool = False, use
     if not params:
         logger.warning("No parameters extracted from the query.")
         return
+
+    desc = _describe_search(params)
+    if desc:
+        print(desc)
 
     logger.info("Determining results...")
     try:
@@ -96,6 +117,7 @@ def run_departures(stop: str, output_format: str = "text", debug: bool = False, 
         logger.error("Fehler bei der Abfrage: %s", exc)
         return
 
+    print(f"Abfahrten {stop}")
     logger.info("Suche wird gestartet...")
     logger.info("Ergebnisse gefunden.")
     if output_format == "json" and not debug:
@@ -130,6 +152,8 @@ def run_stop_finder(query: str, output_format: str = "text", debug: bool = False
     except Exception as exc:
         logger.error("Error during request: %s", exc)
         return
+
+    print(f"Treffer f\u00fcr Suchbegriff: {query}")
     if output_format == "json" and not debug:
         output_format = "text"
     if output_format == "json":
