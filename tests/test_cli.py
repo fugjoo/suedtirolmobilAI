@@ -13,7 +13,9 @@ from src import cli
 def test_run_search_text(mock_parse, mock_search, mock_format, capsys):
     cli.run_search('foo', output_format='text')
     captured = capsys.readouterr()
-    assert captured.out.strip() == 'summary'
+    lines = captured.out.strip().splitlines()
+    assert lines[0] == 'Von A nach B'
+    assert lines[1] == 'summary'
     mock_format.assert_called_once_with({'ok': True})
 
 @patch('src.cli.efa_api.search_efa', return_value={'foo': 'bar'})
@@ -21,7 +23,10 @@ def test_run_search_text(mock_parse, mock_search, mock_format, capsys):
 def test_run_search_json(mock_parse, mock_search, capsys):
     cli.run_search('foo', output_format='json', debug=True)
     captured = capsys.readouterr()
-    assert json.loads(captured.out) == {'foo': 'bar'}
+    lines = captured.out.splitlines()
+    assert lines[0] == 'Von A'
+    json_text = '\n'.join(lines[1:])
+    assert json.loads(json_text) == {'foo': 'bar'}
 
 
 @patch('src.cli.format_search_result', return_value='legs')
@@ -30,7 +35,9 @@ def test_run_search_json(mock_parse, mock_search, capsys):
 def test_run_search_legs(mock_parse, mock_search, mock_format, capsys):
     cli.run_search('foo', output_format='legs')
     captured = capsys.readouterr()
-    assert captured.out.strip() == 'legs'
+    lines = captured.out.strip().splitlines()
+    assert lines[0] == 'Von A nach B'
+    assert lines[1] == 'legs'
     mock_format.assert_called_once_with({'ok': True}, legs_only=True)
 
 
@@ -42,7 +49,9 @@ def test_run_search_legs(mock_parse, mock_search, mock_format, capsys):
 def test_run_search_chatgpt(mock_parse_gpt, mock_parse, mock_search, mock_detect, mock_narrative, capsys):
     cli.run_search('foo', output_format='legs', use_chatgpt=True)
     captured = capsys.readouterr()
-    assert captured.out.strip() == 'better'
+    lines = captured.out.strip().splitlines()
+    assert lines[0] == 'Von A nach B'
+    assert lines[1] == 'better'
     mock_parse_gpt.assert_called_once_with('foo')
     mock_parse.assert_not_called()
     mock_narrative.assert_called_once_with({'ok': True}, lang='de')
@@ -56,7 +65,9 @@ def test_run_search_chatgpt(mock_parse_gpt, mock_parse, mock_search, mock_detect
 def test_run_search_chatgpt_fallback(mock_parse_gpt, mock_parse, mock_search, mock_detect, mock_narrative, capsys):
     cli.run_search('foo', output_format='legs', use_chatgpt=True)
     captured = capsys.readouterr()
-    assert captured.out.strip() == 'better'
+    lines = captured.out.strip().splitlines()
+    assert lines[0] == 'Von A nach B'
+    assert lines[1] == 'better'
     mock_parse_gpt.assert_called_once_with('foo')
     mock_parse.assert_called_once_with('foo')
     mock_narrative.assert_called_once_with({'ok': True}, lang='de')
