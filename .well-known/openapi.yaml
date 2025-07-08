@@ -4,7 +4,7 @@ info:
   description: API for public transport queries.
   version: "1.0"
 servers:
-  - url: https://suedtirolmobilai.duckdns.org
+  - url: $SERVER_URL
 paths:
   /search:
     post:

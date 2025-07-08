@@ -53,6 +53,10 @@ The service can be configured via the following environment variables:
   ```bash
   API_URL=http://localhost:8000 python -m src.telegram_bot
   ```
+- `SERVER_URL` – public URL used in `/.well-known/openapi.yaml`
+  ```bash
+  SERVER_URL=https://api.example.com uvicorn src.main:app --reload
+  ```
 
 Environment variables can also be stored in a `.env` file in the project root.
 A `.env.example` file is included as a template. Copy it to `.env` and fill in
