@@ -7,15 +7,28 @@ import requests
 BASE_URL = os.getenv("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
 
 
-def trip_request(origin: str, destination: str, datetime: Optional[str] = None) -> Dict[str, Any]:
+def trip_request(
+    origin: str,
+    destination: str,
+    datetime: Optional[str] = None,
+    origin_stateless: Optional[str] = None,
+    destination_stateless: Optional[str] = None,
+) -> Dict[str, Any]:
     """Request a trip from origin to destination."""
-    params = {
-        "name_origin": origin,
-        "type_origin": "any",
-        "name_destination": destination,
-        "type_destination": "any",
-        "outputFormat": "JSON",
-    }
+    params = {"outputFormat": "JSON"}
+    if origin_stateless:
+        params["name_origin"] = origin_stateless
+        params["type_origin"] = "stop"
+    else:
+        params["name_origin"] = origin
+        params["type_origin"] = "any"
+
+    if destination_stateless:
+        params["name_destination"] = destination_stateless
+        params["type_destination"] = "stop"
+    else:
+        params["name_destination"] = destination
+        params["type_destination"] = "any"
     if datetime:
         date, time = datetime.split("T")
         params["itdDate"] = date
@@ -25,15 +38,23 @@ def trip_request(origin: str, destination: str, datetime: Optional[str] = None) 
     return response.json()
 
 
-def departure_monitor(stop: str, limit: int = 5) -> Dict[str, Any]:
+def departure_monitor(
+    stop: str,
+    limit: int = 5,
+    stateless: Optional[str] = None,
+) -> Dict[str, Any]:
     """Return upcoming departures for a stop."""
     params = {
-        "name_dm": stop,
-        "type_dm": "stop",
         "mode": "direct",
         "limit": limit,
         "outputFormat": "JSON",
     }
+    if stateless:
+        params["name_dm"] = stateless
+        params["type_dm"] = "stop"
+    else:
+        params["name_dm"] = stop
+        params["type_dm"] = "stop"
     response = requests.get(f"{BASE_URL}/XML_DM_REQUEST", params=params, timeout=10)
     response.raise_for_status()
     return response.json()

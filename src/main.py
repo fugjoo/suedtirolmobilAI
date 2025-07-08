@@ -43,15 +43,25 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
     points = from_data.get("stopFinder", {}).get("points", [])
     if not points:
         raise HTTPException(status_code=404, detail="origin not found")
-    q.from_location = points[0].get("name", q.from_location)
+    from_point = points[0]
+    q.from_location = from_point.get("name", q.from_location)
+    from_stateless = from_point.get("stateless")
 
     to_data = efa_api.stop_finder(q.to_location)
     points = to_data.get("stopFinder", {}).get("points", [])
     if not points:
         raise HTTPException(status_code=404, detail="destination not found")
-    q.to_location = points[0].get("name", q.to_location)
+    to_point = points[0]
+    q.to_location = to_point.get("name", q.to_location)
+    to_stateless = to_point.get("stateless")
 
-    data: Dict[str, Any] = efa_api.trip_request(q.from_location, q.to_location, q.datetime)
+    data: Dict[str, Any] = efa_api.trip_request(
+        q.from_location,
+        q.to_location,
+        q.datetime,
+        origin_stateless=from_stateless,
+        destination_stateless=to_stateless,
+    )
     try:
         text = llm_formatter.format_trip(data, language=q.language or "de")
         return text if format == "text" else {"data": text}
@@ -66,8 +76,10 @@ def departures(body: DeparturesRequest, format: str = Query("json")) -> Any:
     points = sf_data.get("stopFinder", {}).get("points", [])
     if not points:
         raise HTTPException(status_code=404, detail="stop not found")
-    verified = points[0].get("name", body.stop)
-    data = efa_api.departure_monitor(verified, body.limit)
+    point = points[0]
+    verified = point.get("name", body.stop)
+    stateless = point.get("stateless")
+    data = efa_api.departure_monitor(verified, body.limit, stateless=stateless)
     return data if format == "text" else {"data": data}
 
 
