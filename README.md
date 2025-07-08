@@ -1,7 +1,7 @@
 # suedtirolmobilAI
 
 A small FastAPI service that interprets natural language queries for public
-transport and forwards them to a Mentz‑EFA backend.
+transport and forwards them to a EFA (Mentz GmbH) backend.
 
 ## Features
 - Parse queries in German, English and Italian.
@@ -10,12 +10,11 @@ transport and forwards them to a Mentz‑EFA backend.
 - Return stop suggestions.
 - Automatically decide between trip search, departures and stop search
   based on the entered text.
-- Optional ChatGPT summaries for nicer text output.
+- ChatGPT summaries for nicer text output.
 - ChatGPT plugin manifest for webhook integration.
 - Command line client for quick access.
-- Simple Telegram bot for chat interaction, including a `/loop` mode.
-- Interactive console chat loop using ChatGPT.
-- Configurable Mentz‑EFA base URL via `EFA_BASE_URL`.
+- Simple Telegram bot for chat interaction, including conversation mode
+- Configurable EFA base URL via `EFA_BASE_URL` and other API-Keys an Tokens (OpenAI, Telegram).
 
 ## Requirements
 Python 3.8 or newer is required.
@@ -28,14 +27,6 @@ source venv/bin/activate
 ```
 The script reuses an existing `venv` if it already runs on Python 3.8 or newer
 and automatically recreates it when an older interpreter is detected.
-### Manual setup
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python -m spacy download de_core_news_sm  # optional
-```
-spaCy is pinned to versions below 3.8 for compatibility.
 
 ## Running the API
 Start the server with:
@@ -75,34 +66,32 @@ python -m src.cli search "Wie komme ich von Bozen nach Meran um 14:30?"
 ```
 ### Departure monitor
 ```bash
-python -m src.cli departures "Bozen"
+python -m src.cli departures "Anfahrten Bozen, Bahnhof"
 ```
 ### Stop suggestions
 ```bash
-python -m src.cli stops "Brixen"
+python -m src.cli stops "Haltestellen in Brixen"
 ```
 
 ### Automatic query detection
 When text is entered without explicitly choosing a command, the service tries to
 infer the best action automatically.  For example:
 
-* `Neumarkt Busbahnhof` → departures
-* `Bozen-Meran` → trip search
+* `Abfahrten Neumarkt Busbahnhof` → departures
+* `Bozen - Meran` → trip search
+* `von Bozen nach Meran morgen um 13:00 Uhr` → trip search
+* `Haltestestelle in Meran` → stops
 
 Queries in German, English and Italian are supported.
 
 ### Flags
-- `--format` – choose the output format (`text`, `json` or `legs`)
+- `--format` – choose the output format (`text`, `json`)
   ```bash
   python -m src.cli search "Bozen Meran" --format json
   ```
 - `--debug` – enable verbose logging
   ```bash
   python -m src.cli departures "Bozen" --debug
-  ```
-- `--chatgpt` – generate ChatGPT summaries
-  ```bash
-  python -m src.cli search "Brixen Meran" --chatgpt
   ```
 - `--api-url` – API endpoint for the Telegram bot
   ```bash
@@ -142,15 +131,6 @@ curl -X POST http://localhost:8000/stops \
 Append `?format=text` or `?format=json` to change the response and use
 `chatgpt=true` for ChatGPT summaries.
 
-## ChatGPT summaries
-Set `OPENAI_API_KEY` and use `--chatgpt` or `chatgpt=true`:
-```bash
-OPENAI_API_KEY=sk-... python -m src.cli search "Bozen nach Meran" --chatgpt
-# or for the server
-OPENAI_API_KEY=sk-... uvicorn src.main:app --host 0.0.0.0 --reload
-```
-
-The prompts used for query parsing and response formatting are stored in `prompts/`.
 ## ChatGPT plugin
 The repository includes a plugin manifest and OpenAPI file in the
 `.well-known/` directory. When the server is running they are served under
@@ -174,17 +154,6 @@ defaults to the value of the `API_URL` environment variable or
 
 When selecting a command from the bot's keyboard without additional text,
 the bot will ask for the required input before sending the request.
-
-Use `/loop` to start a conversational mode that interprets free text via the
-`/parse`, `/trip` and `/stops` API endpoints. Send `/cancel` to exit the loop.
-
-## Console chat loop
-Start an interactive session on the console using ChatGPT to parse requests and format results.
-```bash
-OPENAI_API_KEY=sk-... python -m src.chat_loop
-```
-Example queries can be found in `examples/queries.txt`.
-
 
 ## Testing
 ```bash
