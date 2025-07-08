@@ -13,7 +13,7 @@ transport and forwards them to a Mentz‑EFA backend.
 - Optional ChatGPT summaries for nicer text output.
 - ChatGPT plugin manifest for webhook integration.
 - Command line client for quick access.
-- Simple Telegram bot for chat interaction.
+- Simple Telegram bot for chat interaction, including a `/loop` mode.
 - Interactive console chat loop using ChatGPT.
 - Configurable Mentz‑EFA base URL via `EFA_BASE_URL`.
 
@@ -174,6 +174,9 @@ defaults to the value of the `API_URL` environment variable or
 
 When selecting a command from the bot's keyboard without additional text,
 the bot will ask for the required input before sending the request.
+
+Use `/loop` to start a conversational mode that interprets free text via the
+`/parse`, `/trip` and `/stops` API endpoints. Send `/cancel` to exit the loop.
 
 ## Console chat loop
 Start an interactive session on the console using ChatGPT to parse requests and format results.

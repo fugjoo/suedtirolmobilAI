@@ -148,3 +148,25 @@ def test_stops_endpoint_chatgpt(mock_stopfinder_request, mock_format, mock_detec
     assert response.text == 'better stops'
     mock_format.assert_called_once_with({'foo': 'bar'}, lang='de')
     mock_reformat.assert_called_once_with('stops')
+
+
+@patch('src.main.chatgpt_helper.parse_request_llm', return_value={'type': 'trip'})
+def test_parse_endpoint(mock_parse):
+    client = TestClient(app)
+    response = client.post('/parse', json={'text': 'foo'})
+    assert response.status_code == 200
+    assert response.json() == {'type': 'trip'}
+    mock_parse.assert_called_once_with('foo')
+
+
+@patch('src.main.format_search_result', return_value='legs')
+@patch('src.main.efa_api.search_efa', return_value={'ok': True})
+@patch('src.main.nlp_parser.detect_language', return_value='de')
+def test_trip_endpoint(mock_detect, mock_search, mock_format):
+    client = TestClient(app)
+    payload = {'from_stop': 'A', 'to_stop': 'B'}
+    response = client.post('/trip', json=payload)
+    assert response.status_code == 200
+    assert response.text == 'legs'
+    mock_search.assert_called_once_with(payload)
+    mock_format.assert_called_once_with({'ok': True}, legs_only=True, lang='de')
