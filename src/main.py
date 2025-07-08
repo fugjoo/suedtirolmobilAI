@@ -38,6 +38,19 @@ def search(body: SearchRequest, format: str = Query("json"), chatgpt: bool = Fal
             q = llm_parser.parse_llm(body.text)
         except Exception as exc:  # pragma: no cover - no tests
             raise HTTPException(status_code=400, detail=str(exc))
+
+    from_data = efa_api.stop_finder(q.from_location)
+    points = from_data.get("stopFinder", {}).get("points", [])
+    if not points:
+        raise HTTPException(status_code=404, detail="origin not found")
+    q.from_location = points[0].get("name", q.from_location)
+
+    to_data = efa_api.stop_finder(q.to_location)
+    points = to_data.get("stopFinder", {}).get("points", [])
+    if not points:
+        raise HTTPException(status_code=404, detail="destination not found")
+    q.to_location = points[0].get("name", q.to_location)
+
     data: Dict[str, Any] = efa_api.trip_request(q.from_location, q.to_location, q.datetime)
     if chatgpt:
         text = llm_formatter.format_trip(data, language=q.language or "de")
@@ -48,7 +61,12 @@ def search(body: SearchRequest, format: str = Query("json"), chatgpt: bool = Fal
 @app.post("/departures")
 def departures(body: DeparturesRequest, format: str = Query("json"), chatgpt: bool = False) -> Any:
     """Return upcoming departures for a stop."""
-    data = efa_api.departure_monitor(body.stop, body.limit)
+    sf_data = efa_api.stop_finder(body.stop)
+    points = sf_data.get("stopFinder", {}).get("points", [])
+    if not points:
+        raise HTTPException(status_code=404, detail="stop not found")
+    verified = points[0].get("name", body.stop)
+    data = efa_api.departure_monitor(verified, body.limit)
     return data if format == "text" else {"data": data}
 
 
