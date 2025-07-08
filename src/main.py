@@ -52,7 +52,7 @@ class TripRequest(BaseModel):
     lang: Optional[str] = None
 
 @app.post("/search")
-def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = False):
+async def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = False):
     """Handle trip searches based on natural language input.
 
     Expects a :class:`SearchRequest` containing the user text. Setting
@@ -68,7 +68,7 @@ def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = Fal
         params = nlp_parser.parse_query(req.text)
     if not params:
         raise HTTPException(status_code=400, detail="No parameters extracted")
-    result = efa_api.search_efa(params)
+    result = await efa_api.search_efa_async(params)
     logger.debug("/search result: %s", result)
     if format == "json":
         return result
@@ -85,13 +85,13 @@ def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = Fal
 
 
 @app.post("/departures")
-def departures(req: DMRequest, format: str = "json", chatgpt: bool = False):
+async def departures(req: DMRequest, format: str = "json", chatgpt: bool = False):
     """Return upcoming departures for the given stop."""
     logger.info("/departures stop='%s' limit=%s", req.stop, req.limit)
     if not req.stop:
         raise HTTPException(status_code=400, detail="Missing stop name")
     lang = nlp_parser.detect_language(req.stop)
-    result = efa_api.dm_request(req.stop, req.limit, lang)
+    result = await efa_api.dm_request_async(req.stop, req.limit, lang)
     logger.debug("/departures result: %s", result)
     if format == "text":
         text = format_departures_result(result, lang=lang)
@@ -102,13 +102,13 @@ def departures(req: DMRequest, format: str = "json", chatgpt: bool = False):
 
 
 @app.post("/stops")
-def stops(req: StopFinderRequest, format: str = "json", chatgpt: bool = False):
+async def stops(req: StopFinderRequest, format: str = "json", chatgpt: bool = False):
     """Return stop suggestions for the given query."""
     logger.info("/stops query='%s'", req.query)
     if not req.query:
         raise HTTPException(status_code=400, detail="Missing query")
     lang = nlp_parser.detect_language(req.query)
-    result = efa_api.stopfinder_request(req.query, lang)
+    result = await efa_api.stopfinder_request_async(req.query, lang)
     logger.debug("/stops result: %s", result)
     if format == "text":
         text = format_stops_result(result, lang=lang)
@@ -130,7 +130,7 @@ def parse(req: ParseRequest):
 
 
 @app.post("/trip")
-def trip(req: TripRequest, format: Optional[str] = None, chatgpt: bool = False):
+async def trip(req: TripRequest, format: Optional[str] = None, chatgpt: bool = False):
     """Return trip results for explicit parameters."""
 
     params: Dict[str, Any] = {
@@ -142,7 +142,7 @@ def trip(req: TripRequest, format: Optional[str] = None, chatgpt: bool = False):
     if req.lang:
         params["lang"] = req.lang
     logger.info("/trip params: %s", params)
-    result = efa_api.search_efa(params)
+    result = await efa_api.search_efa_async(params)
     if format == "json":
         return result
     lang = req.lang or nlp_parser.detect_language(req.from_stop)

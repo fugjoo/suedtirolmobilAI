@@ -3,6 +3,7 @@
 from typing import Dict, Any, List, Optional
 import logging
 import requests
+import httpx
 
 from .config import EFA_BASE_URL
 
@@ -87,6 +88,74 @@ def get_stop_code(query: str, lang: Optional[str] = None) -> str:
     return query
 
 
+async def get_stop_code_async(query: str, lang: Optional[str] = None) -> str:
+    """Asynchronously resolve a stop name to its stateless identifier."""
+    if lang is None:
+        lang = nlp_parser.detect_language(query)
+    url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
+    params = {
+        "odvSugMacro": "true",
+        "name_sf": query,
+        "outputFormat": "JSON",
+        "locationServerActive": 1,
+        "outputEncoding": "UTF-8",
+    }
+    if lang in ("de", "it", "en"):
+        params["language"] = lang
+
+    logger.debug("Requesting stop code for '%s'", query)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        logger.debug("StopFinder response status: %s", response.status_code)
+        response.encoding = "utf-8"
+        data = response.json()
+        stopfinder = data.get("stopFinder")
+        if not isinstance(stopfinder, dict):
+            stopfinder = {}
+        points_data = stopfinder.get("points")
+        if isinstance(points_data, dict):
+            points = points_data.get("point", [])
+        elif isinstance(points_data, list):
+            points = points_data
+        else:
+            points = []
+        if isinstance(points, dict):
+            points = [points]
+
+        logger.info("StopFinder found %d suggestion(s) for '%s'", len(points), query)
+        logger.debug("StopFinder results for '%s': %s", query, points)
+
+        best: Optional[Dict[str, Any]] = None
+        best_quality = -1
+        for p in points:
+            try:
+                quality = int(p.get("quality", 0))
+            except (TypeError, ValueError):
+                quality = 0
+            if quality > best_quality:
+                best_quality = quality
+                best = p
+
+        logger.debug("Stop suggestions: %s", points)
+        logger.debug("Best match: %s", best)
+        if best and best.get("stateless"):
+            logger.info("StopFinder stateless ID for '%s': %s", query, best["stateless"])
+
+        if best:
+            if best.get("stateless"):
+                logger.debug("Using stateless code: %s", best["stateless"])
+                return best["stateless"]
+            if best.get("name"):
+                logger.debug("Using stop name: %s", best["name"])
+                return best["name"]
+    except Exception as exc:
+        logger.warning("Stop code lookup failed for '%s': %s", query, exc)
+
+    return query
+
+
 def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
     """Send a GET request to the Mentz-EFA API.
 
@@ -143,6 +212,52 @@ def search_efa(params: Dict[str, Any]) -> Dict[str, Any]:
         return {"text": response.text}
 
 
+async def search_efa_async(params: Dict[str, Any]) -> Dict[str, Any]:
+    """Asynchronously send a GET request to the Mentz-EFA API."""
+    url = f"{BASE_URL}/XML_TRIP_REQUEST2"
+
+    logger.info("Searching trip: %s", params)
+
+    lang = params.get("lang")
+    from_stop = params.get("from_stop")
+    if from_stop:
+        from_stop = await get_stop_code_async(from_stop, lang)
+    to_stop = params.get("to_stop")
+    if to_stop:
+        to_stop = await get_stop_code_async(to_stop, lang)
+
+    efa_params = {
+        "name_origin": from_stop,
+        "type_origin": "any",
+        "name_destination": to_stop,
+        "type_destination": "any",
+        "outputFormat": "JSON",
+        "calcNumberOfTrips": 1,
+        "locationServerActive": 1,
+        "odvMacro": "true",
+        "outputEncoding": "UTF-8",
+    }
+    if lang in ("de", "it", "en"):
+        efa_params["language"] = lang
+
+    time = params.get("time")
+    if time:
+        efa_params["itdTime"] = time
+    logger.debug("Trip request params: %s", efa_params)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=efa_params, timeout=10)
+    response.raise_for_status()
+    logger.debug("Trip request status: %s", response.status_code)
+    response.encoding = "utf-8"
+    try:
+        data = response.json()
+        logger.debug("Trip response payload: %s", data)
+        return data
+    except ValueError:
+        return {"text": response.text}
+
+
 def dm_request(stop_name: str, limit: int = 10, lang: Optional[str] = None) -> Dict[str, Any]:
     """Query the departure monitor (DM) endpoint for a specific stop."""
     url = f"{BASE_URL}/XML_DM_REQUEST"
@@ -176,6 +291,40 @@ def dm_request(stop_name: str, limit: int = 10, lang: Optional[str] = None) -> D
         return {"text": response.text}
 
 
+async def dm_request_async(stop_name: str, limit: int = 10, lang: Optional[str] = None) -> Dict[str, Any]:
+    """Asynchronously query the departure monitor (DM) endpoint."""
+    url = f"{BASE_URL}/XML_DM_REQUEST"
+    logger.info("Requesting departures for '%s'", stop_name)
+    if lang is None:
+        lang = nlp_parser.detect_language(stop_name)
+    stop_name = await get_stop_code_async(stop_name, lang)
+    params = {
+        "type_dm": "stop",
+        "name_dm": stop_name,
+        "mode": "direct",
+        "limit": limit,
+        "outputFormat": "JSON",
+        "locationServerActive": 1,
+        "odvMacro": "true",
+        "outputEncoding": "UTF-8",
+    }
+    if lang in ("de", "it", "en"):
+        params["language"] = lang
+
+    logger.debug("DM request params: %s", params)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    logger.debug("DM request status: %s", response.status_code)
+    response.encoding = "utf-8"
+    try:
+        data = response.json()
+        logger.debug("DM response payload: %s", data)
+        return data
+    except ValueError:
+        return {"text": response.text}
+
+
 def stopfinder_request(query: str, lang: Optional[str] = None) -> Dict[str, Any]:
     """Return stop suggestions for the given search string."""
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
@@ -193,6 +342,31 @@ def stopfinder_request(query: str, lang: Optional[str] = None) -> Dict[str, Any]
     logger.info("Stop finder for query '%s'", query)
     logger.debug("StopFinder params: %s", params)
     response = requests.get(url, params=params, timeout=10)
+    response.raise_for_status()
+    response.encoding = "utf-8"
+    data = response.json()
+    logger.debug("StopFinder response: %s", data)
+    return data
+
+
+async def stopfinder_request_async(query: str, lang: Optional[str] = None) -> Dict[str, Any]:
+    """Asynchronously return stop suggestions for the given search string."""
+    url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
+    if lang is None:
+        lang = nlp_parser.detect_language(query)
+    params = {
+        "odvSugMacro": "true",
+        "name_sf": query,
+        "outputFormat": "JSON",
+        "locationServerActive": 1,
+        "outputEncoding": "UTF-8",
+    }
+    if lang in ("de", "it", "en"):
+        params["language"] = lang
+    logger.info("Stop finder for query '%s'", query)
+    logger.debug("StopFinder params: %s", params)
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params=params, timeout=10)
     response.raise_for_status()
     response.encoding = "utf-8"
     data = response.json()
