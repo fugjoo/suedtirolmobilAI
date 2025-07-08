@@ -232,3 +232,75 @@ def narrative_trip_summary(result: dict, lang: str = "de") -> str:
     content = data["choices"][0]["message"]["content"].strip()
     logger.debug("ChatGPT narrative summary: %s", content)
     return content
+
+
+def _load_prompt(name: str) -> str:
+    """Return the contents of a prompt template."""
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parent.parent / "prompts" / name
+    with path.open(encoding="utf-8") as fh:
+        return fh.read()
+
+
+def parse_request_llm(text: str) -> dict:
+    """Parse a natural language request using an external prompt."""
+    api_key = OPENAI_API_KEY
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set")
+
+    prompt = _load_prompt("extract_search_parameters.txt")
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "gpt-3.5-turbo",
+        "temperature": 0,
+        "messages": [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": text},
+        ],
+    }
+
+    logger.debug("LLM parsing text: %s", text)
+    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    content = data["choices"][0]["message"]["content"].strip()
+    try:
+        parsed = json.loads(content)
+        logger.debug("LLM parsed request: %s", parsed)
+        return parsed
+    except json.JSONDecodeError:
+        logger.warning("Unexpected LLM response: %s", content)
+        return {}
+
+
+def format_trip_response_llm(result: dict, lang: str = "de") -> str:
+    """Return an LLM formatted summary of a trip search result."""
+    api_key = OPENAI_API_KEY
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set")
+
+    prompt = _load_prompt("format_trip_response.txt").format(language=lang)
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "gpt-3.5-turbo",
+        "temperature": 0,
+        "messages": [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": json.dumps(result, ensure_ascii=False)},
+        ],
+    }
+
+    logger.debug("Requesting LLM trip summary")
+    response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    content = data["choices"][0]["message"]["content"].strip()
+    logger.debug("LLM trip summary: %s", content)
+    return content
