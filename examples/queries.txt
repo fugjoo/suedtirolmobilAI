@@ -1,8 +1,0 @@
-# Deutsch
-Gibt es morgen frueh Busse von Meran nach Bozen?
-
-# Italiano
-Ci sono autobus da Merano a Bolzano domani mattina?
-
-# English
-Are there trains from Bolzano to Bressanone at 9 am tomorrow?
