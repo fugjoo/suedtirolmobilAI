@@ -7,6 +7,7 @@ transport and forwards them to a EFA (Mentz GmbH) backend.
 - Parse queries in German, English and Italian.
 - Search for public transport connections.
 - Monitor departures for a stop.
+- Use stopfinder results to send stateless stop IDs for trips and departures.
 - Return stop suggestions.
 - Automatically decide between trip search, departures and stop search
   based on the entered text.
