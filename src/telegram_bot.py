@@ -31,7 +31,7 @@ BOT_TOKEN = TELEGRAM_TOKEN
 USE_CHATGPT = False
 
 # Conversation states for interactive commands
-SEARCH, DEPARTURES = range(2)
+SEARCH, DEPARTURES, LOOP = range(3)
 
 
 def parse_args(args=None):
@@ -145,7 +145,7 @@ async def handle_text(update, context):
 
 async def cmd_start(update, context):
     """Send a welcome message and show the command keyboard."""
-    keyboard = [["/search", "/departures", "/stops"]]
+    keyboard = [["/search", "/departures", "/stops", "/loop"]]
     markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text(
         "Welcome! Send me a request or choose a command.", reply_markup=markup
@@ -233,6 +233,71 @@ async def cmd_stops(update, context):
         await update.message.reply_text(f"Request failed: {exc}")
 
 
+async def cmd_loop(update, context):
+    """Enter continuous chat loop mode."""
+
+    await update.message.reply_text("Loop started. Send /cancel to stop.")
+    return LOOP
+
+
+async def handle_loop(update, context):
+    """Process a message in loop mode."""
+
+    text = update.message.text.strip()
+    try:
+        resp = requests.post(f"{API_URL}/parse", json={"text": text})
+        info = resp.json() if resp.status_code == 200 else {}
+    except Exception as exc:
+        await update.message.reply_text(f"Parse failed: {exc}")
+        return LOOP
+
+    req_type = info.get("type")
+    if req_type in {"trip", "departure"}:
+        params = {}
+        if info.get("from"):
+            params["from_stop"] = info["from"]
+        if info.get("to"):
+            params["to_stop"] = info["to"]
+        if info.get("datetime"):
+            params["time"] = info["datetime"].split("T")[-1][:5]
+        if info.get("language"):
+            params["lang"] = info["language"]
+        url = f"{API_URL}/trip?format=text"
+        if USE_CHATGPT:
+            url += "&chatgpt=true"
+        try:
+            resp = requests.post(url, json=params)
+            if resp.status_code == 200:
+                await update.message.reply_text(resp.text)
+            else:
+                await update.message.reply_text(f"Error: {resp.text}")
+        except Exception as exc:
+            await update.message.reply_text(f"Request failed: {exc}")
+    elif req_type == "stop":
+        query = info.get("from") or info.get("to") or text
+        url = f"{API_URL}/stops?format=text"
+        if USE_CHATGPT:
+            url += "&chatgpt=true"
+        try:
+            resp = requests.post(url, json={"query": query})
+            if resp.status_code == 200:
+                await update.message.reply_text(resp.text)
+            else:
+                await update.message.reply_text(f"Error: {resp.text}")
+        except Exception as exc:
+            await update.message.reply_text(f"Request failed: {exc}")
+    else:
+        await update.message.reply_text("Sorry, I could not understand your request.")
+    return LOOP
+
+
+async def cancel_loop(update, context):
+    """Exit loop mode."""
+
+    await update.message.reply_text("Loop ended.")
+    return ConversationHandler.END
+
+
 async def cmd_reset(update, context):
     """Clear the stored conversation state."""
     context.user_data.clear()
@@ -289,8 +354,18 @@ def main() -> None:
             },
             fallbacks=[],
         )
+        loop_conv = ConversationHandler(
+            entry_points=[CommandHandler("loop", cmd_loop)],
+            states={
+                LOOP: [
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, handle_loop)
+                ]
+            },
+            fallbacks=[CommandHandler("cancel", cancel_loop)],
+        )
         application.add_handler(search_conv)
         application.add_handler(depart_conv)
+        application.add_handler(loop_conv)
         application.add_handler(CommandHandler("stops", cmd_stops))
         application.add_handler(CommandHandler("reset", cmd_reset))
         application.add_handler(

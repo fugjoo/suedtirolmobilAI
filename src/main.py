@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 import logging
 
 from . import nlp_parser, efa_api, chatgpt_helper
@@ -35,6 +35,21 @@ class DMRequest(BaseModel):
 
 class StopFinderRequest(BaseModel):
     query: str
+
+
+class ParseRequest(BaseModel):
+    """Input model for the /parse endpoint."""
+
+    text: str
+
+
+class TripRequest(BaseModel):
+    """Input model for the /trip endpoint."""
+
+    from_stop: str
+    to_stop: str
+    time: Optional[str] = None
+    lang: Optional[str] = None
 
 @app.post("/search")
 def search(req: SearchRequest, format: Optional[str] = None, chatgpt: bool = False):
@@ -101,6 +116,44 @@ def stops(req: StopFinderRequest, format: str = "json", chatgpt: bool = False):
             text = chatgpt_helper.reformat_summary(text)
         return PlainTextResponse(text)
     return result
+
+
+@app.post("/parse")
+def parse(req: ParseRequest):
+    """Parse a user request via the language model."""
+
+    logger.info("/parse text='%s'", req.text)
+    info = chatgpt_helper.parse_request_llm(req.text)
+    if not info:
+        raise HTTPException(status_code=400, detail="Parse failed")
+    return info
+
+
+@app.post("/trip")
+def trip(req: TripRequest, format: Optional[str] = None, chatgpt: bool = False):
+    """Return trip results for explicit parameters."""
+
+    params: Dict[str, Any] = {
+        "from_stop": req.from_stop,
+        "to_stop": req.to_stop,
+    }
+    if req.time:
+        params["time"] = req.time
+    if req.lang:
+        params["lang"] = req.lang
+    logger.info("/trip params: %s", params)
+    result = efa_api.search_efa(params)
+    if format == "json":
+        return result
+    lang = req.lang or nlp_parser.detect_language(req.from_stop)
+    if chatgpt:
+        text = chatgpt_helper.format_trip_response_llm(result, lang=lang)
+        return PlainTextResponse(text)
+    if format == "text":
+        text = format_search_result(result, legs_only=False, lang=lang)
+        return PlainTextResponse(text)
+    text = format_search_result(result, legs_only=True, lang=lang)
+    return PlainTextResponse(text)
 
 # Run via ``python -m src.main`` for debugging without auto-reload.
 if __name__ == "__main__" and __package__:
