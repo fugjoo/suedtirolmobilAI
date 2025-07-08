@@ -1,12 +1,13 @@
 """FastAPI application exposing endpoints for trip search and departures."""
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import logging
+import os
 
 from . import nlp_parser, efa_api, chatgpt_helper
 from .summaries import (
@@ -19,6 +20,18 @@ from .logging_utils import setup_logging
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+SERVER_URL = os.getenv("SERVER_URL", "http://localhost:8000")
+
+
+@app.get("/.well-known/openapi.yaml", include_in_schema=False)
+def well_known_openapi() -> Response:
+    """Return OpenAPI spec with the current server URL."""
+
+    file = Path(__file__).resolve().parent.parent / ".well-known" / "openapi.yaml"
+    content = file.read_text()
+    return Response(content.replace("$SERVER_URL", SERVER_URL), media_type="application/yaml")
+
 app.mount(
     "/.well-known",
     StaticFiles(directory=Path(__file__).resolve().parent.parent / ".well-known"),
