@@ -4,7 +4,7 @@ info:
   description: API for public transport queries.
   version: "1.0"
 servers:
-  - url: http://localhost:8000
+  - url: https://suedtirolmobilai.duckdns.org
 paths:
   /search:
     post:
@@ -38,6 +38,10 @@ paths:
             application/json:
               schema:
                 type: object
+                properties:
+                  data:
+                    description: Response payload
+                    type: object
                 additionalProperties: true
             text/plain:
               schema:
@@ -77,6 +81,10 @@ paths:
             application/json:
               schema:
                 type: object
+                properties:
+                  data:
+                    description: Response payload
+                    type: object
                 additionalProperties: true
             text/plain:
               schema:
@@ -113,6 +121,10 @@ paths:
             application/json:
               schema:
                 type: object
+                properties:
+                  data:
+                    description: Response payload
+                    type: object
                 additionalProperties: true
             text/plain:
               schema:
