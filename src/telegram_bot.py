@@ -30,6 +30,24 @@ API_URL = CONFIG_API_URL
 BOT_TOKEN = TELEGRAM_TOKEN
 USE_CHATGPT = False
 
+# Number of recent user messages to keep in the conversation history
+HISTORY_LIMIT = 5
+
+
+def append_history(context, text):
+    """Append ``text`` to the per-user history and trim the list.
+
+    Parameters
+    ----------
+    context : telegram.ext.CallbackContext
+        The context object storing user specific data.
+    text : str
+        The latest user message.
+    """
+    history = context.user_data.get("history", [])
+    history.append(text)
+    context.user_data["history"] = history[-HISTORY_LIMIT:]
+
 # Conversation states for interactive commands
 SEARCH, DEPARTURES, LOOP = range(3)
 
@@ -77,8 +95,7 @@ async def handle_text(update, context):
         logger.error("Classification failed: %s", exc)
         info = {}
 
-    history.append(text)
-    context.user_data["history"] = history[-5:]
+    append_history(context, text)
 
     endpoint = (info.get("endpoint") or "search").lower()
 
