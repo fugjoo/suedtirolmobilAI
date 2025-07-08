@@ -16,10 +16,6 @@ paths:
           schema:
             type: string
             enum: [text, json]
-        - in: query
-          name: chatgpt
-          schema:
-            type: boolean
       requestBody:
         required: true
         content:
@@ -56,10 +52,6 @@ paths:
           schema:
             type: string
             enum: [text, json]
-        - in: query
-          name: chatgpt
-          schema:
-            type: boolean
       requestBody:
         required: true
         content:
@@ -99,10 +91,6 @@ paths:
           schema:
             type: string
             enum: [text, json]
-        - in: query
-          name: chatgpt
-          schema:
-            type: boolean
       requestBody:
         required: true
         content:

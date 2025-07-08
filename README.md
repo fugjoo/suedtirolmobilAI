@@ -107,8 +107,8 @@ curl -X POST http://localhost:8000/stops \
      -H 'Content-Type: application/json' \
      -d '{"query": "Brixen"}'
 ```
-Append `?format=text` or `?format=json` to change the response and use
-`chatgpt=true` for ChatGPT summaries.
+Append `?format=text` or `?format=json` to change the response. ChatGPT
+summaries are enabled automatically when `OPENAI_API_KEY` is set.
 
 ## ChatGPT plugin
 The repository includes a plugin manifest and OpenAPI file in the
