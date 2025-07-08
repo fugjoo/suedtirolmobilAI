@@ -106,6 +106,13 @@ Queries in German, English and Italian are supported.
   python -m src.telegram_bot --api-url http://localhost:8000 --start-server
   ```
 
+### Console chat
+Start a minimal interactive chat loop. Combine `--llm-parser` and
+`--llm-format` to use OpenAI for parsing and formatting:
+```bash
+python -m src.chat --llm-parser --llm-format
+```
+
 ## API endpoints
 All endpoints accept POST requests.
 

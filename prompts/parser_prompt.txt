@@ -1,0 +1,10 @@
+You are a transport query parser. Extract the following fields from the user text and respond with JSON only.
+Fields:
+- type: "trip", "departure", or "stop"
+- from: starting location or null
+- to: destination location or null
+- datetime: ISO format "YYYY-MM-DDTHH:MM" or null
+- transport_mode: "Bus", "Zug", "Seilbahn" or null
+- long_distance: true or false
+- language: "de", "it", or "en"
+User text: {text}
