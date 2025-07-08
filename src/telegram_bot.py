@@ -11,6 +11,8 @@ import requests
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
+MAX_MESSAGE_LENGTH = 4096
+
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
@@ -44,42 +46,48 @@ def call_api(endpoint: str, payload: Dict[str, Any]) -> str:
     return f"Error {resp.status_code}: {resp.text}"
 
 
+async def send_reply(update: Update, text: str) -> None:
+    """Send text in chunks to avoid Telegram message limits."""
+    for i in range(0, len(text), MAX_MESSAGE_LENGTH):
+        await update.message.reply_text(text[i : i + MAX_MESSAGE_LENGTH])
+
+
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming messages."""
     text = update.message.text.strip()
     state = context.user_data.get("state")
     if text == "/search":
         context.user_data["state"] = "search"
-        await update.message.reply_text("Enter trip query:")
+        await send_reply(update, "Enter trip query:")
         return
     if text == "/departures":
         context.user_data["state"] = "departures"
-        await update.message.reply_text("Enter stop name:")
+        await send_reply(update, "Enter stop name:")
         return
     if text == "/stops":
         context.user_data["state"] = "stops"
-        await update.message.reply_text("Enter search text:")
+        await send_reply(update, "Enter search text:")
         return
 
     if state == "search":
         context.user_data.pop("state", None)
         reply = call_api("/search", {"text": text})
-        await update.message.reply_text(reply)
+        await send_reply(update, reply)
         return
     if state == "departures":
         context.user_data.pop("state", None)
         reply = call_api("/departures", {"stop": text})
-        await update.message.reply_text(reply)
+        await send_reply(update, reply)
         return
     if state == "stops":
         context.user_data.pop("state", None)
         reply = call_api("/stops", {"query": text})
-        await update.message.reply_text(reply)
+        await send_reply(update, reply)
         return
 
     # fallback: try /search
     reply = call_api("/search", {"text": text})
-    await update.message.reply_text(reply)
+    await send_reply(update, reply)
 
 
 def run_bot(token: str, start_server: bool) -> None:
