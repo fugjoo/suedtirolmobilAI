@@ -12,7 +12,7 @@ transport and forwards them to a EFA (Mentz GmbH) backend.
   based on the entered text.
 - ChatGPT summaries for nicer text output.
 - ChatGPT plugin manifest for webhook integration.
-- Command line client for quick access.
+- Interactive console chat for quick access.
 - Simple Telegram bot for chat interaction, including conversation mode
 - Configurable EFA base URL via `EFA_BASE_URL` and other API-Keys an Tokens (OpenAI, Telegram).
 
@@ -44,7 +44,7 @@ The service can be configured via the following environment variables:
   ```
 - `OPENAI_API_KEY` – enable ChatGPT features
   ```bash
-  OPENAI_API_KEY=sk-... python -m src.cli search "Bozen" --chatgpt
+  OPENAI_API_KEY=sk-... python -m src.chat --llm-parser --llm-format
   ```
 - `TELEGRAM_TOKEN` – required for the Telegram bot
   ```bash
@@ -64,18 +64,10 @@ A `.env.example` file is included as a template. Copy it to `.env` and fill in
 your credentials. The `.env` file is loaded automatically and should not be
 committed to version control.
 
-## Command line usage
-### Search for a trip
+## Console chat
+Start a minimal interactive chat loop. Combine `--llm-parser` and `--llm-format` to use OpenAI for parsing and formatting:
 ```bash
-python -m src.cli search "Wie komme ich von Bozen nach Meran um 14:30?"
-```
-### Departure monitor
-```bash
-python -m src.cli departures "Anfahrten Bozen, Bahnhof"
-```
-### Stop suggestions
-```bash
-python -m src.cli stops "Haltestellen in Brixen"
+python -m src.chat --llm-parser --llm-format
 ```
 
 ### Automatic query detection
@@ -88,31 +80,6 @@ infer the best action automatically.  For example:
 * `Haltestestelle in Meran` → stops
 
 Queries in German, English and Italian are supported.
-
-### Flags
-- `--format` – choose the output format (`text`, `json`)
-  ```bash
-  python -m src.cli search "Bozen Meran" --format json
-  ```
-- `--debug` – enable verbose logging
-  ```bash
-  python -m src.cli departures "Bozen" --debug
-  ```
-- `--api-url` – API endpoint for the Telegram bot
-  ```bash
-  python -m src.telegram_bot --api-url http://localhost:8000
-  ```
-- `--start-server` – start the API automatically for the Telegram bot
-  ```bash
-  python -m src.telegram_bot --api-url http://localhost:8000 --start-server
-  ```
-
-### Console chat
-Start a minimal interactive chat loop. Combine `--llm-parser` and
-`--llm-format` to use OpenAI for parsing and formatting:
-```bash
-python -m src.chat --llm-parser --llm-format
-```
 
 ## API endpoints
 All endpoints accept POST requests.
