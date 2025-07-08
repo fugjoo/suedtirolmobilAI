@@ -42,10 +42,11 @@ The service can be configured via the following environment variables:
   ```bash
   EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
   ```
-- `OPENAI_API_KEY` – enable ChatGPT features
-  ```bash
-  OPENAI_API_KEY=sk-... python -m src.chat --llm-parser --llm-format
-  ```
+- `OPENAI_API_KEY` – API key for ChatGPT. When set the service always uses
+  ChatGPT without any `--chatgpt` flag or `chatgpt=true` query parameter.
+```bash
+OPENAI_API_KEY=sk-... python -m src.chat --llm-parser --llm-format
+```
 - `TELEGRAM_TOKEN` – required for the Telegram bot
   ```bash
   TELEGRAM_TOKEN=your_token python -m src.telegram_bot
@@ -108,7 +109,8 @@ curl -X POST http://localhost:8000/stops \
      -d '{"query": "Brixen"}'
 ```
 Append `?format=text` or `?format=json` to change the response. ChatGPT
-summaries are enabled automatically when `OPENAI_API_KEY` is set.
+summaries are enabled automatically when `OPENAI_API_KEY` is set. The
+`chatgpt` query parameter is no longer required.
 
 ## ChatGPT plugin
 The repository includes a plugin manifest and OpenAPI file in the
