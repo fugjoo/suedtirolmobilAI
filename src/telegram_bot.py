@@ -102,12 +102,12 @@ def run_bot(token: str, start_server: bool) -> None:
 
 def main() -> None:
     """Parse arguments and run the bot."""
+    global API_URL
     parser = argparse.ArgumentParser()
     parser.add_argument("--api-url", default=API_URL, help="API endpoint")
     parser.add_argument("--start-server", action="store_true", help="start API with uvicorn")
     parser.add_argument("--token", default=TOKEN, help="Telegram bot token")
     args = parser.parse_args()
-    global API_URL
     API_URL = args.api_url
     if not args.token:
         parser.error("Telegram token not provided")
