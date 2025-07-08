@@ -14,6 +14,7 @@ transport and forwards them to a Mentz‑EFA backend.
 - ChatGPT plugin manifest for webhook integration.
 - Command line client for quick access.
 - Simple Telegram bot for chat interaction.
+- Interactive console chat loop using ChatGPT.
 - Configurable Mentz‑EFA base URL via `EFA_BASE_URL`.
 
 ## Requirements
@@ -149,6 +150,7 @@ OPENAI_API_KEY=sk-... python -m src.cli search "Bozen nach Meran" --chatgpt
 OPENAI_API_KEY=sk-... uvicorn src.main:app --host 0.0.0.0 --reload
 ```
 
+The prompts used for query parsing and response formatting are stored in `prompts/`.
 ## ChatGPT plugin
 The repository includes a plugin manifest and OpenAPI file in the
 `.well-known/` directory. When the server is running they are served under
@@ -172,6 +174,14 @@ defaults to the value of the `API_URL` environment variable or
 
 When selecting a command from the bot's keyboard without additional text,
 the bot will ask for the required input before sending the request.
+
+## Console chat loop
+Start an interactive session on the console using ChatGPT to parse requests and format results.
+```bash
+OPENAI_API_KEY=sk-... python -m src.chat_loop
+```
+Example queries can be found in `examples/queries.txt`.
+
 
 ## Testing
 ```bash
