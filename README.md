@@ -50,6 +50,10 @@ OPENAI_API_KEY=sk-...
 ```bash
 OPENAI_MODEL=gpt-4
 ```
+`OPENAI_MAX_TOKENS` – maximum tokens for ChatGPT replies (default 100)
+```bash
+OPENAI_MAX_TOKENS=120
+```
 - `TELEGRAM_TOKEN` – required for the Telegram bot
   ```bash
   TELEGRAM_TOKEN=your_token
