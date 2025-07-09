@@ -9,6 +9,19 @@ fi
 # Ensure Python 3.8+ and build tools (for spaCy dependencies)
 PYTHON_CMD=python3
 
+# Detect package manager and update if needed
+if command -v apt-get >/dev/null; then
+    PKG_MGR=apt-get
+    INSTALL_CMD="sudo apt-get install -y"
+    sudo apt-get update
+elif command -v yum >/dev/null; then
+    PKG_MGR=yum
+    INSTALL_CMD="sudo yum install -y"
+else
+    echo "No supported package manager found. Please install dependencies manually." >&2
+    exit 1
+fi
+
 # check if python3 satisfies the version requirement
 if ! $PYTHON_CMD - <<'EOF'
 import sys
@@ -16,26 +29,27 @@ sys.exit(0 if sys.version_info >= (3, 8) else 1)
 EOF
 then
     echo "Python 3.8+ not found. Installing..."
-    if command -v apt-get >/dev/null; then
-        sudo apt-get update
-        sudo apt-get install -y build-essential python3.8 python3.8-venv python3.8-dev
-        PYTHON_CMD=python3.8
-    elif command -v yum >/dev/null; then
-        sudo yum install -y gcc gcc-c++ make automake autoconf kernel-devel
-        sudo yum install -y python38 python38-devel
-        PYTHON_CMD=python3.8
-    else
-        echo "No supported package manager found. Please install Python 3.8 or newer manually." >&2
-        exit 1
-    fi
+    case $PKG_MGR in
+        apt-get)
+            $INSTALL_CMD build-essential python3.8 python3.8-venv python3.8-dev
+            PYTHON_CMD=python3.8
+            ;;
+        yum)
+            $INSTALL_CMD gcc gcc-c++ make automake autoconf kernel-devel
+            $INSTALL_CMD python38 python38-devel
+            PYTHON_CMD=python3.8
+            ;;
+    esac
 else
-    if command -v apt-get >/dev/null; then
-        sudo apt-get update
-        sudo apt-get install -y build-essential python3-dev
-    elif command -v yum >/dev/null; then
-        sudo yum install gcc gcc-c++ make automake autoconf kernel-devel
-        sudo yum install -y python3-devel
-    fi
+    case $PKG_MGR in
+        apt-get)
+            $INSTALL_CMD build-essential python3-dev
+            ;;
+        yum)
+            $INSTALL_CMD gcc gcc-c++ make automake autoconf kernel-devel
+            $INSTALL_CMD python3-devel
+            ;;
+    esac
 fi
 
 # Create virtual environment if needed or outdated
