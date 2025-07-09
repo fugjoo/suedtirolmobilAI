@@ -34,9 +34,15 @@ def _extract_time(point: Dict[str, Any]) -> Dict[str, Optional[str]]:
 
 def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
     """Return minimal information about a trip."""
-    trip = data.get("trips", {}).get("trip")
-    if isinstance(trip, list):
-        trip = trip[0] if trip else {}
+    trips = data.get("trips")
+    if isinstance(trips, dict):
+        trips = trips.get("trip")
+    if isinstance(trips, list):
+        trip = trips[0] if trips else None
+    elif isinstance(trips, dict):
+        trip = trips
+    else:
+        trip = None
     if not isinstance(trip, dict):
         return {}
     result: Dict[str, Any] = {
@@ -44,9 +50,11 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
         "interchange": trip.get("interchange"),
         "legs": [],
     }
-    legs: List[Dict[str, Any]] = trip.get("legs", [])
+    legs = trip.get("legs")
     if isinstance(legs, dict):
         legs = legs.get("leg", [])  # type: ignore[assignment]
+    if not isinstance(legs, list):
+        legs = []
     for leg in legs:
         points = leg.get("points", [])
         if isinstance(points, dict):
