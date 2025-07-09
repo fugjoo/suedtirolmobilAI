@@ -4,7 +4,6 @@ import argparse
 import asyncio
 import json
 import logging
-import os
 import threading
 from typing import Dict, Any, List
 
@@ -14,8 +13,10 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 
 MAX_MESSAGE_LENGTH = 4096
 
-API_URL = os.getenv("API_URL", "http://localhost:8000")
-TOKEN = os.getenv("TELEGRAM_TOKEN")
+from .config import get_api_url, get_telegram_token
+
+API_URL = get_api_url()
+TOKEN = get_telegram_token()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

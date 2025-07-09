@@ -44,7 +44,15 @@ The service can be configured via the following environment variables:
   ```
 - `OPENAI_API_KEY` – API key for ChatGPT.
 ```bash
-OPENAI_API_KEY=sk-... 
+OPENAI_API_KEY=sk-...
+```
+- `OPENAI_MODEL` – OpenAI model name used for LLM features
+```bash
+OPENAI_MODEL=gpt-4
+```
+- `OPENAI_MAX_TOKENS_PARAM` – parameter name for limiting output length
+```bash
+OPENAI_MAX_TOKENS_PARAM=max_tokens
 ```
 - `TELEGRAM_TOKEN` – required for the Telegram bot
   ```bash

@@ -1,10 +1,11 @@
 """Simple wrapper for the Mentz EFA API."""
 
 from typing import Optional, Dict, Any
-import os
 import requests
 
-BASE_URL = os.getenv("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
+from .config import get_efa_base_url
+
+BASE_URL = get_efa_base_url()
 
 
 def build_trip_params(
