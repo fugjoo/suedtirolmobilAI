@@ -17,12 +17,19 @@ def load_prompt() -> str:
 
 def _extract_time(point: Dict[str, Any]) -> Dict[str, Optional[str]]:
     """Return planned and real time strings from a point."""
+
     if not isinstance(point, dict):
         return {"time": None, "rtTime": None}
     dt = point.get("dateTime", {})
     time = None
     rt_time = None
     if isinstance(dt, dict):
+
+    dt = point.get("dateTime", {})
+    time = None
+    rt_time = None
+    if dt:
+
         hour = dt.get("time")
         if hour:
             time = hour
@@ -34,6 +41,7 @@ def _extract_time(point: Dict[str, Any]) -> Dict[str, Optional[str]]:
 
 def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
     """Return minimal information about a trip."""
+
     trips = data.get("trips")
     if isinstance(trips, dict):
         trips = trips.get("trip")
@@ -43,6 +51,9 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
         trip = trips
     else:
         trip = None
+
+    trip = data.get("trips", {}).get("trip")
+
     if not isinstance(trip, dict):
         return {}
     result: Dict[str, Any] = {
@@ -50,6 +61,7 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
         "interchange": trip.get("interchange"),
         "legs": [],
     }
+
     legs = trip.get("legs")
     if isinstance(legs, dict):
         legs = legs.get("leg", [])  # type: ignore[assignment]
@@ -59,6 +71,11 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
         points = leg.get("points", [])
         if isinstance(points, dict):
             points = points.get("point", [])  # type: ignore[assignment]
+
+    legs: List[Dict[str, Any]] = trip.get("legs", [])
+    for leg in legs:
+        points = leg.get("points", [])
+
         if len(points) < 2:
             continue
         start = points[0]
@@ -82,12 +99,16 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
 def extract_departure_info(data: Dict[str, Any]) -> Dict[str, Any]:
     """Return minimal information about upcoming departures."""
     departures: List[Dict[str, Any]] = []
+
     dep_list = data.get("departureList")
     if isinstance(dep_list, dict):
         dep_list = dep_list.get("departure", [])
     if not isinstance(dep_list, list):
         dep_list = []
     for dep in dep_list:
+
+    for dep in data.get("departureList", []):
+
         line = dep.get("servingLine", {})
         dt = dep.get("dateTime", {})
         rt = dep.get("realDateTime", {})
@@ -124,6 +145,7 @@ def format_trip(data: Dict[str, Any], language: str = "de", model: str = "gpt-3.
 
     short_data = extract_trip_info(data)
     prompt = load_prompt().format(data=json.dumps(short_data, ensure_ascii=False), language=language)
+
     client = openai.OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model=model,
@@ -141,6 +163,8 @@ def format_departures(data: Dict[str, Any], language: str = "de", model: str = "
 
     short_data = extract_departure_info(data)
     prompt = load_prompt().format(data=json.dumps(short_data, ensure_ascii=False), language=language)
+
+
     client = openai.OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model=model,
