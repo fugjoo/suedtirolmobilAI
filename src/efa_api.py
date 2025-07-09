@@ -3,6 +3,7 @@
 from typing import Optional, Dict, Any
 import os
 import logging
+import datetime as dt
 import requests
 
 logger = logging.getLogger(__name__)
@@ -45,9 +46,12 @@ def build_trip_params(
         params["type_destination"] = destination_type or "any"
 
     if datetime:
-        date, time = datetime.split("T")
-        params["itdDate"] = date
-        params["itdTime"] = time
+        try:
+            dt_value = dt.datetime.fromisoformat(datetime)
+            params["itdDate"] = dt_value.strftime("%Y%m%d")
+            params["itdTime"] = dt_value.strftime("%H:%M")
+        except ValueError:
+            logger.warning("Invalid datetime string: %s", datetime)
     if include:
         params["includedMeans"] = ",".join(include)
     if exclude:
