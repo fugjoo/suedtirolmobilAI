@@ -4,7 +4,8 @@ Fields:
 - from: starting location or null
 - to: destination location or null
 - datetime: ISO format "YYYY-MM-DDTHH:MM" or null
-- transport_mode: "Bus", "Zug", "Seilbahn" or null
-- long_distance: true or false
+- include: list of desired transport modes or empty list
+- exclude: list of transport modes to skip or empty list
+- long_distance: true to allow long distance trains, false to exclude them
 - language: "de", "it", or "en"
 User text: {text}

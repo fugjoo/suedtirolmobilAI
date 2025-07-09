@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -15,6 +15,9 @@ class Query:
     datetime: Optional[str] = None
     line: Optional[str] = None
     language: Optional[str] = None
+    include: Optional[List[str]] = None
+    exclude: Optional[List[str]] = None
+    long_distance: Optional[bool] = None
 
 
 TRIP_RE = re.compile(
@@ -22,11 +25,28 @@ TRIP_RE = re.compile(
     re.I,
 )
 DEPT_RE = re.compile(r"abfahrten? (?P<stop>\w+)", re.I)
+INCLUDE_RE = re.compile(r"mit (?P<modes>bus(?: und seilbahn)?)", re.I)
+EXCLUDE_RE = re.compile(r"ohne (?P<modes>zug|fernverkehr)", re.I)
 
 
 
 def parse(text: str) -> Query:
     """Parse a German language query."""
+    include_modes = []
+    exclude_modes = []
+    if m := INCLUDE_RE.search(text):
+        modes = m.group("modes").lower()
+        if "bus" in modes:
+            include_modes.append("Bus")
+        if "seilbahn" in modes:
+            include_modes.append("Seilbahn")
+    if m := EXCLUDE_RE.search(text):
+        mode = m.group("modes").lower()
+        if "zug" in mode:
+            exclude_modes.append("Zug")
+        if "fernverkehr" in mode:
+            exclude_modes.append("Fernverkehr")
+
     match = TRIP_RE.search(text)
     if match:
         dt = match.group("time")
@@ -39,10 +59,26 @@ def parse(text: str) -> Query:
             match.group("to"),
             iso,
             language="de",
+            include=include_modes or None,
+            exclude=exclude_modes or None,
+            long_distance=None if "Fernverkehr" not in exclude_modes else False,
         )
 
     match = DEPT_RE.search(text)
     if match:
-        return Query("departure", from_location=match.group("stop"), language="de")
+        return Query(
+            "departure",
+            from_location=match.group("stop"),
+            language="de",
+            include=include_modes or None,
+            exclude=exclude_modes or None,
+            long_distance=None if "Fernverkehr" not in exclude_modes else False,
+        )
 
-    return Query("unknown", language="de")
+    return Query(
+        "unknown",
+        language="de",
+        include=include_modes or None,
+        exclude=exclude_modes or None,
+        long_distance=None if "Fernverkehr" not in exclude_modes else False,
+    )
