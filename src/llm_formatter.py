@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import openai
 
-from .config import get_openai_model
+from .config import get_openai_model, get_openai_max_tokens
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "formatter_prompt.txt"
 
@@ -125,7 +125,10 @@ def extract_departure_info(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def format_trip(
-    data: Dict[str, Any], language: str = "de", model: Optional[str] = None
+    data: Dict[str, Any],
+    language: str = "de",
+    model: Optional[str] = None,
+    max_tokens: Optional[int] = None,
 ) -> str:
     """Return ChatGPT-formatted trip description.
 
@@ -134,6 +137,8 @@ def format_trip(
     """
     if model is None:
         model = get_openai_model()
+    if max_tokens is None:
+        max_tokens = get_openai_max_tokens()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
@@ -145,13 +150,16 @@ def format_trip(
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "system", "content": prompt}],
-        max_tokens=200,
+        max_tokens=max_tokens,
     )
     return response.choices[0].message.content.strip()
 
 
 def format_departures(
-    data: Dict[str, Any], language: str = "de", model: Optional[str] = None
+    data: Dict[str, Any],
+    language: str = "de",
+    model: Optional[str] = None,
+    max_tokens: Optional[int] = None,
 ) -> str:
     """Return ChatGPT-formatted departure list.
 
@@ -160,6 +168,8 @@ def format_departures(
     """
     if model is None:
         model = get_openai_model()
+    if max_tokens is None:
+        max_tokens = get_openai_max_tokens()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
@@ -172,6 +182,6 @@ def format_departures(
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "system", "content": prompt}],
-        max_tokens=200,
+        max_tokens=max_tokens,
     )
     return response.choices[0].message.content.strip()
