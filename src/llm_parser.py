@@ -45,11 +45,16 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
         try:
             dt = datetime.fromisoformat(dt_value)
             now = datetime.now()
-            if dt.year != now.year:
+            if "heute" in text.lower():
+                dt = dt.replace(year=now.year, month=now.month, day=now.day)
+            elif dt.year != now.year:
                 dt = dt.replace(year=now.year)
-                data["datetime"] = dt.strftime("%Y-%m-%dT%H:%M")
+            data["datetime"] = dt.strftime("%Y-%m-%dT%H:%M")
         except ValueError:
             pass
+    elif "heute" in text.lower():
+        now = datetime.now()
+        data["datetime"] = now.strftime("%Y-%m-%dT%H:%M")
     return Query(
         type=data.get("type", "unknown"),
         from_location=data.get("from"),

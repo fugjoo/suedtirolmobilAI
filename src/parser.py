@@ -72,7 +72,11 @@ def parse(text: str) -> Query:
         dt = match.group("time")
         iso = None
         if dt:
-            iso = f"2025-01-01T{dt}"
+            if "heute" in text.lower():
+                today = datetime.now().strftime("%Y-%m-%d")
+                iso = f"{today}T{dt}"
+            else:
+                iso = f"2025-01-01T{dt}"
         return Query(
             "trip",
             match.group("from"),
