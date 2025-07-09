@@ -39,23 +39,45 @@ INCLUDE_RE = re.compile(r"mit (?P<modes>bus(?: und seilbahn)?)", re.I)
 EXCLUDE_RE = re.compile(r"ohne (?P<modes>zug|fernverkehr)", re.I)
 
 
+TODAY_WORDS = {"heute", "today", "oggi"}
+TOMORROW_WORDS = {"morgen", "tomorrow", "domani"}
+YESTERDAY_WORDS = {"gestern", "yesterday", "ieri"}
+NEXT_SUNDAY_WORDS = {
+    "n\u00e4chsten sonntag",
+    "naechsten sonntag",
+    "next sunday",
+    "domenica prossima",
+    "prossima domenica",
+}
+WEEKEND_WORDS = {
+    "am wochenende",
+    "this weekend",
+    "next weekend",
+    "at the weekend",
+    "nel weekend",
+    "nel fine settimana",
+    "fine settimana",
+    "weekend",
+}
+
+
 def relative_iso(text: str, time_str: Optional[str] = None) -> Optional[str]:
-    """Return ISO timestamp for relative date keywords."""
+    """Return ISO timestamp for relative date keywords across languages."""
     lower = text.lower()
     now = datetime.now()
     date = None
-    if "heute" in lower:
+    if any(word in lower for word in TODAY_WORDS):
         date = now.date()
-    elif "morgen" in lower:
+    elif any(word in lower for word in TOMORROW_WORDS):
         date = now.date() + timedelta(days=1)
-    elif "gestern" in lower:
+    elif any(word in lower for word in YESTERDAY_WORDS):
         date = now.date() - timedelta(days=1)
-    elif "n\xc3\xa4chsten sonntag" in lower or "naechsten sonntag" in lower:
+    elif any(word in lower for word in NEXT_SUNDAY_WORDS):
         days = (6 - now.weekday()) % 7
         if days == 0:
             days = 7
         date = now.date() + timedelta(days=days)
-    elif "am wochenende" in lower:
+    elif any(word in lower for word in WEEKEND_WORDS):
         days = (5 - now.weekday()) % 7
         if days <= 0:
             days += 7
