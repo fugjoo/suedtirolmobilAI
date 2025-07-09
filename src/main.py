@@ -33,13 +33,46 @@ class StopsRequest(BaseModel):
 
 @app.post("/search")
 def search(body: SearchRequest, format: str = Query("json")) -> Any:
-    """Parse a text query for a trip and return EFA results."""
+    """Parse a text query and return EFA results.
+
+    A departure monitor request is executed when no destination is provided.
+    """
     q = parser.parse(body.text)
     if q.type != "trip" or not q.from_location or not q.to_location:
         try:
             q = llm_parser.parse_llm(body.text)
         except Exception as exc:  # pragma: no cover - no tests
             raise HTTPException(status_code=400, detail=str(exc))
+
+    if not q.from_location:
+        raise HTTPException(status_code=400, detail="origin not specified")
+
+    if not q.to_location:
+        sf_data = efa_api.stop_finder(q.from_location, language=q.language or "de")
+        points = sf_data.get("stopFinder", {}).get("points", [])
+        if not points:
+            raise HTTPException(status_code=404, detail="stop not found")
+        point = efa_api.best_point(points)
+        if not point:
+            raise HTTPException(status_code=404, detail="stop not found")
+        verified = point.get("name", q.from_location)
+        stateless = point.get("stateless")
+        data = efa_api.departure_monitor(
+            verified, 10, stateless=stateless, language=q.language or "de"
+        )
+        short_data = llm_formatter.extract_departure_info(data)
+        try:
+            text = llm_formatter.format_departures(data, language=q.language or "de")
+            if format == "text":
+                return text
+            return {
+                "input": body.text,
+                "stop": point,
+                "llmData": short_data,
+                "data": text,
+            }
+        except Exception as exc:  # pragma: no cover - no tests
+            raise HTTPException(status_code=500, detail=str(exc))
 
     from_data = efa_api.stop_finder(q.from_location, language=q.language or "de")
     points = from_data.get("stopFinder", {}).get("points", [])
