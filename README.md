@@ -1,21 +1,19 @@
 # suedtirolmobilAI
 
 A small FastAPI service that interprets natural language queries for public
-transport and forwards them to a EFA (Mentz GmbH) backend.
+transport and forwards them to a EFA backend (by Mentz GmbH). See docs/EFA_API.md
 
 ## Features
 - Parse queries in German, English and Italian.
 - Search for public transport connections.
 - Monitor departures for a stop.
 - Use stopfinder results to send stateless stop IDs for trips and departures.
-- Return stop suggestions.
-- Automatically decide between trip search, departures and stop search
-  based on the entered text.
+- Automatically decide between trip search, departures based on the entered text.
 - ChatGPT summaries for nicer text output.
 - ChatGPT plugin manifest for webhook integration.
 - Interactive console chat for quick access.
 - Simple Telegram bot for chat interaction, including conversation mode
-- Configurable EFA base URL via `EFA_BASE_URL` and other API-Keys an Tokens (OpenAI, Telegram).
+- Configurable EFA base URL via `EFA_BASE_URL` and other API-Keys and Tokens (OpenAI, Telegram).
 
 ## Requirements
 Python 3.8 or newer is required.
@@ -24,7 +22,6 @@ Python 3.8 or newer is required.
 ### Quick start
 ```bash
 ./install.sh
-source venv/bin/activate
 ```
 The script reuses an existing `venv` if it already runs on Python 3.8 or newer
 and automatically recreates it when an older interpreter is detected.
@@ -41,30 +38,29 @@ The service can be configured via the following environment variables:
 
 - `EFA_BASE_URL` – base URL of the Mentz‑EFA endpoint
   ```bash
-  EFA_BASE_URL=https://efa.sta.bz.it/apb uvicorn src.main:app --reload
+  EFA_BASE_URL=https://efa.sta.bz.it/apb
   ```
-- `OPENAI_API_KEY` – API key for ChatGPT. When set the service always uses
-  ChatGPT without any `--chatgpt` flag or `chatgpt=true` query parameter.
+- `OPENAI_API_KEY` – API key for ChatGPT.
 ```bash
-OPENAI_API_KEY=sk-... python -m src.chat --llm-parser --llm-format
+OPENAI_API_KEY=sk-... 
 ```
 - `TELEGRAM_TOKEN` – required for the Telegram bot
   ```bash
-  TELEGRAM_TOKEN=your_token python -m src.telegram_bot
+  TELEGRAM_TOKEN=your_token
   ```
 - `API_URL` – base URL of the API used by the Telegram bot
   ```bash
-  API_URL=http://localhost:8000 python -m src.telegram_bot
+  API_URL=http://localhost:8000
   ```
 - `SERVER_URL` – public URL used in `/.well-known/openapi.yaml`
   ```bash
-  SERVER_URL=https://api.example.com uvicorn src.main:app --reload
+  SERVER_URL=https://api.example.com
   ```
 
 Environment variables can also be stored in a `.env` file in the project root.
 A `.env.example` file is included as a template. Copy it to `.env` and fill in
 your credentials. The `.env` file is loaded automatically and should not be
-committed to version control.
+committed.
 
 ## Console chat
 Start a minimal interactive chat loop. Combine `--llm-parser` and `--llm-format` to use OpenAI for parsing and formatting:
@@ -109,9 +105,7 @@ curl -X POST http://localhost:8000/stops \
      -H 'Content-Type: application/json' \
      -d '{"query": "Brixen"}'
 ```
-Append `?format=text` or `?format=json` to change the response. ChatGPT
-summaries are enabled automatically when `OPENAI_API_KEY` is set. The
-`chatgpt` query parameter is no longer required.
+Append `?format=text`, `?format=llm` or `?format=json` to change the response. 
 
 ## ChatGPT plugin
 The repository includes a plugin manifest and OpenAPI file in the
