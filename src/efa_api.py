@@ -118,4 +118,17 @@ def best_point(points: Any) -> Optional[Dict[str, Any]]:
     """Return the point entry with the highest quality."""
     if not points:
         return None
-    return max(points, key=lambda p: int(p.get("quality", 0)))
+
+    if isinstance(points, dict):
+        if "point" in points:
+            points = points["point"]
+        if isinstance(points, dict):
+            return points
+
+    if isinstance(points, list):
+        items = [p for p in points if isinstance(p, dict)]
+        if not items:
+            return None
+        return max(items, key=lambda p: int(p.get("quality", 0)))
+
+    return None
