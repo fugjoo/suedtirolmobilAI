@@ -1,14 +1,13 @@
 """OpenAI-powered query parser."""
 
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
 import openai
 
 from .parser import Query
-from .config import get_openai_model
+from .config import get_openai_model, get_openai_api_key
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "parser_prompt.txt"
 
@@ -26,9 +25,7 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
     """
     if model is None:
         model = get_openai_model()
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY not set")
+    api_key = get_openai_api_key()
 
     prompt = load_prompt().format(text=text)
     client = openai.OpenAI(api_key=api_key)

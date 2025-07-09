@@ -1,13 +1,12 @@
 """Format EFA responses using OpenAI."""
 
 import json
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import openai
 
-from .config import get_openai_model
+from .config import get_openai_model, get_openai_api_key
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "formatter_prompt.txt"
 
@@ -134,9 +133,7 @@ def format_trip(
     """
     if model is None:
         model = get_openai_model()
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY not set")
+    api_key = get_openai_api_key()
 
     short_data = extract_trip_info(data)
     prompt = load_prompt().format(data=json.dumps(short_data, ensure_ascii=False), language=language)
@@ -160,9 +157,7 @@ def format_departures(
     """
     if model is None:
         model = get_openai_model()
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY not set")
+    api_key = get_openai_api_key()
 
     short_data = extract_departure_info(data)
     prompt = load_prompt().format(data=json.dumps(short_data, ensure_ascii=False), language=language)
