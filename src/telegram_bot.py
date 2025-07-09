@@ -8,6 +8,8 @@ import os
 import threading
 from typing import Dict, Any, List
 
+from . import parser, efa_api
+
 import requests
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
@@ -64,6 +66,64 @@ async def send_reply(update: Update, text: str) -> None:
         await update.message.reply_text(text[i : i + MAX_MESSAGE_LENGTH])
 
 
+def gather_debug_entries(text: str, state: str = None) -> List[Dict[str, Any]]:
+    """Return debug information for a query."""
+    if state == "departures":
+        query = parser.Query("departure", from_location=text, language="en")
+    else:
+        query = parser.parse(text)
+    entries: List[Dict[str, Any]] = [query.__dict__]
+    if query.type == "trip" and query.from_location and query.to_location:
+        from_sf = efa_api.stop_finder(query.from_location, language=query.language or "de")
+        from_pts = from_sf.get("stopFinder", {}).get("points", [])
+        to_sf = efa_api.stop_finder(query.to_location, language=query.language or "de")
+        to_pts = to_sf.get("stopFinder", {}).get("points", [])
+        if from_pts and to_pts:
+            from_p = efa_api.best_point(from_pts)
+            to_p = efa_api.best_point(to_pts)
+            params = efa_api.build_trip_params(
+                from_p.get("name", query.from_location),
+                to_p.get("name", query.to_location),
+                query.datetime,
+                origin_stateless=from_p.get("stateless"),
+                destination_stateless=to_p.get("stateless"),
+                include=query.include,
+                exclude=query.exclude,
+                long_distance=query.long_distance,
+                language=query.language or "de",
+            )
+            entries.append(
+                {
+                    "fromStateless": from_p.get("stateless"),
+                    "toStateless": to_p.get("stateless"),
+                    "request": {
+                        "url": f"{efa_api.BASE_URL}/XML_TRIP_REQUEST2",
+                        "params": params,
+                    },
+                }
+            )
+    elif query.type == "departure" and query.from_location:
+        sf_data = efa_api.stop_finder(query.from_location, language=query.language or "de")
+        points = sf_data.get("stopFinder", {}).get("points", [])
+        if points:
+            point = efa_api.best_point(points)
+            params = efa_api.build_departure_params(
+                point.get("name", query.from_location),
+                stateless=point.get("stateless"),
+                language=query.language or "de",
+            )
+            entries.append(
+                {
+                    "stateless": point.get("stateless"),
+                    "request": {
+                        "url": f"{efa_api.BASE_URL}/XML_DM_REQUEST",
+                        "params": params,
+                    },
+                }
+            )
+    return entries
+
+
 async def debug_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send collected debug information."""
     if not DEBUG_INFO:
@@ -95,11 +155,21 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if state == "search":
         context.user_data.pop("state", None)
+        if DEBUG:
+            entries = gather_debug_entries(text)
+            DEBUG_INFO.extend(entries)
+            for ent in entries:
+                await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
         reply = call_api("/search", {"text": text})
         await send_reply(update, reply)
         return
     if state == "departures":
         context.user_data.pop("state", None)
+        if DEBUG:
+            entries = gather_debug_entries(text, state="departures")
+            DEBUG_INFO.extend(entries)
+            for ent in entries:
+                await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
         reply = call_api("/departures", {"stop": text})
         await send_reply(update, reply)
         return
@@ -110,6 +180,11 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     # fallback: try /search
+    if DEBUG:
+        entries = gather_debug_entries(text)
+        DEBUG_INFO.extend(entries)
+        for ent in entries:
+            await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
     reply = call_api("/search", {"text": text})
     await send_reply(update, reply)
 
