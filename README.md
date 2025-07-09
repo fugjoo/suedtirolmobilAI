@@ -9,6 +9,8 @@ transport and forwards them to a Mentz EFA backend. See `docs/EFA_XML_API.md`.
 - Use stateless stop IDs for better accuracy.
 - Automatically detect the desired action.
 - Optional ChatGPT summaries.
+- Verifies stops before requesting trips or departures.
+- ChatGPT uses trimmed EFA data for concise responses.
 - Plugin manifest for ChatGPT integration.
 - Interactive console chat.
 - Simple Telegram bot.
