@@ -1,19 +1,17 @@
 # suedtirolmobilAI
 
 A small FastAPI service that interprets natural language queries for public
-transport and forwards them to a EFA backend (by Mentz GmbH). See docs/EFA_API.md
+transport and forwards them to a Mentz EFA backend. See `docs/EFA_XML_API.md`.
 
 ## Features
 - Parse queries in German, English and Italian.
-- Search for public transport connections.
-- Monitor departures for a stop.
-- Use stopfinder results to send stateless stop IDs for trips and departures.
-- Automatically decide between trip search, departures based on the entered text.
-- ChatGPT summaries for nicer text output.
-- ChatGPT plugin manifest for webhook integration.
-- Interactive console chat for quick access.
-- Simple Telegram bot for chat interaction, including conversation mode
-- Configurable EFA base URL via `EFA_BASE_URL` and other API-Keys and Tokens (OpenAI, Telegram).
+- Search connections and monitor departures.
+- Use stateless stop IDs for better accuracy.
+- Automatically detect the desired action.
+- Optional ChatGPT summaries.
+- Plugin manifest for ChatGPT integration.
+- Interactive console chat.
+- Simple Telegram bot.
 
 ## Requirements
 Python 3.8 or newer is required.
@@ -63,9 +61,10 @@ your credentials. The `.env` file is loaded automatically and should not be
 committed.
 
 ## Console chat
-Start a minimal interactive chat loop. Combine `--llm-parser` and `--llm-format` to use OpenAI for parsing and formatting:
+Start a minimal interactive chat loop. Combine `--llm-parser` and `--llm-format` to use OpenAI for parsing and formatting.
+Add `--debug` to print the parsed query JSON.
 ```bash
-python -m src.chat --llm-parser --llm-format
+python -m src.chat --llm-parser --llm-format --debug
 ```
 
 ### Automatic query detection
@@ -80,7 +79,11 @@ infer the best action automatically.  For example:
 Queries in German, English and Italian are supported.
 
 ## API endpoints
-All endpoints accept POST requests.
+All endpoints accept POST requests. Use the query parameter `format` to control
+the output:
+
+- `format=json` (default) returns a JSON object.
+- `format=text` returns plain text.
 
 ### `/search`
 Parse a natural language query for a trip.
@@ -91,7 +94,8 @@ curl -X POST http://localhost:8000/search \
 ```
 
 ### `/departures`
-List upcoming departures for a stop.
+List upcoming departures for a stop. The optional `limit` parameter controls
+how many results are returned (default `10`).
 ```bash
 curl -X POST http://localhost:8000/departures \
      -H 'Content-Type: application/json' \
@@ -105,7 +109,7 @@ curl -X POST http://localhost:8000/stops \
      -H 'Content-Type: application/json' \
      -d '{"query": "Brixen"}'
 ```
-Append `?format=text`, `?format=llm` or `?format=json` to change the response. 
+Append `?format=text` or `?format=json` to change the response.
 
 ## ChatGPT plugin
 The repository includes a plugin manifest and OpenAPI file in the
@@ -119,7 +123,8 @@ Forward messages to the API using the example bot:
 export TELEGRAM_TOKEN=your_token
 python -m src.telegram_bot --api-url http://localhost:8000
 ```
-Add `--start-server` to launch the API with `uvicorn` automatically:
+Add `--start-server` to launch the API with `uvicorn` automatically. Use
+`--token` to pass a token explicitly and `--debug` for verbose logging.
 ```bash
 export TELEGRAM_TOKEN=your_token
 python -m src.telegram_bot --api-url http://localhost:8000 --start-server
