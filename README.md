@@ -24,7 +24,9 @@ Python 3.8 or newer is required.
 ./install.sh
 ```
 The script reuses an existing `venv` if it already runs on Python 3.8 or newer
-and automatically recreates it when an older interpreter is detected.
+and automatically recreates it when an older interpreter is detected. It works
+on systems using `apt-get` or `yum` by detecting the available package
+manager automatically.
 
 ## Running the API
 Start the server with:
