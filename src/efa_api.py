@@ -14,6 +14,9 @@ def build_trip_params(
     origin_stateless: Optional[str] = None,
     destination_stateless: Optional[str] = None,
     *,
+    include: Optional[list] = None,
+    exclude: Optional[list] = None,
+    long_distance: Optional[bool] = None,
     language: str = "de",
 ) -> Dict[str, Any]:
     """Return parameters for a trip request."""
@@ -36,6 +39,15 @@ def build_trip_params(
         date, time = datetime.split("T")
         params["itdDate"] = date
         params["itdTime"] = time
+    if include:
+        params["includedMeans"] = ",".join(include)
+    if exclude:
+        params["excludedMeans"] = ",".join(exclude)
+    if long_distance is False:
+        params.setdefault("excludedMeans", "")
+        if params["excludedMeans"]:
+            params["excludedMeans"] += ","
+        params["excludedMeans"] += "Fernverkehr"
     return params
 
 
@@ -69,6 +81,9 @@ def trip_request(
     origin_stateless: Optional[str] = None,
     destination_stateless: Optional[str] = None,
     *,
+    include: Optional[list] = None,
+    exclude: Optional[list] = None,
+    long_distance: Optional[bool] = None,
     language: str = "de",
 ) -> Dict[str, Any]:
     """Request a trip from origin to destination."""
@@ -78,6 +93,9 @@ def trip_request(
         datetime,
         origin_stateless=origin_stateless,
         destination_stateless=destination_stateless,
+        include=include,
+        exclude=exclude,
+        long_distance=long_distance,
         language=language,
     )
     response = requests.get(f"{BASE_URL}/XML_TRIP_REQUEST2", params=params, timeout=10)

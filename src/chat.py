@@ -58,6 +58,9 @@ def main() -> None:
                     q.datetime,
                     origin_stateless=from_point.get("stateless"),
                     destination_stateless=to_point.get("stateless"),
+                    include=q.include,
+                    exclude=q.exclude,
+                    long_distance=q.long_distance,
                     language=q.language or "de",
                 )
                 debug_info["request"] = {
@@ -71,6 +74,9 @@ def main() -> None:
                 q.datetime,
                 origin_stateless=from_point.get("stateless"),
                 destination_stateless=to_point.get("stateless"),
+                include=q.include,
+                exclude=q.exclude,
+                long_distance=q.long_distance,
                 language=q.language or "de",
             )
             if args.llm_format:

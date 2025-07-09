@@ -67,6 +67,9 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         q.datetime,
         origin_stateless=from_stateless,
         destination_stateless=to_stateless,
+        include=q.include,
+        exclude=q.exclude,
+        long_distance=q.long_distance,
         language=q.language or "de",
     )
     short_data = llm_formatter.extract_trip_info(data)

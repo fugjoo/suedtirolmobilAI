@@ -46,4 +46,7 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
         datetime=data.get("datetime"),
         line=None,
         language=data.get("language"),
+        include=data.get("include"),
+        exclude=data.get("exclude"),
+        long_distance=data.get("long_distance"),
     )
