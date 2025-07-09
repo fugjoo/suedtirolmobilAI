@@ -24,6 +24,11 @@ TRIP_RE = re.compile(
     r"von (?P<from>\w+) nach (?P<to>\w+)(?: um (?P<time>\d{1,2}:\d{2}))?",
     re.I,
 )
+# also handle "Bozen - Meran" style queries
+TRIP_DASH_RE = re.compile(
+    r"(?P<from>\w+)\s*[-\u2013]\s*(?P<to>\w+)(?:\s+um\s+(?P<time>\d{1,2}:\d{2}))?",
+    re.I,
+)
 DEPT_RE = re.compile(r"abfahrten? (?P<stop>\w+)", re.I)
 INCLUDE_RE = re.compile(r"mit (?P<modes>bus(?: und seilbahn)?)", re.I)
 EXCLUDE_RE = re.compile(r"ohne (?P<modes>zug|fernverkehr)", re.I)
@@ -48,6 +53,8 @@ def parse(text: str) -> Query:
             exclude_modes.append("Fernverkehr")
 
     match = TRIP_RE.search(text)
+    if not match:
+        match = TRIP_DASH_RE.search(text)
     if match:
         dt = match.group("time")
         iso = None
