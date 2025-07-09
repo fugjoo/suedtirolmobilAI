@@ -8,7 +8,7 @@ from typing import Optional
 
 import openai
 
-from .parser import Query
+from .parser import Query, relative_iso
 from .config import get_openai_model
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "parser_prompt.txt"
@@ -45,24 +45,22 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
         try:
             dt = datetime.fromisoformat(dt_value)
             now = datetime.now()
-            if "heute" in text.lower():
-                dt = dt.replace(year=now.year, month=now.month, day=now.day)
-            elif dt.year != now.year:
+            if dt.year != now.year:
                 dt = dt.replace(year=now.year)
             data["datetime"] = dt.strftime("%Y-%m-%dT%H:%M")
         except ValueError:
             pass
-    elif "heute" in text.lower():
-        now = datetime.now()
-        data["datetime"] = now.strftime("%Y-%m-%dT%H:%M")
+    else:
+        iso = relative_iso(text)
+        if iso:
+            data["datetime"] = iso
     return Query(
         type=data.get("type", "unknown"),
         from_location=data.get("from"),
         to_location=data.get("to"),
         datetime=data.get("datetime"),
-        line=None,
         language=data.get("language"),
         include=data.get("include"),
         exclude=data.get("exclude"),
-        long_distance=data.get("long_distance"),
+        long_distance=data.get("long_distance", False),
     )
