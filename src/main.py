@@ -83,6 +83,7 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         raise HTTPException(status_code=404, detail="origin not found")
     q.from_location = from_point.get("name", q.from_location)
     from_stateless = from_point.get("stateless")
+    from_type = from_point.get("anyType")
 
     to_data = efa_api.stop_finder(q.to_location, language=q.language or "de")
     points = to_data.get("stopFinder", {}).get("points", [])
@@ -93,6 +94,7 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         raise HTTPException(status_code=404, detail="destination not found")
     q.to_location = to_point.get("name", q.to_location)
     to_stateless = to_point.get("stateless")
+    to_type = to_point.get("anyType")
 
     data: Dict[str, Any] = efa_api.trip_request(
         q.from_location,
@@ -100,6 +102,8 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         q.datetime,
         origin_stateless=from_stateless,
         destination_stateless=to_stateless,
+        origin_type=from_type,
+        destination_type=to_type,
         include=q.include,
         exclude=q.exclude,
         long_distance=q.long_distance,
