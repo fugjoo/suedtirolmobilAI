@@ -1,3 +1,3 @@
 Please help me present public-transport connections in a clear and friendly way.
-Using the data below, write a concise flowing text, well-structured in following language: {language} 
+Using the data below, write a concise, flowing text, well-structured in following language: "{language}"
 Data: {data}
