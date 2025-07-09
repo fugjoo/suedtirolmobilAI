@@ -92,6 +92,8 @@ def gather_debug_entries(text: str, state: str = None) -> List[Dict[str, Any]]:
                 query.datetime,
                 origin_stateless=from_p.get("stateless"),
                 destination_stateless=to_p.get("stateless"),
+                origin_type=from_p.get("anyType"),
+                destination_type=to_p.get("anyType"),
                 include=query.include,
                 exclude=query.exclude,
                 long_distance=query.long_distance,

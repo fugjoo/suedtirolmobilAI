@@ -1,6 +1,7 @@
 """Very small rule-based parser for transport queries."""
 
 import re
+from datetime import datetime
 from dataclasses import dataclass
 from typing import Optional, List
 
@@ -51,6 +52,18 @@ def parse(text: str) -> Query:
             exclude_modes.append("Zug")
         if "fernverkehr" in mode:
             exclude_modes.append("Fernverkehr")
+
+    if text.strip().lower() == "heute":
+        now = datetime.now()
+        iso = now.strftime("%Y-%m-%dT%H:%M")
+        return Query(
+            "unknown",
+            datetime=iso,
+            language="de",
+            include=include_modes or None,
+            exclude=exclude_modes or None,
+            long_distance=None if "Fernverkehr" not in exclude_modes else False,
+        )
 
     match = TRIP_RE.search(text)
     if not match:

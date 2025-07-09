@@ -17,26 +17,32 @@ def build_trip_params(
     origin_stateless: Optional[str] = None,
     destination_stateless: Optional[str] = None,
     *,
+    origin_type: Optional[str] = None,
+    destination_type: Optional[str] = None,
     include: Optional[list] = None,
     exclude: Optional[list] = None,
     long_distance: Optional[bool] = None,
     language: str = "de",
 ) -> Dict[str, Any]:
     """Return parameters for a trip request."""
-    params: Dict[str, Any] = {"outputFormat": "JSON", "language": language}
+    params: Dict[str, Any] = {
+        "outputFormat": "JSON",
+        "language": language,
+        "odvMacro": "true",
+    }
     if origin_stateless:
         params["name_origin"] = origin_stateless
         params["type_origin"] = "stop"
     else:
         params["name_origin"] = origin
-        params["type_origin"] = "any"
+        params["type_origin"] = origin_type or "any"
 
     if destination_stateless:
         params["name_destination"] = destination_stateless
         params["type_destination"] = "stop"
     else:
         params["name_destination"] = destination
-        params["type_destination"] = "any"
+        params["type_destination"] = destination_type or "any"
 
     if datetime:
         date, time = datetime.split("T")
@@ -84,6 +90,8 @@ def trip_request(
     origin_stateless: Optional[str] = None,
     destination_stateless: Optional[str] = None,
     *,
+    origin_type: Optional[str] = None,
+    destination_type: Optional[str] = None,
     include: Optional[list] = None,
     exclude: Optional[list] = None,
     long_distance: Optional[bool] = None,
@@ -96,6 +104,8 @@ def trip_request(
         datetime,
         origin_stateless=origin_stateless,
         destination_stateless=destination_stateless,
+        origin_type=origin_type,
+        destination_type=destination_type,
         include=include,
         exclude=exclude,
         long_distance=long_distance,

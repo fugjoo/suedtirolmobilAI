@@ -2,6 +2,7 @@
 
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -39,6 +40,16 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
     )
     content = response.choices[0].message.content.strip()
     data = json.loads(content)
+    dt_value = data.get("datetime")
+    if dt_value:
+        try:
+            dt = datetime.fromisoformat(dt_value)
+            now = datetime.now()
+            if dt.year != now.year:
+                dt = dt.replace(year=now.year)
+                data["datetime"] = dt.strftime("%Y-%m-%dT%H:%M")
+        except ValueError:
+            pass
     return Query(
         type=data.get("type", "unknown"),
         from_location=data.get("from"),
