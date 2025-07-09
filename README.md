@@ -113,20 +113,22 @@ curl -X POST http://localhost:8000/search \
 ```
 
 ### `/departures`
-List upcoming departures for a stop. The optional `limit` parameter controls
-how many results are returned (default `10`).
+List upcoming departures for a stop. Use the optional `language` parameter to
+choose `de`, `it`, or `en`. The optional `limit` parameter controls how many
+results are returned (default `10`).
 ```bash
 curl -X POST http://localhost:8000/departures \
      -H 'Content-Type: application/json' \
-     -d '{"stop": "Bozen", "limit": 5}'
+     -d '{"stop": "Bozen", "language": "it", "limit": 5}'
 ```
 
 ### `/stops`
-Return stop name suggestions.
+Return stop name suggestions. You can specify a `language` of `de`, `it`, or
+`en`.
 ```bash
 curl -X POST http://localhost:8000/stops \
      -H 'Content-Type: application/json' \
-     -d '{"query": "Brixen"}'
+     -d '{"query": "Brixen", "language": "it"}'
 ```
 Append `?format=text` or `?format=json` to change the response.
 
