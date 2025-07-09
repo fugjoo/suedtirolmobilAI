@@ -38,4 +38,5 @@ def parse_llm(text: str, model: str = "gpt-3.5-turbo") -> Query:
         to_location=data.get("to"),
         datetime=data.get("datetime"),
         line=None,
+        language=data.get("language"),
     )
