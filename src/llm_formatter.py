@@ -20,16 +20,11 @@ def _extract_time(point: Dict[str, Any]) -> Dict[str, Optional[str]]:
 
     if not isinstance(point, dict):
         return {"time": None, "rtTime": None}
+
     dt = point.get("dateTime", {})
     time = None
     rt_time = None
     if isinstance(dt, dict):
-
-    dt = point.get("dateTime", {})
-    time = None
-    rt_time = None
-    if dt:
-
         hour = dt.get("time")
         if hour:
             time = hour
@@ -44,15 +39,11 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
 
     trips = data.get("trips")
     if isinstance(trips, dict):
-        trips = trips.get("trip")
-    if isinstance(trips, list):
+        trip = trips.get("trip")
+    elif isinstance(trips, list):
         trip = trips[0] if trips else None
-    elif isinstance(trips, dict):
-        trip = trips
     else:
         trip = None
-
-    trip = data.get("trips", {}).get("trip")
 
     if not isinstance(trip, dict):
         return {}
@@ -71,10 +62,6 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
         points = leg.get("points", [])
         if isinstance(points, dict):
             points = points.get("point", [])  # type: ignore[assignment]
-
-    legs: List[Dict[str, Any]] = trip.get("legs", [])
-    for leg in legs:
-        points = leg.get("points", [])
 
         if len(points) < 2:
             continue
@@ -106,8 +93,6 @@ def extract_departure_info(data: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(dep_list, list):
         dep_list = []
     for dep in dep_list:
-
-    for dep in data.get("departureList", []):
 
         line = dep.get("servingLine", {})
         dt = dep.get("dateTime", {})
