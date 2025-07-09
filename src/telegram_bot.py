@@ -95,7 +95,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if state == "search":
         context.user_data.pop("state", None)
-        reply = call_api("/search", {"text": text}, params={"format": "text", "chatgpt": "true"})
+        reply = call_api("/search", {"text": text}, params={"format": "text"})
         await send_reply(update, reply)
         return
     if state == "departures":
@@ -110,7 +110,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     # fallback: try /search
-    reply = call_api("/search", {"text": text}, params={"format": "text", "chatgpt": "true"})
+    reply = call_api("/search", {"text": text}, params={"format": "text"})
     await send_reply(update, reply)
 
 
