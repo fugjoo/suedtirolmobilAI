@@ -60,6 +60,17 @@ A `.env.example` file is included as a template. Copy it to `.env` and fill in
 your credentials. The `.env` file is loaded automatically and should not be
 committed.
 
+## Prompt templates
+Two text files under `prompts/` define how the LLM features interact with
+OpenAI. `parser_prompt.txt` instructs the parser which fields to extract from a
+query, while `formatter_prompt.txt` formats a trip using a chosen language.
+Both templates contain placeholders that are replaced automatically:
+
+- `{text}` in `parser_prompt.txt`
+- `{data}` and `{language}` in `formatter_prompt.txt`
+
+Edit the files to change the wording or add additional instructions.
+
 ## Console chat
 Start a minimal interactive chat loop. Combine `--llm-parser` and `--llm-format` to use OpenAI for parsing and formatting.
 Add `--debug` to print the parsed query JSON.
