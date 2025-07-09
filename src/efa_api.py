@@ -7,15 +7,15 @@ import requests
 BASE_URL = os.getenv("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
 
 
-def trip_request(
+def build_trip_params(
     origin: str,
     destination: str,
     datetime: Optional[str] = None,
     origin_stateless: Optional[str] = None,
     destination_stateless: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Request a trip from origin to destination."""
-    params = {"outputFormat": "JSON"}
+    """Return parameters for a trip request."""
+    params: Dict[str, Any] = {"outputFormat": "JSON"}
     if origin_stateless:
         params["name_origin"] = origin_stateless
         params["type_origin"] = "stop"
@@ -29,10 +29,49 @@ def trip_request(
     else:
         params["name_destination"] = destination
         params["type_destination"] = "any"
+
     if datetime:
         date, time = datetime.split("T")
         params["itdDate"] = date
         params["itdTime"] = time
+    return params
+
+
+def build_departure_params(
+    stop: str,
+    limit: int = 5,
+    stateless: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Return parameters for a departure monitor request."""
+    params: Dict[str, Any] = {
+        "mode": "direct",
+        "limit": limit,
+        "outputFormat": "JSON",
+    }
+    if stateless:
+        params["name_dm"] = stateless
+        params["type_dm"] = "stop"
+    else:
+        params["name_dm"] = stop
+        params["type_dm"] = "stop"
+    return params
+
+
+def trip_request(
+    origin: str,
+    destination: str,
+    datetime: Optional[str] = None,
+    origin_stateless: Optional[str] = None,
+    destination_stateless: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Request a trip from origin to destination."""
+    params = build_trip_params(
+        origin,
+        destination,
+        datetime,
+        origin_stateless=origin_stateless,
+        destination_stateless=destination_stateless,
+    )
     response = requests.get(f"{BASE_URL}/XML_TRIP_REQUEST2", params=params, timeout=10)
     response.raise_for_status()
     return response.json()
@@ -44,17 +83,7 @@ def departure_monitor(
     stateless: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Return upcoming departures for a stop."""
-    params = {
-        "mode": "direct",
-        "limit": limit,
-        "outputFormat": "JSON",
-    }
-    if stateless:
-        params["name_dm"] = stateless
-        params["type_dm"] = "stop"
-    else:
-        params["name_dm"] = stop
-        params["type_dm"] = "stop"
+    params = build_departure_params(stop, limit, stateless=stateless)
     response = requests.get(f"{BASE_URL}/XML_DM_REQUEST", params=params, timeout=10)
     response.raise_for_status()
     return response.json()

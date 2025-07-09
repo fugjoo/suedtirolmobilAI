@@ -44,6 +44,23 @@ def main() -> None:
                 continue
             from_point = from_points[0]
             to_point = to_points[0]
+            if args.debug:
+                debug_info = {
+                    "fromStateless": from_point.get("stateless"),
+                    "toStateless": to_point.get("stateless"),
+                }
+                params = efa_api.build_trip_params(
+                    from_point.get("name", q.from_location),
+                    to_point.get("name", q.to_location),
+                    q.datetime,
+                    origin_stateless=from_point.get("stateless"),
+                    destination_stateless=to_point.get("stateless"),
+                )
+                debug_info["request"] = {
+                    "url": f"{efa_api.BASE_URL}/XML_TRIP_REQUEST2",
+                    "params": params,
+                }
+                print(json.dumps(debug_info, indent=2, ensure_ascii=False))
             data = efa_api.trip_request(
                 from_point.get("name", q.from_location),
                 to_point.get("name", q.to_location),
@@ -65,6 +82,19 @@ def main() -> None:
                 print("Stop not found")
                 continue
             point = points[0]
+            if args.debug:
+                params = efa_api.build_departure_params(
+                    point.get("name", q.from_location),
+                    stateless=point.get("stateless"),
+                )
+                debug_info = {
+                    "stateless": point.get("stateless"),
+                    "request": {
+                        "url": f"{efa_api.BASE_URL}/XML_DM_REQUEST",
+                        "params": params,
+                    },
+                }
+                print(json.dumps(debug_info, indent=2, ensure_ascii=False))
             data = efa_api.departure_monitor(
                 point.get("name", q.from_location),
                 stateless=point.get("stateless"),
