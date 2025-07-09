@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional
 
 import openai
 
+from .config import get_openai_model
+
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "formatter_prompt.txt"
 
 
@@ -122,8 +124,16 @@ def extract_departure_info(data: Dict[str, Any]) -> Dict[str, Any]:
     return {"departures": departures}
 
 
-def format_trip(data: Dict[str, Any], language: str = "de", model: str = "gpt-3.5-turbo") -> str:
-    """Return ChatGPT-formatted trip description."""
+def format_trip(
+    data: Dict[str, Any], language: str = "de", model: Optional[str] = None
+) -> str:
+    """Return ChatGPT-formatted trip description.
+
+    The ``OPENAI_MODEL`` environment variable is used when ``model`` is not
+    provided.
+    """
+    if model is None:
+        model = get_openai_model()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
@@ -140,8 +150,16 @@ def format_trip(data: Dict[str, Any], language: str = "de", model: str = "gpt-3.
     return response.choices[0].message.content.strip()
 
 
-def format_departures(data: Dict[str, Any], language: str = "de", model: str = "gpt-3.5-turbo") -> str:
-    """Return ChatGPT-formatted departure list."""
+def format_departures(
+    data: Dict[str, Any], language: str = "de", model: Optional[str] = None
+) -> str:
+    """Return ChatGPT-formatted departure list.
+
+    The ``OPENAI_MODEL`` environment variable is used when ``model`` is not
+    provided.
+    """
+    if model is None:
+        model = get_openai_model()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
