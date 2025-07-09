@@ -115,7 +115,11 @@ def stop_finder(query: str, *, language: str = "de") -> Dict[str, Any]:
 
 
 def best_point(points: Any) -> Optional[Dict[str, Any]]:
-    """Return the point entry with the highest quality."""
+    """Return the stop entry with the highest quality.
+
+    Entries of type ``stop`` are preferred. If no such entry exists, the
+    highest quality item from the provided list is returned.
+    """
     if not points:
         return None
 
@@ -129,6 +133,8 @@ def best_point(points: Any) -> Optional[Dict[str, Any]]:
         items = [p for p in points if isinstance(p, dict)]
         if not items:
             return None
-        return max(items, key=lambda p: int(p.get("quality", 0)))
+        stop_items = [p for p in items if p.get("anyType") == "stop"]
+        ranked = stop_items or items
+        return max(ranked, key=lambda p: int(p.get("quality", 0)))
 
     return None
