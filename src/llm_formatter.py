@@ -17,10 +17,19 @@ def load_prompt() -> str:
 
 def _extract_time(point: Dict[str, Any]) -> Dict[str, Optional[str]]:
     """Return planned and real time strings from a point."""
+
+    if not isinstance(point, dict):
+        return {"time": None, "rtTime": None}
+    dt = point.get("dateTime", {})
+    time = None
+    rt_time = None
+    if isinstance(dt, dict):
+
     dt = point.get("dateTime", {})
     time = None
     rt_time = None
     if dt:
+
         hour = dt.get("time")
         if hour:
             time = hour
@@ -32,7 +41,19 @@ def _extract_time(point: Dict[str, Any]) -> Dict[str, Optional[str]]:
 
 def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
     """Return minimal information about a trip."""
+
+    trips = data.get("trips")
+    if isinstance(trips, dict):
+        trips = trips.get("trip")
+    if isinstance(trips, list):
+        trip = trips[0] if trips else None
+    elif isinstance(trips, dict):
+        trip = trips
+    else:
+        trip = None
+
     trip = data.get("trips", {}).get("trip")
+
     if not isinstance(trip, dict):
         return {}
     result: Dict[str, Any] = {
@@ -40,9 +61,21 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
         "interchange": trip.get("interchange"),
         "legs": [],
     }
+
+    legs = trip.get("legs")
+    if isinstance(legs, dict):
+        legs = legs.get("leg", [])  # type: ignore[assignment]
+    if not isinstance(legs, list):
+        legs = []
+    for leg in legs:
+        points = leg.get("points", [])
+        if isinstance(points, dict):
+            points = points.get("point", [])  # type: ignore[assignment]
+
     legs: List[Dict[str, Any]] = trip.get("legs", [])
     for leg in legs:
         points = leg.get("points", [])
+
         if len(points) < 2:
             continue
         start = points[0]
@@ -66,7 +99,16 @@ def extract_trip_info(data: Dict[str, Any]) -> Dict[str, Any]:
 def extract_departure_info(data: Dict[str, Any]) -> Dict[str, Any]:
     """Return minimal information about upcoming departures."""
     departures: List[Dict[str, Any]] = []
+
+    dep_list = data.get("departureList")
+    if isinstance(dep_list, dict):
+        dep_list = dep_list.get("departure", [])
+    if not isinstance(dep_list, list):
+        dep_list = []
+    for dep in dep_list:
+
     for dep in data.get("departureList", []):
+
         line = dep.get("servingLine", {})
         dt = dep.get("dateTime", {})
         rt = dep.get("realDateTime", {})
@@ -103,6 +145,26 @@ def format_trip(data: Dict[str, Any], language: str = "de", model: str = "gpt-3.
 
     short_data = extract_trip_info(data)
     prompt = load_prompt().format(data=json.dumps(short_data, ensure_ascii=False), language=language)
+
+    client = openai.OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "system", "content": prompt}],
+        max_tokens=200,
+    )
+    return response.choices[0].message.content.strip()
+
+
+def format_departures(data: Dict[str, Any], language: str = "de", model: str = "gpt-3.5-turbo") -> str:
+    """Return ChatGPT-formatted departure list."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set")
+
+    short_data = extract_departure_info(data)
+    prompt = load_prompt().format(data=json.dumps(short_data, ensure_ascii=False), language=language)
+
+
     client = openai.OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model=model,
