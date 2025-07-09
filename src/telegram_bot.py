@@ -8,7 +8,7 @@ import os
 import threading
 from typing import Dict, Any, List
 
-from . import parser, efa_api
+from . import parser, efa_api, llm_parser
 
 import requests
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
@@ -69,9 +69,14 @@ async def send_reply(update: Update, text: str) -> None:
 def gather_debug_entries(text: str, state: str = None) -> List[Dict[str, Any]]:
     """Return debug information for a query."""
     if state == "departures":
-        query = parser.Query("departure", from_location=text, language="en")
+        query = parser.Query("departure", from_location=text, language="de")
     else:
         query = parser.parse(text)
+        if query.type != "trip" or not query.from_location or not query.to_location:
+            try:
+                query = llm_parser.parse_llm(text)
+            except Exception as exc:  # pragma: no cover - network
+                logger.error("LLM parse failed: %s", exc)
     entries: List[Dict[str, Any]] = [query.__dict__]
     if query.type == "trip" and query.from_location and query.to_location:
         from_sf = efa_api.stop_finder(query.from_location, language=query.language or "de")
@@ -221,9 +226,12 @@ def main() -> None:
     if not args.token:
         parser.error("Telegram token not provided")
     if args.debug:
-        logging.getLogger().setLevel(logging.DEBUG)
         global DEBUG
         DEBUG = True
+        logger.setLevel(logging.DEBUG)
+        logging.getLogger("httpx").setLevel(logging.INFO)
+        logging.getLogger("httpcore").setLevel(logging.INFO)
+        logging.getLogger("telegram.ext").setLevel(logging.INFO)
         logger.debug("Debug mode active")
         logger.debug("Args: %s", args)
     run_bot(args.token, args.start_server)

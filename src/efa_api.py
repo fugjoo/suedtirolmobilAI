@@ -2,7 +2,10 @@
 
 from typing import Optional, Dict, Any
 import os
+import logging
 import requests
+
+logger = logging.getLogger(__name__)
 
 BASE_URL = os.getenv("EFA_BASE_URL", "https://efa.sta.bz.it/apb")
 
@@ -98,7 +101,9 @@ def trip_request(
         long_distance=long_distance,
         language=language,
     )
-    response = requests.get(f"{BASE_URL}/XML_TRIP_REQUEST2", params=params, timeout=10)
+    url = f"{BASE_URL}/XML_TRIP_REQUEST2"
+    logger.debug("EFA request %s %s", url, params)
+    response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json()
 
@@ -114,7 +119,9 @@ def departure_monitor(
     params = build_departure_params(
         stop, limit, stateless=stateless, language=language
     )
-    response = requests.get(f"{BASE_URL}/XML_DM_REQUEST", params=params, timeout=10)
+    url = f"{BASE_URL}/XML_DM_REQUEST"
+    logger.debug("EFA request %s %s", url, params)
+    response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json()
 
@@ -127,7 +134,9 @@ def stop_finder(query: str, *, language: str = "de") -> Dict[str, Any]:
         "outputFormat": "JSON",
         "language": language,
     }
-    response = requests.get(f"{BASE_URL}/XML_STOPFINDER_REQUEST", params=params, timeout=10)
+    url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
+    logger.debug("EFA request %s %s", url, params)
+    response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json()
 
