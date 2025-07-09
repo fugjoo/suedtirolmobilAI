@@ -229,8 +229,8 @@ def main() -> None:
         global DEBUG
         DEBUG = True
         logger.setLevel(logging.DEBUG)
-        logging.getLogger("httpx").setLevel(logging.INFO)
-        logging.getLogger("httpcore").setLevel(logging.INFO)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpcore").setLevel(logging.WARNING)
         logging.getLogger("telegram.ext").setLevel(logging.INFO)
         logger.debug("Debug mode active")
         logger.debug("Args: %s", args)
