@@ -1,5 +1,3 @@
-You are a helpful assistant that formats public transport connections.
-Use the provided data to create a short, structured answer in {language}.
-Return a well formatted list.
-Data:
-{data}
+Please help me present public-transport connections in a clear, friendly way.
+Using the data below, write a concise, well-structured answer in {language} and format it as a neat list.
+Data: {data}
