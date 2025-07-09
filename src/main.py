@@ -62,9 +62,18 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         origin_stateless=from_stateless,
         destination_stateless=to_stateless,
     )
+    short_data = llm_formatter.extract_trip_info(data)
     try:
         text = llm_formatter.format_trip(data, language=q.language or "de")
-        return text if format == "text" else {"data": text}
+        if format == "text":
+            return text
+        return {
+            "input": body.text,
+            "from": from_point,
+            "to": to_point,
+            "llmData": short_data,
+            "data": text,
+        }
     except Exception as exc:  # pragma: no cover - no tests
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -80,7 +89,19 @@ def departures(body: DeparturesRequest, format: str = Query("json")) -> Any:
     verified = point.get("name", body.stop)
     stateless = point.get("stateless")
     data = efa_api.departure_monitor(verified, body.limit, stateless=stateless)
-    return data if format == "text" else {"data": data}
+    short_data = llm_formatter.extract_departure_info(data)
+    try:
+        text = llm_formatter.format_departures(data, language="de")
+        if format == "text":
+            return text
+        return {
+            "input": body.stop,
+            "stop": point,
+            "llmData": short_data,
+            "data": text,
+        }
+    except Exception as exc:  # pragma: no cover - no tests
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @app.post("/stops")
