@@ -35,15 +35,18 @@ def main() -> None:
             print(json.dumps(q.__dict__, indent=2, ensure_ascii=False))
 
         if q.type == "trip" and q.from_location and q.to_location:
-            from_sf = efa_api.stop_finder(q.from_location)
+            from_sf = efa_api.stop_finder(q.from_location, language=q.language or "de")
             from_points = from_sf.get("stopFinder", {}).get("points", [])
-            to_sf = efa_api.stop_finder(q.to_location)
+            to_sf = efa_api.stop_finder(q.to_location, language=q.language or "de")
             to_points = to_sf.get("stopFinder", {}).get("points", [])
             if not from_points or not to_points:
                 print("Stop not found")
                 continue
-            from_point = from_points[0]
-            to_point = to_points[0]
+            from_point = efa_api.best_point(from_points)
+            to_point = efa_api.best_point(to_points)
+            if not from_point or not to_point:
+                print("Stop not found")
+                continue
             if args.debug:
                 debug_info = {
                     "fromStateless": from_point.get("stateless"),
@@ -55,6 +58,7 @@ def main() -> None:
                     q.datetime,
                     origin_stateless=from_point.get("stateless"),
                     destination_stateless=to_point.get("stateless"),
+                    language=q.language or "de",
                 )
                 debug_info["request"] = {
                     "url": f"{efa_api.BASE_URL}/XML_TRIP_REQUEST2",
@@ -67,6 +71,7 @@ def main() -> None:
                 q.datetime,
                 origin_stateless=from_point.get("stateless"),
                 destination_stateless=to_point.get("stateless"),
+                language=q.language or "de",
             )
             if args.llm_format:
                 try:
@@ -76,16 +81,20 @@ def main() -> None:
             else:
                 print(data)
         elif q.type == "departure" and q.from_location:
-            sf_data = efa_api.stop_finder(q.from_location)
+            sf_data = efa_api.stop_finder(q.from_location, language=q.language or "de")
             points = sf_data.get("stopFinder", {}).get("points", [])
             if not points:
                 print("Stop not found")
                 continue
-            point = points[0]
+            point = efa_api.best_point(points)
+            if not point:
+                print("Stop not found")
+                continue
             if args.debug:
                 params = efa_api.build_departure_params(
                     point.get("name", q.from_location),
                     stateless=point.get("stateless"),
+                    language=q.language or "de",
                 )
                 debug_info = {
                     "stateless": point.get("stateless"),
@@ -98,6 +107,7 @@ def main() -> None:
             data = efa_api.departure_monitor(
                 point.get("name", q.from_location),
                 stateless=point.get("stateless"),
+                language=q.language or "de",
             )
             if args.llm_format:
                 try:

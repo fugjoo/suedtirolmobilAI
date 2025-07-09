@@ -95,22 +95,22 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     if state == "search":
         context.user_data.pop("state", None)
-        reply = call_api("/search", {"text": text}, params={"format": "text"})
+        reply = call_api("/search", {"text": text})
         await send_reply(update, reply)
         return
     if state == "departures":
         context.user_data.pop("state", None)
-        reply = call_api("/departures", {"stop": text}, params={"format": "text"})
+        reply = call_api("/departures", {"stop": text})
         await send_reply(update, reply)
         return
     if state == "stops":
         context.user_data.pop("state", None)
-        reply = call_api("/stops", {"query": text}, params={"format": "text"})
+        reply = call_api("/stops", {"query": text})
         await send_reply(update, reply)
         return
 
     # fallback: try /search
-    reply = call_api("/search", {"text": text}, params={"format": "text"})
+    reply = call_api("/search", {"text": text})
     await send_reply(update, reply)
 
 

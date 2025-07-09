@@ -21,12 +21,14 @@ class DeparturesRequest(BaseModel):
 
     stop: str
     limit: int = 10
+    language: str = "de"
 
 
 class StopsRequest(BaseModel):
     """Request body for /stops."""
 
     query: str
+    language: str = "de"
 
 
 @app.post("/search")
@@ -39,19 +41,23 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         except Exception as exc:  # pragma: no cover - no tests
             raise HTTPException(status_code=400, detail=str(exc))
 
-    from_data = efa_api.stop_finder(q.from_location)
+    from_data = efa_api.stop_finder(q.from_location, language=q.language or "de")
     points = from_data.get("stopFinder", {}).get("points", [])
     if not points:
         raise HTTPException(status_code=404, detail="origin not found")
-    from_point = points[0]
+    from_point = efa_api.best_point(points)
+    if not from_point:
+        raise HTTPException(status_code=404, detail="origin not found")
     q.from_location = from_point.get("name", q.from_location)
     from_stateless = from_point.get("stateless")
 
-    to_data = efa_api.stop_finder(q.to_location)
+    to_data = efa_api.stop_finder(q.to_location, language=q.language or "de")
     points = to_data.get("stopFinder", {}).get("points", [])
     if not points:
         raise HTTPException(status_code=404, detail="destination not found")
-    to_point = points[0]
+    to_point = efa_api.best_point(points)
+    if not to_point:
+        raise HTTPException(status_code=404, detail="destination not found")
     q.to_location = to_point.get("name", q.to_location)
     to_stateless = to_point.get("stateless")
 
@@ -61,6 +67,7 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         q.datetime,
         origin_stateless=from_stateless,
         destination_stateless=to_stateless,
+        language=q.language or "de",
     )
     short_data = llm_formatter.extract_trip_info(data)
     try:
@@ -81,17 +88,21 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
 @app.post("/departures")
 def departures(body: DeparturesRequest, format: str = Query("json")) -> Any:
     """Return upcoming departures for a stop."""
-    sf_data = efa_api.stop_finder(body.stop)
+    sf_data = efa_api.stop_finder(body.stop, language=body.language)
     points = sf_data.get("stopFinder", {}).get("points", [])
     if not points:
         raise HTTPException(status_code=404, detail="stop not found")
-    point = points[0]
+    point = efa_api.best_point(points)
+    if not point:
+        raise HTTPException(status_code=404, detail="stop not found")
     verified = point.get("name", body.stop)
     stateless = point.get("stateless")
-    data = efa_api.departure_monitor(verified, body.limit, stateless=stateless)
+    data = efa_api.departure_monitor(
+        verified, body.limit, stateless=stateless, language=body.language
+    )
     short_data = llm_formatter.extract_departure_info(data)
     try:
-        text = llm_formatter.format_departures(data, language="de")
+        text = llm_formatter.format_departures(data, language=body.language)
         if format == "text":
             return text
         return {
@@ -107,6 +118,6 @@ def departures(body: DeparturesRequest, format: str = Query("json")) -> Any:
 @app.post("/stops")
 def stops(body: StopsRequest, format: str = Query("json")) -> Any:
     """Return stop name suggestions."""
-    data = efa_api.stop_finder(body.query)
+    data = efa_api.stop_finder(body.query, language=body.language)
     return data if format == "text" else {"data": data}
 
