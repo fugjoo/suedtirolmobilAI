@@ -61,6 +61,9 @@ paths:
               properties:
                 stop:
                   type: string
+                language:
+                  type: string
+                  enum: [de, it, en]
                 limit:
                   type: integer
                   default: 10
@@ -100,6 +103,9 @@ paths:
               properties:
                 query:
                   type: string
+                language:
+                  type: string
+                  enum: [de, it, en]
               required:
                 - query
       responses:
