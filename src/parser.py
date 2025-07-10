@@ -50,6 +50,7 @@ DEPARTURE_WORDS = {"abfahren", "abfahrt", "depart", "departure", "partenza"}
 
 WITH_WORDS = {"mit", "with", "con"}
 WITHOUT_WORDS = {"ohne", "without", "senza"}
+ONLY_WORDS = {"nur", "only", "solo"}
 BUS_TERMS = {"bus", "autobus"}
 TRAIN_TERMS = {"zug", "train", "treno"}
 SEILBAHN_TERMS = {"seilbahn", "cable car", "cablecar", "funivia"}
@@ -246,6 +247,49 @@ def parse(text: str) -> Query:
             seilbahn = True
         if any(f"{w} {t}" in lower for t in LONG_DISTANCE_TERMS):
             long_distance = True
+
+    for w in ONLY_WORDS:
+        if any(f"{w} {t}" in lower for t in BUS_TERMS):
+            bus = True
+            zug = False
+            seilbahn = False
+        if any(f"{w} {t}" in lower for t in TRAIN_TERMS):
+            bus = False
+            zug = True
+            seilbahn = False
+        if any(f"{w} {t}" in lower for t in SEILBAHN_TERMS):
+            bus = False
+            zug = False
+            seilbahn = True
+        if any(f"{w} {t}" in lower for t in LONG_DISTANCE_TERMS):
+            bus = False
+            zug = False
+            seilbahn = False
+            long_distance = True
+
+    tokens = set(lower.split())
+    has_bus = any(t in tokens for t in BUS_TERMS)
+    has_train = any(t in tokens for t in TRAIN_TERMS)
+    has_seilbahn = any(t in tokens for t in SEILBAHN_TERMS)
+    has_long_distance = any(t in tokens for t in LONG_DISTANCE_TERMS)
+
+    if has_bus and not has_train and not has_seilbahn and not has_long_distance:
+        bus = True
+        zug = False
+        seilbahn = False
+    elif has_train and not has_bus and not has_seilbahn and not has_long_distance:
+        bus = False
+        zug = True
+        seilbahn = False
+    elif has_seilbahn and not has_bus and not has_train and not has_long_distance:
+        bus = False
+        zug = False
+        seilbahn = True
+    elif has_long_distance and not has_bus and not has_train and not has_seilbahn:
+        bus = False
+        zug = False
+        seilbahn = False
+        long_distance = True
 
     if m := DATE_ONLY_RE.match(text.strip()):
         iso = relative_iso(text, m.group("time"))
