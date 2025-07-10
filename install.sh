@@ -81,3 +81,4 @@ source venv/bin/activate
 echo "\nInstallation complete."
 echo "Activate the environment with source venv/bin/activate"
 echo "Run the server using: uvicorn src.main:app --host 0.0.0.0 --reload"
+echo "Append --debug for verbose logging."

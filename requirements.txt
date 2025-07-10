@@ -2,7 +2,7 @@ fastapi
 requests
 spacy<3.8
 pydantic
-uvicorn
+uvicorn<0.19
 pytest
 httpx<0.25
 langdetect
