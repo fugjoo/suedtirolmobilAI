@@ -166,6 +166,13 @@ defaults to the value of the `API_URL` environment variable or
 When selecting a command from the bot's keyboard without additional text,
 the bot will ask for the required input before sending the request.
 
+## Autostart on Linux
+See [docs/autostart.md](docs/autostart.md) for details on creating a
+`systemd` service. The templates in the [systemd/](systemd/) directory can be
+copied to `/etc/systemd/system/` or installed automatically with
+`./install_services.sh`. Once created the service can be controlled with
+`systemctl start`, `stop` and `restart`.
+
 ## Testing
 ```bash
 pytest
