@@ -4,6 +4,11 @@ set -e
 # Copy service templates to /etc/systemd/system and reload systemd.
 # Paths inside the unit files may need adjustment.
 
+if ! command -v systemctl >/dev/null || ! pidof systemd >/dev/null; then
+    echo "Error: systemd is not running. This script requires a system with systemd." >&2
+    exit 1
+fi
+
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 sudo cp "$SRC_DIR/systemd/suedtirolmobil.service" /etc/systemd/system/
