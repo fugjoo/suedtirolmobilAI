@@ -3,7 +3,7 @@ Fields:
 - type: "trip", "departure", or "stop"
 - from: starting location or null
 - to: destination location or null
-- datetime: ISO format "YYYY-MM-DDTHH:MM" or null
+- datetime: the literal date expression such as "heute", "tomorrow", a date and time, "next sunday", "am Dienstag", "martedì prossimo" or null
 - datetime_mode: "dep" for departure or "arr" for arrival time
 - bus: true or false
 - zug: true or false
