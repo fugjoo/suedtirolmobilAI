@@ -3,6 +3,7 @@
 import json
 import os
 from datetime import datetime
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -17,6 +18,28 @@ PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "parser_promp
 def load_prompt() -> str:
     """Return parser prompt template."""
     return PROMPT_PATH.read_text(encoding="utf-8")
+
+
+def _normalize_datetime(dt_value: Optional[str], text: str) -> str:
+    """Return ISO timestamp from a datetime field or fallback text."""
+    now = datetime.now()
+    if dt_value:
+        time_match = re.search(r"\d{1,2}:\d{2}", dt_value)
+        iso = relative_iso(dt_value, time_match.group(0) if time_match else None)
+        if iso:
+            return iso
+        try:
+            dt = datetime.fromisoformat(dt_value)
+        except ValueError:
+            pass
+        else:
+            if dt.year != now.year:
+                dt = dt.replace(year=now.year)
+            return dt.strftime("%Y-%m-%dT%H:%M")
+    iso = relative_iso(text)
+    if iso:
+        return iso
+    return now.strftime("%Y-%m-%dT%H:%M")
 
 
 def parse_llm(text: str, model: Optional[str] = None) -> Query:
@@ -40,22 +63,7 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
     )
     content = response.choices[0].message.content.strip()
     data = json.loads(content)
-    dt_value = data.get("datetime")
-    if dt_value:
-        try:
-            dt = datetime.fromisoformat(dt_value)
-            now = datetime.now()
-            if dt.year != now.year:
-                dt = dt.replace(year=now.year)
-            data["datetime"] = dt.strftime("%Y-%m-%dT%H:%M")
-        except ValueError:
-            pass
-    else:
-        iso = relative_iso(text)
-        if iso:
-            data["datetime"] = iso
-        else:
-            data["datetime"] = datetime.now().strftime("%Y-%m-%dT%H:%M")
+    data["datetime"] = _normalize_datetime(data.get("datetime"), text)
     return Query(
         type=data.get("type", "unknown"),
         from_location=data.get("from"),

@@ -84,6 +84,10 @@ Both templates contain placeholders that are replaced automatically:
 
 Edit the files to change the wording or add additional instructions.
 
+`parser_prompt.txt` now returns the date expression literally, for example
+"heute", "tomorrow" or "next sunday". The parser translates these phrases into
+a proper ISO timestamp when processing the response.
+
 ## Console chat
 Start a minimal interactive chat loop. Combine `--llm-parser` and `--llm-format` to use OpenAI for parsing and formatting.
 Add `--debug` to print the parsed query JSON.
