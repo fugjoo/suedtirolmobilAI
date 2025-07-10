@@ -1,0 +1,14 @@
+[Unit]
+Description=suedtirolmobilAI API
+After=network.target
+
+[Service]
+Type=simple
+# adjust this path to the repository location
+WorkingDirectory=/path/to/suedtirolmobilAI
+ExecStart=/path/to/suedtirolmobilAI/venv/bin/uvicorn src.main:app --host 0.0.0.0
+EnvironmentFile=/path/to/suedtirolmobilAI/.env
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
