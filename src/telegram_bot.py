@@ -94,9 +94,11 @@ def gather_debug_entries(text: str, state: str = None) -> List[Dict[str, Any]]:
                 destination_stateless=to_p.get("stateless"),
                 origin_type=from_p.get("anyType"),
                 destination_type=to_p.get("anyType"),
-                include=query.include,
-                exclude=query.exclude,
+                bus=query.bus,
+                zug=query.zug,
+                seilbahn=query.seilbahn,
                 long_distance=query.long_distance,
+                datetime_mode=query.datetime_mode,
                 language=query.language or "de",
             )
             entries.append(

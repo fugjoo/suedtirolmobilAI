@@ -27,7 +27,12 @@ The EFA XML-API allows access to various public transport functions via HTTP req
   - `type_destination`
   - `odvMacro=true`
   - `calcNumberOfTrips=1`
-  - Optional: `excludedMeans`, `itdTripDateTimeDepArr=dep|arr`
+  - `includedMeans=checkbox`
+  - `inclMOT_BUS=true|false`
+  - `inclMOT_ZUG=true|false`
+  - `inclMOT_8=true|false` *(Seilbahnen)*
+  - `lineRestriction=401|400`
+  - `itdTripDateTimeDepArr=dep|arr`
 
 ### 3. DM-Request (Departure Monitor)
 - **Purpose**: Departure monitor for one or more stops

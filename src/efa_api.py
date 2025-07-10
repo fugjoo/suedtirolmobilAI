@@ -20,9 +20,11 @@ def build_trip_params(
     *,
     origin_type: Optional[str] = None,
     destination_type: Optional[str] = None,
-    include: Optional[list] = None,
-    exclude: Optional[list] = None,
+    bus: bool = True,
+    zug: bool = True,
+    seilbahn: bool = True,
     long_distance: Optional[bool] = None,
+    datetime_mode: str = "dep",
     language: str = "de",
 ) -> Dict[str, Any]:
     """Return parameters for a trip request."""
@@ -30,6 +32,10 @@ def build_trip_params(
         "outputFormat": "JSON",
         "language": language,
         "odvMacro": "true",
+        "includedMeans": "checkbox",
+        "inclMOT_BUS": "true" if bus else "false",
+        "inclMOT_ZUG": "true" if zug else "false",
+        "inclMOT_8": "true" if seilbahn else "false",
     }
     if origin_stateless:
         params["name_origin"] = origin_stateless
@@ -50,17 +56,14 @@ def build_trip_params(
             dt_value = dt.datetime.fromisoformat(datetime)
             params["itdDate"] = dt_value.strftime("%Y%m%d")
             params["itdTime"] = dt_value.strftime("%H:%M")
+            params["itdTripDateTimeDepArr"] = datetime_mode
         except ValueError:
             logger.warning("Invalid datetime string: %s", datetime)
-    if include:
-        params["includedMeans"] = ",".join(include)
-    if exclude:
-        params["excludedMeans"] = ",".join(exclude)
+
     if long_distance is False:
-        params.setdefault("excludedMeans", "")
-        if params["excludedMeans"]:
-            params["excludedMeans"] += ","
-        params["excludedMeans"] += "Fernverkehr"
+        params["lineRestriction"] = "401"
+    else:
+        params["lineRestriction"] = "400"
     return params
 
 
@@ -96,9 +99,11 @@ def trip_request(
     *,
     origin_type: Optional[str] = None,
     destination_type: Optional[str] = None,
-    include: Optional[list] = None,
-    exclude: Optional[list] = None,
+    bus: bool = True,
+    zug: bool = True,
+    seilbahn: bool = True,
     long_distance: Optional[bool] = None,
+    datetime_mode: str = "dep",
     language: str = "de",
 ) -> Dict[str, Any]:
     """Request a trip from origin to destination."""
@@ -110,9 +115,11 @@ def trip_request(
         destination_stateless=destination_stateless,
         origin_type=origin_type,
         destination_type=destination_type,
-        include=include,
-        exclude=exclude,
+        bus=bus,
+        zug=zug,
+        seilbahn=seilbahn,
         long_distance=long_distance,
+        datetime_mode=datetime_mode,
         language=language,
     )
     url = f"{BASE_URL}/XML_TRIP_REQUEST2"

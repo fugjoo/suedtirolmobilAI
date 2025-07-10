@@ -60,7 +60,9 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
         to_location=data.get("to"),
         datetime=data.get("datetime"),
         language=data.get("language"),
-        include=data.get("include"),
-        exclude=data.get("exclude"),
+        bus=data.get("bus", True),
+        zug=data.get("zug", True),
+        seilbahn=data.get("seilbahn", True),
         long_distance=data.get("long_distance", False),
+        datetime_mode=data.get("datetime_mode", "dep"),
     )
