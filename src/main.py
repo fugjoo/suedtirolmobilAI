@@ -5,7 +5,7 @@ from typing import Any, Dict
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
-from . import efa_api, parser, llm_parser, llm_formatter
+from . import efa_api, parser, llm_parser, llm_formatter, request_logger
 
 app = FastAPI()
 
@@ -57,6 +57,17 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
             raise HTTPException(status_code=404, detail="stop not found")
         verified = point.get("name", q.from_location)
         stateless = point.get("stateless")
+        params = efa_api.build_departure_params(
+            verified, 10, stateless=stateless, language=q.language or "de"
+        )
+        request_logger.log_entry(
+            {
+                "input": body.text,
+                "stop": point,
+                "url": f"{efa_api.BASE_URL}/XML_DM_REQUEST",
+                "params": params,
+            }
+        )
         data = efa_api.departure_monitor(
             verified, 10, stateless=stateless, language=q.language or "de"
         )
@@ -96,6 +107,30 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
     to_stateless = to_point.get("stateless")
     to_type = to_point.get("anyType")
 
+    params = efa_api.build_trip_params(
+        q.from_location,
+        q.to_location,
+        q.datetime,
+        origin_stateless=from_stateless,
+        destination_stateless=to_stateless,
+        origin_type=from_type,
+        destination_type=to_type,
+        bus=q.bus,
+        zug=q.zug,
+        seilbahn=q.seilbahn,
+        long_distance=q.long_distance,
+        datetime_mode=q.datetime_mode,
+        language=q.language or "de",
+    )
+    request_logger.log_entry(
+        {
+            "input": body.text,
+            "from": from_point,
+            "to": to_point,
+            "url": f"{efa_api.BASE_URL}/XML_TRIP_REQUEST2",
+            "params": params,
+        }
+    )
     data: Dict[str, Any] = efa_api.trip_request(
         q.from_location,
         q.to_location,
@@ -139,6 +174,17 @@ def departures(body: DeparturesRequest, format: str = Query("json")) -> Any:
         raise HTTPException(status_code=404, detail="stop not found")
     verified = point.get("name", body.stop)
     stateless = point.get("stateless")
+    params = efa_api.build_departure_params(
+        verified, body.limit, stateless=stateless, language=body.language
+    )
+    request_logger.log_entry(
+        {
+            "input": body.stop,
+            "stop": point,
+            "url": f"{efa_api.BASE_URL}/XML_DM_REQUEST",
+            "params": params,
+        }
+    )
     data = efa_api.departure_monitor(
         verified, body.limit, stateless=stateless, language=body.language
     )
@@ -160,6 +206,19 @@ def departures(body: DeparturesRequest, format: str = Query("json")) -> Any:
 @app.post("/stops")
 def stops(body: StopsRequest, format: str = Query("json")) -> Any:
     """Return stop name suggestions."""
+    params = {
+        "name_sf": body.query,
+        "odvSugMacro": "true",
+        "outputFormat": "JSON",
+        "language": body.language,
+    }
+    request_logger.log_entry(
+        {
+            "input": body.query,
+            "url": f"{efa_api.BASE_URL}/XML_STOPFINDER_REQUEST",
+            "params": params,
+        }
+    )
     data = efa_api.stop_finder(body.query, language=body.language)
     return data if format == "text" else {"data": data}
 
