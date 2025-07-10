@@ -83,6 +83,90 @@ WEEKEND_WORDS = {
     "weekend",
 }
 
+# map weekday phrases to weekday numbers
+WEEKDAY_WORDS = {
+    0: {"montag", "am montag", "monday", "on monday", "lunedi", "luned\u00ec"},
+    1: {"dienstag", "am dienstag", "tuesday", "on tuesday", "martedi", "marted\u00ec"},
+    2: {
+        "mittwoch",
+        "am mittwoch",
+        "wednesday",
+        "on wednesday",
+        "mercoledi",
+        "mercoled\u00ec",
+    },
+    3: {
+        "donnerstag",
+        "am donnerstag",
+        "thursday",
+        "on thursday",
+        "giovedi",
+        "gioved\u00ec",
+    },
+    4: {"freitag", "am freitag", "friday", "on friday", "venerdi", "venerd\u00ec"},
+    5: {
+        "samstag",
+        "am samstag",
+        "saturday",
+        "on saturday",
+        "sabato",
+    },
+    6: {"sonntag", "am sonntag", "sunday", "on sunday", "domenica"},
+}
+
+# map "next <weekday>" phrases to weekday numbers
+NEXT_WEEKDAY_WORDS = {
+    0: {
+        "n\u00e4chsten montag",
+        "naechsten montag",
+        "next monday",
+        "lunedi prossimo",
+        "prossimo lunedi",
+    },
+    1: {
+        "n\u00e4chsten dienstag",
+        "naechsten dienstag",
+        "next tuesday",
+        "martedi prossimo",
+        "prossimo martedi",
+    },
+    2: {
+        "n\u00e4chsten mittwoch",
+        "naechsten mittwoch",
+        "next wednesday",
+        "mercoledi prossimo",
+        "prossimo mercoledi",
+    },
+    3: {
+        "n\u00e4chsten donnerstag",
+        "naechsten donnerstag",
+        "next thursday",
+        "giovedi prossimo",
+        "prossimo giovedi",
+    },
+    4: {
+        "n\u00e4chsten freitag",
+        "naechsten freitag",
+        "next friday",
+        "venerdi prossimo",
+        "prossimo venerdi",
+    },
+    5: {
+        "n\u00e4chsten samstag",
+        "naechsten samstag",
+        "next saturday",
+        "sabato prossimo",
+        "prossimo sabato",
+    },
+    6: {
+        "n\u00e4chsten sonntag",
+        "naechsten sonntag",
+        "next sunday",
+        "domenica prossima",
+        "prossima domenica",
+    },
+}
+
 
 def relative_iso(text: str, time_str: Optional[str] = None) -> Optional[str]:
     """Return ISO timestamp for relative date keywords across languages."""
@@ -105,6 +189,22 @@ def relative_iso(text: str, time_str: Optional[str] = None) -> Optional[str]:
         if days <= 0:
             days += 7
         date = now.date() + timedelta(days=days)
+    else:
+        for wd, terms in NEXT_WEEKDAY_WORDS.items():
+            if any(term in lower for term in terms):
+                days = (wd - now.weekday()) % 7
+                if days == 0:
+                    days = 7
+                date = now.date() + timedelta(days=days)
+                break
+        if date is None:
+            for wd, terms in WEEKDAY_WORDS.items():
+                if any(term in lower for term in terms):
+                    days = (wd - now.weekday()) % 7
+                    if days == 0:
+                        days = 7
+                    date = now.date() + timedelta(days=days)
+                    break
     if date is None:
         return None
     if time_str:
@@ -149,6 +249,8 @@ def parse(text: str) -> Query:
 
     if m := DATE_ONLY_RE.match(text.strip()):
         iso = relative_iso(text, m.group("time"))
+        if iso is None:
+            iso = datetime.now().strftime("%Y-%m-%dT%H:%M")
         return Query(
             "unknown",
             datetime=iso,
@@ -165,9 +267,12 @@ def parse(text: str) -> Query:
         match = TRIP_DASH_RE.search(text)
     if match:
         dt_val = match.group("time")
-        iso = relative_iso(text, dt_val) if dt_val or DATE_ONLY_RE.search(text) else None
-        if iso is None and dt_val:
-            iso = f"2025-01-01T{dt_val}"
+        iso = relative_iso(text, dt_val)
+        if iso is None:
+            if dt_val:
+                iso = f"2025-01-01T{dt_val}"
+            else:
+                iso = datetime.now().strftime("%Y-%m-%dT%H:%M")
         return Query(
             "trip",
             match.group("from"),
