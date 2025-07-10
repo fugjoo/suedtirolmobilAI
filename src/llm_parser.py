@@ -54,6 +54,8 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
         iso = relative_iso(text)
         if iso:
             data["datetime"] = iso
+        else:
+            data["datetime"] = datetime.now().strftime("%Y-%m-%dT%H:%M")
     return Query(
         type=data.get("type", "unknown"),
         from_location=data.get("from"),
