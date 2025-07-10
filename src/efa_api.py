@@ -5,6 +5,7 @@ import os
 import logging
 import datetime as dt
 import requests
+from . import request_logger
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +125,7 @@ def trip_request(
     )
     url = f"{BASE_URL}/XML_TRIP_REQUEST2"
     logger.debug("EFA request %s %s", url, params)
+    request_logger.log_entry({"url": url, "params": params})
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json()
@@ -142,6 +144,7 @@ def departure_monitor(
     )
     url = f"{BASE_URL}/XML_DM_REQUEST"
     logger.debug("EFA request %s %s", url, params)
+    request_logger.log_entry({"url": url, "params": params})
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json()
@@ -157,6 +160,7 @@ def stop_finder(query: str, *, language: str = "de") -> Dict[str, Any]:
     }
     url = f"{BASE_URL}/XML_STOPFINDER_REQUEST"
     logger.debug("EFA request %s %s", url, params)
+    request_logger.log_entry({"url": url, "params": params})
     response = requests.get(url, params=params, timeout=10)
     response.raise_for_status()
     return response.json()
