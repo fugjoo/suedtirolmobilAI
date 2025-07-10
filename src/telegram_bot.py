@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import threading
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from . import parser, efa_api, llm_parser
 
@@ -140,6 +140,65 @@ async def debug_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     DEBUG_INFO.clear()
 
 
+async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Send the currently stored query parameters."""
+    query: Optional[parser.Query] = context.user_data.get("query")
+    if query is None:
+        await send_reply(update, "No stored parameters")
+        return
+    await send_reply(update, json.dumps(query.__dict__, indent=2, ensure_ascii=False))
+
+
+def parse_query(text: str) -> parser.Query:
+    """Return a parsed query using both parsers."""
+    q = parser.parse(text)
+    if q.type != "trip" or not q.from_location or not q.to_location:
+        try:
+            q = llm_parser.parse_llm(text)
+        except Exception as exc:  # pragma: no cover - network
+            logger.error("LLM parse failed: %s", exc)
+    return q
+
+
+def merge_queries(old: parser.Query, new: parser.Query) -> parser.Query:
+    """Merge two query objects, preferring ``new`` values."""
+    return parser.Query(
+        "trip",
+        new.from_location or old.from_location,
+        new.to_location or old.to_location,
+        new.datetime or old.datetime,
+        new.language or old.language,
+        new.include if new.include is not None else old.include,
+        new.exclude if new.exclude is not None else old.exclude,
+        new.long_distance or old.long_distance,
+    )
+
+
+def compose_text(q: parser.Query) -> str:
+    """Return a canonical text representation of a query."""
+    parts = []
+    if q.from_location and q.to_location:
+        parts.append(f"von {q.from_location} nach {q.to_location}")
+    elif q.from_location:
+        parts.append(f"Abfahrten {q.from_location}")
+    if q.datetime:
+        try:
+            parts.append("um " + q.datetime.split("T")[1])
+        except Exception:
+            pass
+    if q.include:
+        if set(q.include) == {"Bus", "Seilbahn"}:
+            parts.append("mit Bus und Seilbahn")
+        elif q.include == ["Bus"]:
+            parts.append("mit Bus")
+    if q.exclude:
+        if "Zug" in q.exclude:
+            parts.append("ohne Zug")
+        if "Fernverkehr" in q.exclude:
+            parts.append("ohne Fernverkehr")
+    return " ".join(parts)
+
+
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming messages."""
     text = update.message.text.strip()
@@ -159,15 +218,22 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         context.user_data["state"] = "stops"
         await send_reply(update, "Enter search text:")
         return
+    if text == "/reset":
+        context.user_data.pop("query", None)
+        context.user_data.pop("state", None)
+        await send_reply(update, "Conversation reset")
+        return
 
     if state == "search":
         context.user_data.pop("state", None)
+        q = parse_query(text)
+        context.user_data["query"] = q
         if DEBUG:
-            entries = gather_debug_entries(text)
+            entries = gather_debug_entries(compose_text(q))
             DEBUG_INFO.extend(entries)
             for ent in entries:
                 await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-        reply = call_api("/search", {"text": text})
+        reply = call_api("/search", {"text": compose_text(q)})
         await send_reply(update, reply)
         return
     if state == "departures":
@@ -186,7 +252,21 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await send_reply(update, reply)
         return
 
-    # fallback: try /search
+    # fallback: try /search with previous query context
+    base_query: Optional[parser.Query] = context.user_data.get("query")
+    if base_query:
+        new_q = parse_query(text)
+        merged = merge_queries(base_query, new_q)
+        context.user_data["query"] = merged
+        final_text = compose_text(merged)
+        if DEBUG:
+            entries = gather_debug_entries(final_text)
+            DEBUG_INFO.extend(entries)
+            for ent in entries:
+                await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
+        reply = call_api("/search", {"text": final_text})
+        await send_reply(update, reply)
+        return
     if DEBUG:
         entries = gather_debug_entries(text)
         DEBUG_INFO.extend(entries)
@@ -211,6 +291,7 @@ def run_bot(token: str, start_server: bool) -> None:
     application = Application.builder().token(token).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("debug", debug_command))
+    application.add_handler(CommandHandler("settings", settings_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
     application.run_polling()
 
