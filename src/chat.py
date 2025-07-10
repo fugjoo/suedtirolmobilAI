@@ -60,9 +60,11 @@ def main() -> None:
                     destination_stateless=to_point.get("stateless"),
                     origin_type=from_point.get("anyType"),
                     destination_type=to_point.get("anyType"),
-                    include=q.include,
-                    exclude=q.exclude,
+                    bus=q.bus,
+                    zug=q.zug,
+                    seilbahn=q.seilbahn,
                     long_distance=q.long_distance,
+                    datetime_mode=q.datetime_mode,
                     language=q.language or "de",
                 )
                 debug_info["request"] = {
@@ -78,9 +80,11 @@ def main() -> None:
                 destination_stateless=to_point.get("stateless"),
                 origin_type=from_point.get("anyType"),
                 destination_type=to_point.get("anyType"),
-                include=q.include,
-                exclude=q.exclude,
+                bus=q.bus,
+                zug=q.zug,
+                seilbahn=q.seilbahn,
                 long_distance=q.long_distance,
+                datetime_mode=q.datetime_mode,
                 language=q.language or "de",
             )
             if args.llm_format:

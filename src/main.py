@@ -104,9 +104,11 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         destination_stateless=to_stateless,
         origin_type=from_type,
         destination_type=to_type,
-        include=q.include,
-        exclude=q.exclude,
+        bus=q.bus,
+        zug=q.zug,
+        seilbahn=q.seilbahn,
         long_distance=q.long_distance,
+        datetime_mode=q.datetime_mode,
         language=q.language or "de",
     )
     short_data = llm_formatter.extract_trip_info(data)
