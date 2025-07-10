@@ -1,24 +1,28 @@
-# Autostart unter Linux
+# Autostart on Linux
 
-Um den Server oder den Telegram-Chatbot automatisch zu starten, kann ein `systemd`-Dienst verwendet werden. Nach dem Anlegen des Dienstes kann er mit `start`, `stop` und `restart` gesteuert werden.
+This guide explains how to run the API or Telegram bot automatically with `systemd`.
+After setting up a service you can control it with `start`, `stop` and `restart` commands.
 
-## Vorbereitung
+## Preparation
 
-1. Repository klonen und Abhängigkeiten installieren:
+1. Clone the repository and install the dependencies:
    ```bash
    git clone https://example.com/suedtirolmobilAI.git
    cd suedtirolmobilAI
    ./install.sh
    ```
-2. Falls gewünscht, Umgebungsvariablen in einer `.env`-Datei im Projektverzeichnis hinterlegen. Diese Datei wird von der Anwendung automatisch geladen.
 
-Die Beispieldateien `systemd/suedtirolmobil.service` und
-`systemd/suedtirolmobil-bot.service` in diesem Repository können als Vorlage
-verwendet und nach `/etc/systemd/system/` kopiert werden.
+2. Optionally store environment variables in a `.env` file inside the project directory. The application loads this file automatically.
 
-## systemd-Service für die API
+The example unit files `systemd/suedtirolmobil.service` and
+`systemd/suedtirolmobil-bot.service` can be used as templates and copied to
+`/etc/systemd/system/`.
 
-Erstelle die Datei `/etc/systemd/system/suedtirolmobil.service` mit folgendem Inhalt (Pfad gegebenenfalls anpassen):
+## systemd service for the API
+
+Create `/etc/systemd/system/suedtirolmobil.service` with the following content
+(adjust paths if necessary):
+
 
 ```ini
 [Unit]
@@ -27,16 +31,18 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/path/zum/repo/suedtirolmobilAI
-ExecStart=/path/zum/repo/suedtirolmobilAI/venv/bin/uvicorn src.main:app --host 0.0.0.0
-EnvironmentFile=/path/zum/repo/suedtirolmobilAI/.env
+
+WorkingDirectory=/path/to/repo/suedtirolmobilAI
+ExecStart=/path/to/repo/suedtirolmobilAI/venv/bin/uvicorn src.main:app --host 0.0.0.0
+EnvironmentFile=/path/to/repo/suedtirolmobilAI/.env
+
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Anschließend den Dienst laden und aktivieren:
+Reload systemd and enable the service:
 
 ```bash
 sudo systemctl daemon-reload
@@ -44,9 +50,12 @@ sudo systemctl enable suedtirolmobil.service
 sudo systemctl start suedtirolmobil.service
 ```
 
-## systemd-Service für den Telegram-Bot
 
-Soll auch der Telegram-Bot automatisch starten, kann ein zweiter Dienst angelegt werden. Beispiel `/etc/systemd/system/suedtirolmobil-bot.service`:
+## systemd service for the Telegram bot
+
+If you also want to start the Telegram bot automatically, create a second
+service file. Example `/etc/systemd/system/suedtirolmobil-bot.service`:
+
 
 ```ini
 [Unit]
@@ -55,16 +64,20 @@ After=network.target suedtirolmobil.service
 
 [Service]
 Type=simple
-WorkingDirectory=/path/zum/repo/suedtirolmobilAI
-ExecStart=/path/zum/repo/suedtirolmobilAI/venv/bin/python -m src.telegram_bot --api-url http://localhost:8000
-EnvironmentFile=/path/zum/repo/suedtirolmobilAI/.env
+
+WorkingDirectory=/path/to/repo/suedtirolmobilAI
+ExecStart=/path/to/repo/suedtirolmobilAI/venv/bin/python -m src.telegram_bot --api-url http://localhost:8000
+EnvironmentFile=/path/to/repo/suedtirolmobilAI/.env
+
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Dienst ebenfalls laden und aktivieren:
+
+Reload systemd and enable the bot:
+
 
 ```bash
 sudo systemctl daemon-reload
@@ -72,14 +85,20 @@ sudo systemctl enable suedtirolmobil-bot.service
 sudo systemctl start suedtirolmobil-bot.service
 ```
 
-## Steuerung des Dienstes
 
-Die Dienste lassen sich jederzeit mit folgenden Befehlen steuern:
+## Controlling the service
+
+Use the following commands to control the services:
 
 ```bash
-sudo systemctl start suedtirolmobil.service       # Startet die API
-sudo systemctl stop suedtirolmobil.service        # Stoppt die API
-sudo systemctl restart suedtirolmobil.service     # Startet die API neu
+sudo systemctl start suedtirolmobil.service       # start the API
+sudo systemctl stop suedtirolmobil.service        # stop the API
+sudo systemctl restart suedtirolmobil.service     # restart the API
 ```
 
-Für den Telegram-Bot entsprechend `suedtirolmobil-bot.service` verwenden.
+Replace `suedtirolmobil-bot.service` to control the Telegram bot.
+
+Alternatively run `sudo ./install_services.sh` from the repository root to copy
+the example unit files to `/etc/systemd/system/`, enable them and start the
+services immediately.
+=======
