@@ -11,6 +11,7 @@ After setting up a service you can control it with `start`, `stop` and `restart`
    cd suedtirolmobilAI
    ./install.sh
    ```
+
 2. Optionally store environment variables in a `.env` file inside the project directory. The application loads this file automatically.
 
 The example unit files `systemd/suedtirolmobil.service` and
@@ -22,6 +23,7 @@ The example unit files `systemd/suedtirolmobil.service` and
 Create `/etc/systemd/system/suedtirolmobil.service` with the following content
 (adjust paths if necessary):
 
+
 ```ini
 [Unit]
 Description=suedtirolmobilAI API
@@ -29,9 +31,11 @@ After=network.target
 
 [Service]
 Type=simple
+
 WorkingDirectory=/path/to/repo/suedtirolmobilAI
 ExecStart=/path/to/repo/suedtirolmobilAI/venv/bin/uvicorn src.main:app --host 0.0.0.0
 EnvironmentFile=/path/to/repo/suedtirolmobilAI/.env
+
 Restart=on-failure
 
 [Install]
@@ -46,10 +50,12 @@ sudo systemctl enable suedtirolmobil.service
 sudo systemctl start suedtirolmobil.service
 ```
 
+
 ## systemd service for the Telegram bot
 
 If you also want to start the Telegram bot automatically, create a second
 service file. Example `/etc/systemd/system/suedtirolmobil-bot.service`:
+
 
 ```ini
 [Unit]
@@ -58,22 +64,27 @@ After=network.target suedtirolmobil.service
 
 [Service]
 Type=simple
+
 WorkingDirectory=/path/to/repo/suedtirolmobilAI
 ExecStart=/path/to/repo/suedtirolmobilAI/venv/bin/python -m src.telegram_bot --api-url http://localhost:8000
 EnvironmentFile=/path/to/repo/suedtirolmobilAI/.env
+
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 ```
 
+
 Reload systemd and enable the bot:
+
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable suedtirolmobil-bot.service
 sudo systemctl start suedtirolmobil-bot.service
 ```
+
 
 ## Controlling the service
 
@@ -90,3 +101,4 @@ Replace `suedtirolmobil-bot.service` to control the Telegram bot.
 Alternatively run `sudo ./install_services.sh` from the repository root to copy
 the example unit files to `/etc/systemd/system/`, enable them and start the
 services immediately.
+=======
