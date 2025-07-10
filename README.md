@@ -33,6 +33,7 @@ Start the server with:
 ```bash
 uvicorn src.main:app --host 0.0.0.0 --reload
 ```
+Append `--debug` for verbose logging.
 Alternatively run `python -m src.main` for the default settings.
 
 ## Configuration
