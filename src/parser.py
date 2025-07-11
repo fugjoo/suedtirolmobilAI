@@ -8,6 +8,11 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import Optional, List
 
+from langdetect import DetectorFactory, LangDetectException, detect
+
+# make language detection deterministic
+DetectorFactory.seed = 0
+
 
 @dataclass
 class Query:
@@ -218,10 +223,26 @@ def relative_iso(text: str, time_str: Optional[str] = None) -> Optional[str]:
     return datetime.combine(date, t_value).strftime("%Y-%m-%dT%H:%M")
 
 
+def detect_language(text: str) -> str:
+    """Return ``de``, ``it`` or ``en`` based on the input text."""
+    try:
+        code = detect(text)
+    except LangDetectException:
+        return "de"
+    if code.startswith("de"):
+        return "de"
+    if code.startswith("it"):
+        return "it"
+    if code.startswith("en"):
+        return "en"
+    return "de"
+
+
 
 def parse(text: str) -> Query:
     """Parse a short query in German, Italian or English."""
     lower = text.lower()
+    language = detect_language(text)
     bus = True
     zug = True
     seilbahn = True
@@ -324,7 +345,7 @@ def parse(text: str) -> Query:
         return Query(
             "unknown",
             datetime=iso,
-            language="de",
+            language=language,
             bus=bus,
             zug=zug,
             seilbahn=seilbahn,
@@ -348,7 +369,7 @@ def parse(text: str) -> Query:
             match.group("from"),
             match.group("to"),
             iso,
-            language="de",
+            language=language,
             bus=bus,
             zug=zug,
             seilbahn=seilbahn,
@@ -361,7 +382,7 @@ def parse(text: str) -> Query:
         return Query(
             "departure",
             from_location=match.group("stop"),
-            language="de",
+            language=language,
             bus=bus,
             zug=zug,
             seilbahn=seilbahn,
@@ -371,7 +392,7 @@ def parse(text: str) -> Query:
 
     return Query(
         "unknown",
-        language="de",
+        language=language,
         bus=bus,
         zug=zug,
         seilbahn=seilbahn,
