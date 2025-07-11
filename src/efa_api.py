@@ -56,12 +56,12 @@ def build_trip_params(
         params["name_destination"] = destination
         params["type_destination"] = destination_type or "any"
 
+    params["itdTripDateTimeDepArr"] = datetime_mode
     if datetime:
         try:
             dt_value = dt.datetime.fromisoformat(datetime)
             params["itdDate"] = dt_value.strftime("%Y%m%d")
             params["itdTime"] = dt_value.strftime("%H:%M")
-            params["itdTripDateTimeDepArr"] = datetime_mode
         except ValueError:
             logger.warning("Invalid datetime string: %s", datetime)
 
