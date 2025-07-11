@@ -26,6 +26,13 @@ def test_parse_trip_simple():
     assert q.datetime == "2025-01-01T12:30"
 
 
+def test_parse_trip_default_modes():
+    q = parser.parse("von A nach B")
+    assert q.bus is True
+    assert q.zug is True
+    assert q.seilbahn is True
+
+
 def test_parse_departure():
     q = parser.parse("Abfahrten Bozen")
     assert q.type == "departure"
@@ -60,6 +67,14 @@ def test_build_trip_params_long_distance():
     assert params["lineRestriction"] == "401"
     assert params["itdTripDateTimeDepArr"] == "arr"
     assert params["language"] == "it"
+
+
+def test_build_trip_params_defaults():
+    params = efa_api.build_trip_params("A", "B")
+    assert params["inclMOT_BUS"] == "true"
+    assert params["inclMOT_ZUG"] == "true"
+    assert params["inclMOT_8"] == "true"
+    assert params["itdTripDateTimeDepArr"] == "dep"
 
 
 def test_build_trip_params_only_train():
