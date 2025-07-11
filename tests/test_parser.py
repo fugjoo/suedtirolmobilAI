@@ -55,8 +55,36 @@ def test_build_trip_params_long_distance():
         language="it",
     )
     assert params["inclMOT_BUS"] == "true"
-    assert params["inclMOT_ZUG"] == "false"
-    assert params["inclMOT_8"] == "false"
+    assert "inclMOT_ZUG" not in params
+    assert "inclMOT_8" not in params
     assert params["lineRestriction"] == "401"
     assert params["itdTripDateTimeDepArr"] == "arr"
     assert params["language"] == "it"
+
+
+def test_build_trip_params_only_train():
+    params = efa_api.build_trip_params(
+        "A",
+        "B",
+        "2025-02-03T12:00",
+        bus=False,
+        zug=True,
+        seilbahn=False,
+    )
+    assert "inclMOT_BUS" not in params
+    assert params["inclMOT_ZUG"] == "true"
+    assert "inclMOT_8" not in params
+
+
+def test_build_trip_params_no_bus():
+    params = efa_api.build_trip_params(
+        "A",
+        "B",
+        "2025-02-03T12:00",
+        bus=False,
+        zug=True,
+        seilbahn=True,
+    )
+    assert "inclMOT_BUS" not in params
+    assert params["inclMOT_ZUG"] == "true"
+    assert params["inclMOT_8"] == "true"
