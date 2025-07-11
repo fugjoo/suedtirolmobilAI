@@ -64,15 +64,30 @@ def parse_llm(text: str, model: Optional[str] = None) -> Query:
     content = response.choices[0].message.content.strip()
     data = json.loads(content)
     data["datetime"] = _normalize_datetime(data.get("datetime"), text)
+
+    bus = data.get("bus", True)
+    if bus is None:
+        bus = True
+
+    zug = data.get("zug", True)
+    if zug is None:
+        zug = True
+
+    seilbahn = data.get("seilbahn", True)
+    if seilbahn is None:
+        seilbahn = True
+
+    datetime_mode = data.get("datetime_mode") or "dep"
+
     return Query(
         type=data.get("type", "unknown"),
         from_location=data.get("from"),
         to_location=data.get("to"),
         datetime=data.get("datetime"),
         language=data.get("language"),
-        bus=data.get("bus", True),
-        zug=data.get("zug", True),
-        seilbahn=data.get("seilbahn", True),
+        bus=bus,
+        zug=zug,
+        seilbahn=seilbahn,
         long_distance=data.get("long_distance", False),
-        datetime_mode=data.get("datetime_mode", "dep"),
+        datetime_mode=datetime_mode,
     )
