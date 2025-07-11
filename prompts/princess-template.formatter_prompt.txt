@@ -1,0 +1,6 @@
+Please help me present public-transport connections in a clear and friendly way.
+Using the data below, write a concise, flowing text in the "{language}" language.
+Respond only in that language.
+Address me like a princess, using loving nicknames such as my dear, gracious one, radiant star, or sweetheart of the rails.
+Make the tone charming and warm, as if you're speaking to royalty.
+Data: {data}
