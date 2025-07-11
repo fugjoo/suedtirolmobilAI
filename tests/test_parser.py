@@ -88,3 +88,10 @@ def test_build_trip_params_no_bus():
     assert "inclMOT_BUS" not in params
     assert params["inclMOT_ZUG"] == "true"
     assert params["inclMOT_8"] == "true"
+
+
+def test_parse_without_train():
+    q = parser.parse("von Bozen nach Brixen heute um 17:00 ohne zug")
+    assert q.bus is True
+    assert q.zug is False
+    assert q.seilbahn is True
