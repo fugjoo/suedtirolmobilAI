@@ -226,46 +226,71 @@ def parse(text: str) -> Query:
     zug = True
     seilbahn = True
     long_distance = False
+    bus_explicit = False
+    zug_explicit = False
+    seilbahn_explicit = False
+    long_distance_explicit = False
     datetime_mode = "arr" if any(w in lower for w in ARRIVAL_WORDS) else "dep"
 
     for w in WITHOUT_WORDS:
         if any(f"{w} {t}" in lower for t in BUS_TERMS):
             bus = False
+            bus_explicit = True
         if any(f"{w} {t}" in lower for t in TRAIN_TERMS):
             zug = False
+            zug_explicit = True
         if any(f"{w} {t}" in lower for t in SEILBAHN_TERMS):
             seilbahn = False
+            seilbahn_explicit = True
         if any(f"{w} {t}" in lower for t in LONG_DISTANCE_TERMS):
             long_distance = False
+            long_distance_explicit = True
 
     for w in WITH_WORDS:
         if any(f"{w} {t}" in lower for t in BUS_TERMS):
             bus = True
+            bus_explicit = True
         if any(f"{w} {t}" in lower for t in TRAIN_TERMS):
             zug = True
+            zug_explicit = True
         if any(f"{w} {t}" in lower for t in SEILBAHN_TERMS):
             seilbahn = True
+            seilbahn_explicit = True
         if any(f"{w} {t}" in lower for t in LONG_DISTANCE_TERMS):
             long_distance = True
+            long_distance_explicit = True
 
     for w in ONLY_WORDS:
         if any(f"{w} {t}" in lower for t in BUS_TERMS):
             bus = True
             zug = False
             seilbahn = False
+            bus_explicit = True
+            zug_explicit = True
+            seilbahn_explicit = True
         if any(f"{w} {t}" in lower for t in TRAIN_TERMS):
             bus = False
             zug = True
             seilbahn = False
+            bus_explicit = True
+            zug_explicit = True
+            seilbahn_explicit = True
         if any(f"{w} {t}" in lower for t in SEILBAHN_TERMS):
             bus = False
             zug = False
             seilbahn = True
+            bus_explicit = True
+            zug_explicit = True
+            seilbahn_explicit = True
         if any(f"{w} {t}" in lower for t in LONG_DISTANCE_TERMS):
             bus = False
             zug = False
             seilbahn = False
             long_distance = True
+            bus_explicit = True
+            zug_explicit = True
+            seilbahn_explicit = True
+            long_distance_explicit = True
 
     tokens = set(lower.split())
     has_bus = any(t in tokens for t in BUS_TERMS)
@@ -273,23 +298,24 @@ def parse(text: str) -> Query:
     has_seilbahn = any(t in tokens for t in SEILBAHN_TERMS)
     has_long_distance = any(t in tokens for t in LONG_DISTANCE_TERMS)
 
-    if has_bus and not has_train and not has_seilbahn and not has_long_distance:
-        bus = True
-        zug = False
-        seilbahn = False
-    elif has_train and not has_bus and not has_seilbahn and not has_long_distance:
-        bus = False
-        zug = True
-        seilbahn = False
-    elif has_seilbahn and not has_bus and not has_train and not has_long_distance:
-        bus = False
-        zug = False
-        seilbahn = True
-    elif has_long_distance and not has_bus and not has_train and not has_seilbahn:
-        bus = False
-        zug = False
-        seilbahn = False
-        long_distance = True
+    if not (bus_explicit or zug_explicit or seilbahn_explicit or long_distance_explicit):
+        if has_bus and not has_train and not has_seilbahn and not has_long_distance:
+            bus = True
+            zug = False
+            seilbahn = False
+        elif has_train and not has_bus and not has_seilbahn and not has_long_distance:
+            bus = False
+            zug = True
+            seilbahn = False
+        elif has_seilbahn and not has_bus and not has_train and not has_long_distance:
+            bus = False
+            zug = False
+            seilbahn = True
+        elif has_long_distance and not has_bus and not has_train and not has_seilbahn:
+            bus = False
+            zug = False
+            seilbahn = False
+            long_distance = True
 
     if m := DATE_ONLY_RE.match(text.strip()):
         iso = relative_iso(text, m.group("time"))
