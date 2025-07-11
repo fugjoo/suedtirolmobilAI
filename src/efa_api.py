@@ -34,10 +34,14 @@ def build_trip_params(
         "language": language,
         "odvMacro": "true",
         "includedMeans": "checkbox",
-        "inclMOT_BUS": "true" if bus else "false",
-        "inclMOT_ZUG": "true" if zug else "false",
-        "inclMOT_8": "true" if seilbahn else "false",
     }
+
+    if bus:
+        params["inclMOT_BUS"] = "true"
+    if zug:
+        params["inclMOT_ZUG"] = "true"
+    if seilbahn:
+        params["inclMOT_8"] = "true"
     if origin_stateless:
         params["name_origin"] = origin_stateless
         params["type_origin"] = "stop"
