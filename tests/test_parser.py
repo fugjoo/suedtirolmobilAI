@@ -110,3 +110,13 @@ def test_parse_without_train():
     assert q.bus is True
     assert q.zug is False
     assert q.seilbahn is True
+
+
+def test_language_detection_italian():
+    q = parser.parse("un collegamento da Malles a Merano")
+    assert q.language == "it"
+
+
+def test_language_detection_english():
+    q = parser.parse("a trip from Merano to Bolzano")
+    assert q.language == "en"
