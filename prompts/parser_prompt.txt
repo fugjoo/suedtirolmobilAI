@@ -9,5 +9,5 @@ Fields:
 - zug: true or false (default true)
 - seilbahn: true or false (default true)
 - long_distance: true to allow long distance trains, false to exclude them
-- language: "de", "it", or "en"
+- language: users input language "de", "it", or "en"
 User text: {text}
