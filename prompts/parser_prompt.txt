@@ -5,9 +5,9 @@ Fields:
 - to: destination location or null
 - datetime: the literal date expression such as "heute", "tomorrow", a date and time, "next sunday", "am Dienstag", "martedì prossimo" or null
 - datetime_mode: "dep" for departure or "arr" for arrival time
-- bus: true or false
-- zug: true or false
-- seilbahn: true or false
+- bus: true or false (default true)
+- zug: true or false (default true)
+- seilbahn: true or false (default true)
 - long_distance: true to allow long distance trains, false to exclude them
 - language: "de", "it", or "en"
 User text: {text}
