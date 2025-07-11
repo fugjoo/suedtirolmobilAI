@@ -7,6 +7,21 @@ from typing import Any, Dict, List, Optional
 
 import openai
 
+NO_RESULTS = {
+    "de": (
+        "Keine Ergebnisse gefunden. Vielleicht gab es ein Problem bei der Eingabe. "
+        "Bitte versuche es mit einer anderen Formulierung."
+    ),
+    "it": (
+        "Nessun risultato trovato. Potrebbe esserci stato un problema nell'inserimento. "
+        "Prova con una nuova formulazione."
+    ),
+    "en": (
+        "No results found. Something may have gone wrong with the input. "
+        "Please try again with a different wording."
+    ),
+}
+
 from .config import get_openai_model, get_openai_max_tokens
 
 PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "formatter_prompt.txt"
@@ -139,11 +154,15 @@ def format_trip(
         model = get_openai_model()
     if max_tokens is None:
         max_tokens = get_openai_max_tokens()
+
+    short_data = extract_trip_info(data)
+    if not short_data:
+        return NO_RESULTS.get(language, NO_RESULTS["de"])
+
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
 
-    short_data = extract_trip_info(data)
     prompt = load_prompt().format(data=json.dumps(short_data, ensure_ascii=False), language=language)
 
     client = openai.OpenAI(api_key=api_key)
@@ -170,11 +189,15 @@ def format_departures(
         model = get_openai_model()
     if max_tokens is None:
         max_tokens = get_openai_max_tokens()
+
+    short_data = extract_departure_info(data)
+    if not short_data.get("departures"):
+        return NO_RESULTS.get(language, NO_RESULTS["de"])
+
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set")
 
-    short_data = extract_departure_info(data)
     prompt = load_prompt().format(data=json.dumps(short_data, ensure_ascii=False), language=language)
 
 
