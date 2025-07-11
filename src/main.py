@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
+import requests
 
 from . import efa_api, parser, llm_parser, llm_formatter, request_logger
 
@@ -60,12 +61,16 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         params = efa_api.build_departure_params(
             verified, 10, stateless=stateless, language=q.language or "de"
         )
+        full_url = requests.Request(
+            "GET",
+            f"{efa_api.BASE_URL}/XML_DM_REQUEST",
+            params=params,
+        ).prepare().url
         request_logger.log_entry(
             {
                 "input": body.text,
                 "stop": point,
-                "url": f"{efa_api.BASE_URL}/XML_DM_REQUEST",
-                "params": params,
+                "url": full_url,
             }
         )
         data = efa_api.departure_monitor(
@@ -122,13 +127,17 @@ def search(body: SearchRequest, format: str = Query("json")) -> Any:
         datetime_mode=q.datetime_mode,
         language=q.language or "de",
     )
+    full_url = requests.Request(
+        "GET",
+        f"{efa_api.BASE_URL}/XML_TRIP_REQUEST2",
+        params=params,
+    ).prepare().url
     request_logger.log_entry(
         {
             "input": body.text,
             "from": from_point,
             "to": to_point,
-            "url": f"{efa_api.BASE_URL}/XML_TRIP_REQUEST2",
-            "params": params,
+            "url": full_url,
         }
     )
     data: Dict[str, Any] = efa_api.trip_request(
@@ -177,12 +186,16 @@ def departures(body: DeparturesRequest, format: str = Query("json")) -> Any:
     params = efa_api.build_departure_params(
         verified, body.limit, stateless=stateless, language=body.language
     )
+    full_url = requests.Request(
+        "GET",
+        f"{efa_api.BASE_URL}/XML_DM_REQUEST",
+        params=params,
+    ).prepare().url
     request_logger.log_entry(
         {
             "input": body.stop,
             "stop": point,
-            "url": f"{efa_api.BASE_URL}/XML_DM_REQUEST",
-            "params": params,
+            "url": full_url,
         }
     )
     data = efa_api.departure_monitor(
@@ -212,11 +225,15 @@ def stops(body: StopsRequest, format: str = Query("json")) -> Any:
         "outputFormat": "JSON",
         "language": body.language,
     }
+    full_url = requests.Request(
+        "GET",
+        f"{efa_api.BASE_URL}/XML_STOPFINDER_REQUEST",
+        params=params,
+    ).prepare().url
     request_logger.log_entry(
         {
             "input": body.query,
-            "url": f"{efa_api.BASE_URL}/XML_STOPFINDER_REQUEST",
-            "params": params,
+            "url": full_url,
         }
     )
     data = efa_api.stop_finder(body.query, language=body.language)
