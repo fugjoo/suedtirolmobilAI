@@ -25,6 +25,13 @@ logger = logging.getLogger(__name__)
 DEBUG = False
 DEBUG_INFO: List[Dict[str, Any]] = []
 
+# language specific keywords for compose_text
+LANG_PHRASES = {
+    "de": {"from": "von", "to": "nach", "departures": "Abfahrten", "at": "um"},
+    "it": {"from": "da", "to": "a", "departures": "Partenze", "at": "alle"},
+    "en": {"from": "from", "to": "to", "departures": "Departures", "at": "at"},
+}
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send greeting and show command keyboard."""
@@ -69,7 +76,8 @@ async def send_reply(update: Update, text: str) -> None:
 def gather_debug_entries(text: str, state: str = None) -> List[Dict[str, Any]]:
     """Return debug information for a query."""
     if state == "departures":
-        query = parser.Query("departure", from_location=text, language="de")
+        lang = parser.detect_language(text)
+        query = parser.Query("departure", from_location=text, language=lang)
     else:
         query = parser.parse(text)
         if query.type != "trip" or not query.from_location or not query.to_location:
@@ -178,26 +186,20 @@ def merge_queries(old: parser.Query, new: parser.Query) -> parser.Query:
 
 def compose_text(q: parser.Query) -> str:
     """Return a canonical text representation of a query."""
+    lang = q.language or "de"
+    words = LANG_PHRASES.get(lang, LANG_PHRASES["de"])
     parts = []
     if q.from_location and q.to_location:
-        parts.append(f"von {q.from_location} nach {q.to_location}")
+        parts.append(
+            f"{words['from']} {q.from_location} {words['to']} {q.to_location}"
+        )
     elif q.from_location:
-        parts.append(f"Abfahrten {q.from_location}")
+        parts.append(f"{words['departures']} {q.from_location}")
     if q.datetime:
         try:
-            parts.append("um " + q.datetime.split("T")[1])
+            parts.append(f"{words['at']} " + q.datetime.split("T")[1])
         except Exception:
             pass
-    if q.include:
-        if set(q.include) == {"Bus", "Seilbahn"}:
-            parts.append("mit Bus und Seilbahn")
-        elif q.include == ["Bus"]:
-            parts.append("mit Bus")
-    if q.exclude:
-        if "Zug" in q.exclude:
-            parts.append("ohne Zug")
-        if "Fernverkehr" in q.exclude:
-            parts.append("ohne Fernverkehr")
     return " ".join(parts)
 
 
@@ -240,17 +242,19 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     if state == "departures":
         context.user_data.pop("state", None)
+        lang = parser.detect_language(text)
         if DEBUG:
             entries = gather_debug_entries(text, state="departures")
             DEBUG_INFO.extend(entries)
             for ent in entries:
                 await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-        reply = call_api("/departures", {"stop": text})
+        reply = call_api("/departures", {"stop": text, "language": lang})
         await send_reply(update, reply)
         return
     if state == "stops":
         context.user_data.pop("state", None)
-        reply = call_api("/stops", {"query": text})
+        lang = parser.detect_language(text)
+        reply = call_api("/stops", {"query": text, "language": lang})
         await send_reply(update, reply)
         return
 
