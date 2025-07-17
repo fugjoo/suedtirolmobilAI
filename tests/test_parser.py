@@ -26,6 +26,12 @@ def test_parse_trip_simple():
     assert q.datetime == "2025-01-01T12:30"
 
 
+def test_parse_trip_with_comma():
+    q = parser.parse("von Bozen nach Leifers, Zentrum")
+    assert q.from_location == "Bozen"
+    assert q.to_location == "Leifers, Zentrum"
+
+
 def test_parse_trip_default_modes():
     q = parser.parse("von A nach B")
     assert q.bus is True
