@@ -41,15 +41,15 @@ DATE_ONLY_RE = re.compile(
     re.I,
 )
 TRIP_RE = re.compile(
-    r"(?:von|from|da) (?P<from>\w+) (?:nach|to|a) (?P<to>\w+)(?: um (?P<time>\d{1,2}:\d{2}))?",
+    r"(?:von|from|da)\s+(?P<from>.+?)\s+(?:nach|to|a)\s+(?P<to>.+?)(?:\s+um\s+(?P<time>\d{1,2}:\d{2}))?$",
     re.I,
 )
 # also handle "Bozen - Meran" style queries
 TRIP_DASH_RE = re.compile(
-    r"(?P<from>\w+)\s*[-\u2013]\s*(?P<to>\w+)(?:\s+um\s+(?P<time>\d{1,2}:\d{2}))?",
+    r"(?P<from>.+?)\s*[-\u2013]\s*(?P<to>.+?)(?:\s+um\s+(?P<time>\d{1,2}:\d{2}))?$",
     re.I,
 )
-DEPT_RE = re.compile(r"(?:abfahrten?|departures?|partenze) (?P<stop>\w+)", re.I)
+DEPT_RE = re.compile(r"(?:abfahrten?|departures?|partenze)\s+(?P<stop>.+)", re.I)
 ARRIVAL_WORDS = {"ankommen", "ankunft", "arrive", "arrival", "arrivo"}
 DEPARTURE_WORDS = {"abfahren", "abfahrt", "depart", "departure", "partenza"}
 
