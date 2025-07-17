@@ -45,6 +45,12 @@ def test_parse_departure():
     assert q.from_location == "Bozen"
 
 
+def test_parse_departure_with_comma():
+    q = parser.parse("Abfahrten Bozen, Bahnhof")
+    assert q.type == "departure"
+    assert q.from_location == "Bozen, Bahnhof"
+
+
 def test_best_point_prefers_stop():
     points = [
         {"anyType": "platform", "quality": 10},
