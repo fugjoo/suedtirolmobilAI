@@ -176,8 +176,9 @@ Once created the services can be controlled with `systemctl start`, `stop`
 and `restart`.
 
 ## Testing
+The test suite covers the MCP server and the service layer. Run all tests with:
 ```bash
-pytest
+pytest -q
 ```
 
 ## License

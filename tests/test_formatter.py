@@ -3,16 +3,26 @@ import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from src import llm_formatter
+from src import services
+from src.services import DeparturesRequest
 
 
-def test_format_trip_no_results():
-    data = {"trips": None}
-    msg = llm_formatter.format_trip(data, language="en")
-    assert "No results found" in msg
+def test_departures_service_no_results(monkeypatch):
+    def fake_stop_finder(stop: str, language: str = "de"):
+        return {
+            "stopFinder": {
+                "points": [
+                    {"name": stop, "stateless": "1", "anyType": "stop", "quality": 1}
+                ]
+            }
+        }
 
+    def fake_departure_monitor(stop, limit, stateless=None, language="de"):
+        return {"departureList": None}
 
-def test_format_departures_no_results():
-    data = {"departureList": None}
-    msg = llm_formatter.format_departures(data, language="de")
-    assert "Keine Ergebnisse" in msg
+    monkeypatch.setattr(services.efa_api, "stop_finder", fake_stop_finder)
+    monkeypatch.setattr(services.efa_api, "departure_monitor", fake_departure_monitor)
+    monkeypatch.setattr(services.request_logger, "log_entry", lambda *a, **k: None)
+
+    result = services.departures_service(DeparturesRequest(stop="Bozen"), format="text")
+    assert "Keine Ergebnisse" in result
