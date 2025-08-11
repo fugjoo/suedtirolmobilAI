@@ -1,16 +1,17 @@
 """Simple Telegram bot that forwards queries to the API."""
 
 import argparse
-import asyncio
 import json
 import logging
 import os
+import sys
 import threading
 from typing import Dict, Any, List, Optional
 
 from . import parser, efa_api, llm_parser
 
-import requests
+from mcp.client.session import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -41,30 +42,35 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-def call_api(endpoint: str, payload: Dict[str, Any], *, params: Dict[str, Any] = None, json_response: bool = False) -> Any:
-    """Send POST request to the API and return response."""
+async def call_api(tool: str, payload: Dict[str, Any], *, json_response: bool = False) -> Any:
+    """Call an MCP tool and return the server response."""
     if DEBUG:
-        logger.debug("Request %s %s %s", endpoint, params, payload)
+        logger.debug("Request %s %s", tool, payload)
     try:
-        resp = requests.post(f"{API_URL}{endpoint}", json=payload, params=params, timeout=10)
+        async with stdio_client(
+            StdioServerParameters(command=sys.executable, args=["-m", "src.mcp_server"])
+        ) as (read, write):
+            session = ClientSession(read, write)
+            await session.initialize()
+            result = await session.call_tool(tool.lstrip("/"), payload)
     except Exception as exc:  # pragma: no cover - network
         logger.error("Request failed: %s", exc)
-        DEBUG_INFO.append({"endpoint": endpoint, "payload": payload, "error": str(exc)})
+        DEBUG_INFO.append({"endpoint": tool, "payload": payload, "error": str(exc)})
         return str(exc)
-    if resp.ok:
-        try:
-            data = resp.json()
-        except ValueError:
-            data = resp.text
-        DEBUG_INFO.append({"endpoint": endpoint, "payload": payload, "response": data})
-        if json_response:
-            return data
-        if isinstance(data, dict) and "data" in data:
-            content = data["data"]
-            return content if isinstance(content, str) else json.dumps(content, indent=2, ensure_ascii=False)
-        return data if isinstance(data, str) else json.dumps(data, indent=2, ensure_ascii=False)
-    DEBUG_INFO.append({"endpoint": endpoint, "payload": payload, "status": resp.status_code})
-    return f"Error {resp.status_code}: {resp.text}"
+
+    texts = [c.text for c in result.content if hasattr(c, "text")]
+    combined = "\n".join(texts)
+    try:
+        data = json.loads(combined)
+    except ValueError:
+        data = combined
+    DEBUG_INFO.append({"endpoint": tool, "payload": payload, "response": data})
+    if json_response:
+        return data
+    if isinstance(data, dict) and "data" in data:
+        content = data["data"]
+        return content if isinstance(content, str) else json.dumps(content, indent=2, ensure_ascii=False)
+    return data if isinstance(data, str) else json.dumps(data, indent=2, ensure_ascii=False)
 
 
 async def send_reply(update: Update, text: str) -> None:
@@ -237,7 +243,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             DEBUG_INFO.extend(entries)
             for ent in entries:
                 await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-        reply = call_api("/search", {"text": compose_text(q)})
+        reply = await call_api("search", {"text": compose_text(q)})
         await send_reply(update, reply)
         return
     if state == "departures":
@@ -248,13 +254,13 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             DEBUG_INFO.extend(entries)
             for ent in entries:
                 await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-        reply = call_api("/departures", {"stop": text, "language": lang})
+        reply = await call_api("departures", {"stop": text, "language": lang})
         await send_reply(update, reply)
         return
     if state == "stops":
         context.user_data.pop("state", None)
         lang = parser.detect_language(text)
-        reply = call_api("/stops", {"query": text, "language": lang})
+        reply = await call_api("stops", {"query": text, "language": lang})
         await send_reply(update, reply)
         return
 
@@ -270,7 +276,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             DEBUG_INFO.extend(entries)
             for ent in entries:
                 await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-        reply = call_api("/search", {"text": final_text})
+        reply = await call_api("search", {"text": final_text})
         await send_reply(update, reply)
         return
     if DEBUG:
@@ -278,7 +284,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         DEBUG_INFO.extend(entries)
         for ent in entries:
             await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-    reply = call_api("/search", {"text": text})
+    reply = await call_api("search", {"text": text})
     await send_reply(update, reply)
 
 
