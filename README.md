@@ -11,9 +11,7 @@ transport and forwards them to a Mentz EFA backend. See `docs/EFA_XML_API.md`.
 - Optional ChatGPT summaries.
 - Verifies stops before requesting trips or departures.
 - ChatGPT uses trimmed EFA data for concise responses.
-- Plugin manifest for ChatGPT integration.
-- Interactive console chat.
-- Simple Telegram bot.
+- Model Context Protocol (MCP) server for tool calls.
 
 ## Requirements
 Python 3.8 or newer is required.
@@ -36,6 +34,14 @@ uvicorn src.main:app --host 0.0.0.0 --reload
 Append `--debug` for verbose logging.
 Alternatively run `python -m src.main` for the default settings.
 
+## MCP server
+Expose the service as a Model Context Protocol server.
+Start it via:
+```bash
+python -m src.mcp_server
+```
+The server exposes tools like `search`, `departures`, and `stops` for LLM integration.
+
 ## Configuration
 The service can be configured via the following environment variables:
 
@@ -55,18 +61,6 @@ OPENAI_MODEL=gpt-4
 ```bash
 OPENAI_MAX_TOKENS=120
 ```
-- `TELEGRAM_TOKEN` – required for the Telegram bot
-  ```bash
-  TELEGRAM_TOKEN=your_token
-  ```
-- `API_URL` – base URL of the API used by the Telegram bot
-  ```bash
-  API_URL=http://localhost:8000
-  ```
-- `SERVER_URL` – public URL used in `/.well-known/openapi.yaml`
-  ```bash
-  SERVER_URL=https://api.example.com
-  ```
 
 Environment variables can also be stored in a `.env` file in the project root.
 A `.env.example` file is included as a template. Copy it to `.env` and fill in
@@ -87,24 +81,6 @@ Edit the files to change the wording or add additional instructions.
 `parser_prompt.txt` now returns the date expression literally, for example
 "heute", "tomorrow" or "next sunday". The parser translates these phrases into
 a proper ISO timestamp when processing the response.
-
-## Console chat
-Start a minimal interactive chat loop. Combine `--llm-parser` and `--llm-format` to use OpenAI for parsing and formatting.
-Add `--debug` to print the parsed query JSON.
-```bash
-python -m src.chat --llm-parser --llm-format --debug
-```
-
-### Automatic query detection
-When text is entered without explicitly choosing a command, the service tries to
-infer the best action automatically.  For example:
-
-* `Abfahrten Neumarkt Busbahnhof` → departures
-* `Bozen - Meran` → trip search
-* `von Bozen nach Meran morgen um 13:00 Uhr` → trip search
-* `Haltestestelle in Meran` → stops
-
-Queries in German, English and Italian are supported.
 
 ## API endpoints
 All endpoints accept POST requests. Use the query parameter `format` to control
@@ -141,32 +117,6 @@ curl -X POST http://localhost:8000/stops \
 ```
 Append `?format=text` or `?format=json` to change the response.
 
-## ChatGPT plugin
-The repository includes a plugin manifest and OpenAPI file in the
-`.well-known/` directory. When the server is running they are served under
-`/.well-known/ai-plugin.json` and `/.well-known/openapi.yaml` for easy
-integration with ChatGPT.
-
-## Telegram bot
-Forward messages to the API using the example bot:
-```bash
-export TELEGRAM_TOKEN=your_token
-python -m src.telegram_bot --api-url http://localhost:8000
-```
-Add `--start-server` to launch the API with `uvicorn` automatically. Use
-`--token` to pass a token explicitly and `--debug` for verbose logging.
-```bash
-export TELEGRAM_TOKEN=your_token
-python -m src.telegram_bot --api-url http://localhost:8000 --start-server
-```
-Use `--api-url` to specify the address of the running API. The option
-defaults to the value of the `API_URL` environment variable or
-`http://localhost:8000` if unset.
-
-When selecting a command from the bot's keyboard without additional text,
-the bot will ask for the required input before sending the request.
-
-
 ## Autostart on Linux
 See [docs/autostart.md](docs/autostart.md) for details on creating a
 `systemd` service. The templates in the [systemd/](systemd/) directory can be
@@ -176,7 +126,7 @@ Once created the services can be controlled with `systemctl start`, `stop`
 and `restart`.
 
 ## Testing
-The test suite covers the MCP server and the service layer. Run all tests with:
+Run all tests with:
 ```bash
 pytest -q
 ```
