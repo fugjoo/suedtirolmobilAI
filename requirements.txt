@@ -9,3 +9,5 @@ langdetect
 python-telegram-bot
 python-dotenv
 openai
+
+mcp>=1.12.4
