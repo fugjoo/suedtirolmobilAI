@@ -1,5 +1,5 @@
 """Service layer for transit queries."""
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import requests
 from fastapi import HTTPException
@@ -24,6 +24,40 @@ class DeparturesRequest(BaseModel):
 
 class StopsRequest(BaseModel):
     """Request body for stop suggestions."""
+
+    query: str
+    language: str = "de"
+
+
+class TripRequest(BaseModel):
+    """Request body for direct trip requests."""
+
+    origin: str
+    destination: str
+    datetime: Optional[str] = None
+    origin_stateless: Optional[str] = None
+    destination_stateless: Optional[str] = None
+    origin_type: Optional[str] = None
+    destination_type: Optional[str] = None
+    bus: bool = True
+    zug: bool = True
+    seilbahn: bool = True
+    long_distance: Optional[bool] = None
+    datetime_mode: str = "dep"
+    language: str = "de"
+
+
+class DepartureMonitorRequest(BaseModel):
+    """Request body for direct departure monitor queries."""
+
+    stop: str
+    limit: int = 5
+    stateless: Optional[str] = None
+    language: str = "de"
+
+
+class StopFinderRequest(BaseModel):
+    """Request body for direct stop finder queries."""
 
     query: str
     language: str = "de"
@@ -232,4 +266,86 @@ def stops_service(body: StopsRequest, format: str = "json") -> Any:
     )
     data = efa_api.stop_finder(body.query, language=body.language)
     return data if format == "text" else {"data": data}
+
+
+def trip_service(body: TripRequest) -> Dict[str, Any]:
+    """Directly call the EFA trip request API."""
+    params = efa_api.build_trip_params(
+        body.origin,
+        body.destination,
+        body.datetime,
+        origin_stateless=body.origin_stateless,
+        destination_stateless=body.destination_stateless,
+        origin_type=body.origin_type,
+        destination_type=body.destination_type,
+        bus=body.bus,
+        zug=body.zug,
+        seilbahn=body.seilbahn,
+        long_distance=body.long_distance,
+        datetime_mode=body.datetime_mode,
+        language=body.language,
+    )
+    full_url = requests.Request(
+        "GET",
+        f"{efa_api.BASE_URL}/XML_TRIP_REQUEST2",
+        params=params,
+    ).prepare().url
+    request_logger.log_entry({"input": body.model_dump(), "url": full_url})
+    try:
+        return efa_api.trip_request(
+            body.origin,
+            body.destination,
+            body.datetime,
+            origin_stateless=body.origin_stateless,
+            destination_stateless=body.destination_stateless,
+            origin_type=body.origin_type,
+            destination_type=body.destination_type,
+            bus=body.bus,
+            zug=body.zug,
+            seilbahn=body.seilbahn,
+            long_distance=body.long_distance,
+            datetime_mode=body.datetime_mode,
+            language=body.language,
+        )
+    except requests.HTTPError as exc:  # pragma: no cover - network errors
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc)) from exc
+
+
+def departure_monitor_service(body: DepartureMonitorRequest) -> Dict[str, Any]:
+    """Directly call the EFA departure monitor API."""
+    params = efa_api.build_departure_params(
+        body.stop, body.limit, stateless=body.stateless, language=body.language
+    )
+    full_url = requests.Request(
+        "GET",
+        f"{efa_api.BASE_URL}/XML_DM_REQUEST",
+        params=params,
+    ).prepare().url
+    request_logger.log_entry({"input": body.model_dump(), "url": full_url})
+    try:
+        return efa_api.departure_monitor(
+            body.stop, body.limit, stateless=body.stateless, language=body.language
+        )
+    except requests.HTTPError as exc:  # pragma: no cover - network errors
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc)) from exc
+
+
+def stop_finder_service(body: StopFinderRequest) -> Dict[str, Any]:
+    """Directly call the EFA stop finder API."""
+    params = {
+        "name_sf": body.query,
+        "odvSugMacro": "true",
+        "outputFormat": "JSON",
+        "language": body.language,
+    }
+    full_url = requests.Request(
+        "GET",
+        f"{efa_api.BASE_URL}/XML_STOPFINDER_REQUEST",
+        params=params,
+    ).prepare().url
+    request_logger.log_entry({"input": body.model_dump(), "url": full_url})
+    try:
+        return efa_api.stop_finder(body.query, language=body.language)
+    except requests.HTTPError as exc:  # pragma: no cover - network errors
+        raise HTTPException(status_code=exc.response.status_code, detail=str(exc)) from exc
 
