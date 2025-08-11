@@ -125,6 +125,12 @@ The EFA XML-API allows access to various public transport functions via HTTP req
 - **Official Documentation**:  
   https://data.civis.bz.it/dataset/575f7455-6447-4626-a474-0f93ff03067b/resource/c4e66cdf-7749-40ad-bcfd-179f18743d84/download/dokumentationxmlschnittstelleapbv32014-08-28.pdf
 
-- **Similar APIs**:  
-  - Linz: http://data.linz.gv.at/katalog/linz_ag/linz_ag_linien/fahrplan/LINZ_LINIEN_Schnittstelle_EFA_V1.pdf  
+- **Similar APIs**:
+  - Linz: http://data.linz.gv.at/katalog/linz_ag/linz_ag_linien/fahrplan/LINZ_LINIEN_Schnittstelle_EFA_V1.pdf
   - London: http://content.tfl.gov.uk/journey-planner-api-documentation.pdf
+
+## MCP Server
+
+This project also exposes the transport functions via a Model Context Protocol (MCP) server.
+Start the server with `python -m src.mcp_server` and configure it through the
+`MCP_SERVER_PORT` and `MCP_AUTH_TOKEN` environment variables.
