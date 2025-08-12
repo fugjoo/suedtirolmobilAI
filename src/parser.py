@@ -20,7 +20,8 @@ class Query:
 
     ``bus``, ``zug`` and ``seilbahn`` toggle the respective transport modes.
     ``datetime_mode`` controls whether ``datetime`` refers to a departure
-    (``"dep"``) or arrival time (``"arr"").
+    (``"dep"``) or arrival time (``"arr"``). ``last_connection`` indicates
+    that the user is interested in the last possible connection of the day.
     """
 
     type: str
@@ -33,6 +34,7 @@ class Query:
     seilbahn: bool = True
     long_distance: Optional[bool] = False
     datetime_mode: str = "dep"
+    last_connection: bool = False
 
 
 # relative date keywords
@@ -66,6 +68,8 @@ LONG_DISTANCE_TERMS = {
     "longdistance",
     "lunga distanza",
 }
+
+LAST_CONNECTION_WORDS = {"letzte verbindung", "last connection", "ultima corsa"}
 
 
 TODAY_WORDS = {"heute", "today", "oggi"}
@@ -252,6 +256,7 @@ def parse(text: str) -> Query:
     seilbahn_explicit = False
     long_distance_explicit = False
     datetime_mode = "arr" if any(w in lower for w in ARRIVAL_WORDS) else "dep"
+    last_connection = any(w in lower for w in LAST_CONNECTION_WORDS)
 
     for w in WITHOUT_WORDS:
         if any(f"{w} {t}" in lower for t in BUS_TERMS):
@@ -351,6 +356,7 @@ def parse(text: str) -> Query:
             seilbahn=seilbahn,
             long_distance=long_distance,
             datetime_mode=datetime_mode,
+            last_connection=last_connection,
         )
 
     match = TRIP_RE.search(text)
@@ -375,6 +381,7 @@ def parse(text: str) -> Query:
             seilbahn=seilbahn,
             long_distance=long_distance,
             datetime_mode=datetime_mode,
+            last_connection=last_connection,
         )
 
     match = DEPT_RE.search(text)
@@ -388,6 +395,7 @@ def parse(text: str) -> Query:
             seilbahn=seilbahn,
             long_distance=long_distance,
             datetime_mode=datetime_mode,
+            last_connection=last_connection,
         )
 
     return Query(
@@ -398,4 +406,5 @@ def parse(text: str) -> Query:
         seilbahn=seilbahn,
         long_distance=long_distance,
         datetime_mode=datetime_mode,
+        last_connection=last_connection,
     )

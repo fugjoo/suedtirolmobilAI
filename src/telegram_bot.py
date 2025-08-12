@@ -113,6 +113,7 @@ def gather_debug_entries(text: str, state: str = None) -> List[Dict[str, Any]]:
                 seilbahn=query.seilbahn,
                 long_distance=query.long_distance,
                 datetime_mode=query.datetime_mode,
+                last_connection=query.last_connection,
                 language=query.language or "de",
             )
             entries.append(

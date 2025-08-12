@@ -26,9 +26,15 @@ def build_trip_params(
     seilbahn: bool = True,
     long_distance: Optional[bool] = None,
     datetime_mode: str = "dep",
+    last_connection: bool = False,
     language: str = "de",
 ) -> Dict[str, Any]:
-    """Return parameters for a trip request."""
+    """Return parameters for a trip request.
+
+    If ``last_connection`` is ``True``, the API is asked for the latest
+    possible connection of the day by setting ``calcMode`` to ``"last"`` and
+    defaulting the time to ``23:59`` when no explicit datetime is supplied.
+    """
     params: Dict[str, Any] = {
         "outputFormat": "JSON",
         "language": language,
@@ -64,6 +70,13 @@ def build_trip_params(
             params["itdTime"] = dt_value.strftime("%H:%M")
         except ValueError:
             logger.warning("Invalid datetime string: %s", datetime)
+    elif last_connection:
+        now = dt.datetime.now()
+        params["itdDate"] = now.strftime("%Y%m%d")
+        params["itdTime"] = "23:59"
+
+    if last_connection:
+        params["calcMode"] = "last"
 
     if long_distance is False:
         params["lineRestriction"] = "401"
@@ -109,6 +122,7 @@ def trip_request(
     seilbahn: bool = True,
     long_distance: Optional[bool] = None,
     datetime_mode: str = "dep",
+    last_connection: bool = False,
     language: str = "de",
 ) -> Dict[str, Any]:
     """Request a trip from origin to destination."""
@@ -125,6 +139,7 @@ def trip_request(
         seilbahn=seilbahn,
         long_distance=long_distance,
         datetime_mode=datetime_mode,
+        last_connection=last_connection,
         language=language,
     )
     url = f"{BASE_URL}/XML_TRIP_REQUEST2"

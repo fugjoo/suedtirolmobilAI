@@ -44,6 +44,7 @@ class TripRequest(BaseModel):
     seilbahn: bool = True
     long_distance: Optional[bool] = None
     datetime_mode: str = "dep"
+    last_connection: bool = False
     language: str = "de"
 
 
@@ -155,6 +156,7 @@ def search_service(body: SearchRequest, format: str = "json") -> Any:
         seilbahn=q.seilbahn,
         long_distance=q.long_distance,
         datetime_mode=q.datetime_mode,
+        last_connection=q.last_connection,
         language=q.language or "de",
     )
     full_url = requests.Request(
@@ -183,6 +185,7 @@ def search_service(body: SearchRequest, format: str = "json") -> Any:
         seilbahn=q.seilbahn,
         long_distance=q.long_distance,
         datetime_mode=q.datetime_mode,
+        last_connection=q.last_connection,
         language=q.language or "de",
     )
     short_data = llm_formatter.extract_trip_info(data)
@@ -283,6 +286,7 @@ def trip_service(body: TripRequest) -> Dict[str, Any]:
         seilbahn=body.seilbahn,
         long_distance=body.long_distance,
         datetime_mode=body.datetime_mode,
+        last_connection=body.last_connection,
         language=body.language,
     )
     full_url = requests.Request(
@@ -305,6 +309,7 @@ def trip_service(body: TripRequest) -> Dict[str, Any]:
             seilbahn=body.seilbahn,
             long_distance=body.long_distance,
             datetime_mode=body.datetime_mode,
+            last_connection=body.last_connection,
             language=body.language,
         )
     except requests.HTTPError as exc:  # pragma: no cover - network errors

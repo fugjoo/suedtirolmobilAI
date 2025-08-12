@@ -65,6 +65,7 @@ def main() -> None:
                     seilbahn=q.seilbahn,
                     long_distance=q.long_distance,
                     datetime_mode=q.datetime_mode,
+                    last_connection=q.last_connection,
                     language=q.language or "de",
                 )
                 debug_info["request"] = {
@@ -85,6 +86,7 @@ def main() -> None:
                 seilbahn=q.seilbahn,
                 long_distance=q.long_distance,
                 datetime_mode=q.datetime_mode,
+                last_connection=q.last_connection,
                 language=q.language or "de",
             )
             if args.llm_format:
