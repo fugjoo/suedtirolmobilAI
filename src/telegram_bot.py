@@ -4,14 +4,13 @@ import argparse
 import json
 import logging
 import os
-import sys
 import threading
 from typing import Dict, Any, List, Optional
 
 from . import parser, efa_api, llm_parser
 
 from mcp.client.session import ClientSession
-from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.client.websocket import websocket_client
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -42,20 +41,32 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-async def call_api(tool: str, payload: Dict[str, Any], *, json_response: bool = False) -> Any:
-    """Call an MCP tool and return the server response."""
+async def call_api(command: str, session_id: str, text: str, *, json_response: bool = False) -> Any:
+    """Call an MCP tool over WebSocket and return the response.
+
+    Parameters
+    ----------
+    command:
+        Name of the tool or command to execute on the server.
+    session_id:
+        Unique identifier for the current user session.
+    text:
+        Raw text supplied by the user.
+    json_response:
+        If ``True`` return the parsed JSON response, otherwise format the
+        result as a string suitable for Telegram.
+    """
+    payload = {"session_id": session_id, "text": text}
     if DEBUG:
-        logger.debug("Request %s %s", tool, payload)
+        logger.debug("Request %s %s", command, payload)
     try:
-        async with stdio_client(
-            StdioServerParameters(command=sys.executable, args=["-m", "src.mcp_server"])
-        ) as (read, write):
+        async with websocket_client(API_URL) as (read, write):
             session = ClientSession(read, write)
             await session.initialize()
-            result = await session.call_tool(tool.lstrip("/"), payload)
+            result = await session.call_tool(command.lstrip("/"), payload)
     except Exception as exc:  # pragma: no cover - network
         logger.error("Request failed: %s", exc)
-        DEBUG_INFO.append({"endpoint": tool, "payload": payload, "error": str(exc)})
+        DEBUG_INFO.append({"endpoint": command, "payload": payload, "error": str(exc)})
         return str(exc)
 
     texts = [c.text for c in result.content if hasattr(c, "text")]
@@ -64,7 +75,7 @@ async def call_api(tool: str, payload: Dict[str, Any], *, json_response: bool = 
         data = json.loads(combined)
     except ValueError:
         data = combined
-    DEBUG_INFO.append({"endpoint": tool, "payload": payload, "response": data})
+    DEBUG_INFO.append({"endpoint": command, "payload": payload, "response": data})
     if json_response:
         return data
     if isinstance(data, dict) and "data" in data:
@@ -216,6 +227,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming messages."""
     text = update.message.text.strip()
     state = context.user_data.get("state")
+    session_id = str(update.effective_user.id)
     if text == "/debug":
         await debug_command(update, context)
         return
@@ -246,7 +258,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             DEBUG_INFO.extend(entries)
             for ent in entries:
                 await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-        reply = await call_api("search", {"text": compose_text(q)})
+        reply = await call_api("search", session_id, text)
         await send_reply(update, reply)
         return
     if state == "departures":
@@ -257,17 +269,17 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             DEBUG_INFO.extend(entries)
             for ent in entries:
                 await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-        reply = await call_api("departures", {"stop": text, "language": lang})
+        reply = await call_api("departures", session_id, text)
         await send_reply(update, reply)
         return
     if state == "stops":
         context.user_data.pop("state", None)
         lang = parser.detect_language(text)
-        reply = await call_api("stops", {"query": text, "language": lang})
+        reply = await call_api("stops", session_id, text)
         await send_reply(update, reply)
         return
 
-    # fallback: try /search with previous query context
+    # fallback: update server-side query with previous context
     base_query: Optional[parser.Query] = context.user_data.get("query")
     if base_query:
         new_q = parse_query(text)
@@ -279,7 +291,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             DEBUG_INFO.extend(entries)
             for ent in entries:
                 await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-        reply = await call_api("search", {"text": final_text})
+        reply = await call_api("update_query", session_id, text)
         await send_reply(update, reply)
         return
     if DEBUG:
@@ -287,7 +299,7 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         DEBUG_INFO.extend(entries)
         for ent in entries:
             await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-    reply = await call_api("search", {"text": text})
+    reply = await call_api("search", session_id, text)
     await send_reply(update, reply)
 
 
