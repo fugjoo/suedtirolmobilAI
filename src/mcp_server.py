@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, Sequence, List
 
 import json
+from pydantic import BaseModel
 from mcp import types
 from mcp.server import Server
 
@@ -22,7 +23,81 @@ from .services import (
     departure_monitor_service,
     stop_finder_service,
 )
-from . import request_logger
+from . import request_logger, parser
+
+
+class SessionManager:
+    """Manage ``parser.Query`` objects for multiple sessions."""
+
+    def __init__(self) -> None:
+        self._queries: Dict[str, parser.Query] = {}
+
+    def _execute_query(self, q: parser.Query) -> Any:
+        """Return EFA data for ``q`` using the service layer."""
+        if q.from_location and q.to_location:
+            req = TripRequest(
+                origin=q.from_location,
+                destination=q.to_location,
+                datetime=q.datetime,
+                bus=q.bus,
+                zug=q.zug,
+                seilbahn=q.seilbahn,
+                long_distance=q.long_distance,
+                datetime_mode=q.datetime_mode,
+                language=q.language or "de",
+            )
+            return trip_service(req)
+        if q.from_location:
+            req = DepartureMonitorRequest(
+                stop=q.from_location, language=q.language or "de"
+            )
+            return departure_monitor_service(req)
+        return {}
+
+    def update_query(self, session_id: str, text: str) -> Any:
+        """Merge ``text`` into the session query and return fresh results."""
+        new_q = parser.parse(text)
+        old_q = self._queries.get(session_id, parser.Query("unknown"))
+        merged = merge_queries(old_q, new_q)
+        self._queries[session_id] = merged
+        return self._execute_query(merged)
+
+    def reset_session(self, session_id: str) -> Any:
+        """Remove stored state for ``session_id``."""
+        self._queries.pop(session_id, None)
+        return {}
+
+
+def merge_queries(old: parser.Query, new: parser.Query) -> parser.Query:
+    """Merge two queries, preferring values from ``new``."""
+    return parser.Query(
+        new.type if new.type != "unknown" else old.type,
+        new.from_location or old.from_location,
+        new.to_location or old.to_location,
+        new.datetime or old.datetime,
+        new.language or old.language,
+        new.bus if new.bus is not None else old.bus,
+        new.zug if new.zug is not None else old.zug,
+        new.seilbahn if new.seilbahn is not None else old.seilbahn,
+        new.long_distance if new.long_distance is not None else old.long_distance,
+        new.datetime_mode or old.datetime_mode,
+    )
+
+
+SESSION_MANAGER = SessionManager()
+
+
+class UpdateQueryRequest(BaseModel):
+    """Request body for ``update_query``."""
+
+    session_id: str
+    text: str
+
+
+class ResetSessionRequest(BaseModel):
+    """Request body for ``reset_session``."""
+
+    session_id: str
 
 server = Server("suedtirolmobilAI")
 
@@ -61,6 +136,16 @@ async def list_tools() -> List[types.Tool]:
             description="Direct stop finder request",
             inputSchema=StopFinderRequest.model_json_schema(),
         ),
+        types.Tool(
+            name="update_query",
+            description="Update session query with new text",
+            inputSchema=UpdateQueryRequest.model_json_schema(),
+        ),
+        types.Tool(
+            name="reset_session",
+            description="Reset session state",
+            inputSchema=ResetSessionRequest.model_json_schema(),
+        ),
     ]
 
 
@@ -83,6 +168,12 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> Sequence[types.Text
             result = departure_monitor_service(DepartureMonitorRequest(**args))
         elif name == "stop_finder":
             result = stop_finder_service(StopFinderRequest(**args))
+        elif name == "update_query":
+            req = UpdateQueryRequest(**args)
+            result = SESSION_MANAGER.update_query(req.session_id, req.text)
+        elif name == "reset_session":
+            req = ResetSessionRequest(**args)
+            result = SESSION_MANAGER.reset_session(req.session_id)
         else:
             raise ValueError(f"Unknown tool: {name}")
     except Exception as exc:
