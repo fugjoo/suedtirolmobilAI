@@ -184,9 +184,11 @@ def merge_queries(old: parser.Query, new: parser.Query) -> parser.Query:
         new.to_location or old.to_location,
         new.datetime or old.datetime,
         new.language or old.language,
-        new.include if new.include is not None else old.include,
-        new.exclude if new.exclude is not None else old.exclude,
-        new.long_distance or old.long_distance,
+        new.bus if new.bus is not None else old.bus,
+        new.zug if new.zug is not None else old.zug,
+        new.seilbahn if new.seilbahn is not None else old.seilbahn,
+        new.long_distance if new.long_distance is not None else old.long_distance,
+        new.datetime_mode if new.datetime_mode is not None else old.datetime_mode,
     )
 
 
