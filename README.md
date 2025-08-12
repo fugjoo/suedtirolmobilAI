@@ -47,6 +47,23 @@ python -m src.mcp_server
 The MCP server provides tools such as `search`, `departures` and `stops` for
 LLM clients.
 
+#### Dialog mode
+The server can maintain conversational context for a session using two tools:
+
+- `update_query` – merge new text into the current session query and execute it
+- `reset_session` – clear stored state
+
+Example sequence:
+
+1. `update_query` with `text="von A nach B um 18:00"`
+2. `update_query` with `text="doch von C"`
+3. `update_query` with `text="20 Uhr"`
+4. `update_query` with `text="ohne Bus"`
+5. `update_query` with `text="letzte Verbindung"`
+
+Each call refines the trip parameters, allowing step-by-step adjustments
+to origin, time, transport modes or requesting the last connection of the day.
+
 ## Configuration
 Important environment variables:
 

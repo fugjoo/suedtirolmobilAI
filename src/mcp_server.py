@@ -81,6 +81,7 @@ def merge_queries(old: parser.Query, new: parser.Query) -> parser.Query:
         new.seilbahn if new.seilbahn is not None else old.seilbahn,
         new.long_distance if new.long_distance is not None else old.long_distance,
         new.datetime_mode or old.datetime_mode,
+        new.last_connection or old.last_connection,
     )
 
 
