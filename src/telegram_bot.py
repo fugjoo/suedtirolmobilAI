@@ -1,13 +1,10 @@
-"""Simple Telegram bot that forwards queries to the API."""
+"""Telegram bot acting as an MCP client."""
 
 import argparse
 import json
 import logging
 import os
-import threading
-from typing import Dict, Any, List, Optional
-
-from . import parser, efa_api, llm_parser
+from typing import Any
 
 from mcp.client.session import ClientSession
 from mcp.client.websocket import websocket_client
@@ -22,43 +19,28 @@ TOKEN = os.getenv("TELEGRAM_TOKEN")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DEBUG = False
-DEBUG_INFO: List[Dict[str, Any]] = []
-
-# language specific keywords for compose_text
-LANG_PHRASES = {
-    "de": {"from": "von", "to": "nach", "departures": "Abfahrten", "at": "um"},
-    "it": {"from": "da", "to": "a", "departures": "Partenze", "at": "alle"},
-    "en": {"from": "from", "to": "to", "departures": "Departures", "at": "at"},
-}
-
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send greeting and show command keyboard."""
-    keyboard = [[KeyboardButton("/search"), KeyboardButton("/departures"), KeyboardButton("/stops"), KeyboardButton("/debug")]]
+    keyboard = [
+        [
+            KeyboardButton("/search"),
+            KeyboardButton("/departures"),
+            KeyboardButton("/stops"),
+            KeyboardButton("/reset"),
+        ]
+    ]
     await update.message.reply_text(
-        "Send a query or choose a command:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        "Send a query or choose a command:",
+        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
     )
 
 
-async def call_api(command: str, session_id: str, text: str, *, json_response: bool = False) -> Any:
-    """Call an MCP tool over WebSocket and return the response.
-
-    Parameters
-    ----------
-    command:
-        Name of the tool or command to execute on the server.
-    session_id:
-        Unique identifier for the current user session.
-    text:
-        Raw text supplied by the user.
-    json_response:
-        If ``True`` return the parsed JSON response, otherwise format the
-        result as a string suitable for Telegram.
-    """
+async def call_api(
+    command: str, session_id: str, text: str, *, json_response: bool = False
+) -> Any:
+    """Call an MCP tool over WebSocket and return the response."""
     payload = {"session_id": session_id, "text": text}
-    if DEBUG:
-        logger.debug("Request %s %s", command, payload)
     try:
         async with websocket_client(API_URL) as (read, write):
             session = ClientSession(read, write)
@@ -66,7 +48,6 @@ async def call_api(command: str, session_id: str, text: str, *, json_response: b
             result = await session.call_tool(command.lstrip("/"), payload)
     except Exception as exc:  # pragma: no cover - network
         logger.error("Request failed: %s", exc)
-        DEBUG_INFO.append({"endpoint": command, "payload": payload, "error": str(exc)})
         return str(exc)
 
     texts = [c.text for c in result.content if hasattr(c, "text")]
@@ -75,13 +56,16 @@ async def call_api(command: str, session_id: str, text: str, *, json_response: b
         data = json.loads(combined)
     except ValueError:
         data = combined
-    DEBUG_INFO.append({"endpoint": command, "payload": payload, "response": data})
     if json_response:
         return data
     if isinstance(data, dict) and "data" in data:
         content = data["data"]
-        return content if isinstance(content, str) else json.dumps(content, indent=2, ensure_ascii=False)
-    return data if isinstance(data, str) else json.dumps(data, indent=2, ensure_ascii=False)
+        return content if isinstance(content, str) else json.dumps(
+            content, indent=2, ensure_ascii=False
+        )
+    return data if isinstance(data, str) else json.dumps(
+        data, indent=2, ensure_ascii=False
+    )
 
 
 async def send_reply(update: Update, text: str) -> None:
@@ -90,235 +74,60 @@ async def send_reply(update: Update, text: str) -> None:
         await update.message.reply_text(text[i : i + MAX_MESSAGE_LENGTH])
 
 
-def gather_debug_entries(text: str, state: str = None) -> List[Dict[str, Any]]:
-    """Return debug information for a query."""
-    if state == "departures":
-        lang = parser.detect_language(text)
-        query = parser.Query("departure", from_location=text, language=lang)
-    else:
-        query = parser.parse(text)
-        if query.type != "trip" or not query.from_location or not query.to_location:
-            try:
-                query = llm_parser.parse_llm(text)
-            except Exception as exc:  # pragma: no cover - network
-                logger.error("LLM parse failed: %s", exc)
-    entries: List[Dict[str, Any]] = [query.__dict__]
-    if query.type == "trip" and query.from_location and query.to_location:
-        from_sf = efa_api.stop_finder(query.from_location, language=query.language or "de")
-        from_pts = from_sf.get("stopFinder", {}).get("points", [])
-        to_sf = efa_api.stop_finder(query.to_location, language=query.language or "de")
-        to_pts = to_sf.get("stopFinder", {}).get("points", [])
-        if from_pts and to_pts:
-            from_p = efa_api.best_point(from_pts)
-            to_p = efa_api.best_point(to_pts)
-            params = efa_api.build_trip_params(
-                from_p.get("name", query.from_location),
-                to_p.get("name", query.to_location),
-                query.datetime,
-                origin_stateless=from_p.get("stateless"),
-                destination_stateless=to_p.get("stateless"),
-                origin_type=from_p.get("anyType"),
-                destination_type=to_p.get("anyType"),
-                bus=query.bus,
-                zug=query.zug,
-                seilbahn=query.seilbahn,
-                long_distance=query.long_distance,
-                datetime_mode=query.datetime_mode,
-                last_connection=query.last_connection,
-                language=query.language or "de",
-            )
-            entries.append(
-                {
-                    "fromStateless": from_p.get("stateless"),
-                    "toStateless": to_p.get("stateless"),
-                    "request": {
-                        "url": f"{efa_api.BASE_URL}/XML_TRIP_REQUEST2",
-                        "params": params,
-                    },
-                }
-            )
-    elif query.type == "departure" and query.from_location:
-        sf_data = efa_api.stop_finder(query.from_location, language=query.language or "de")
-        points = sf_data.get("stopFinder", {}).get("points", [])
-        if points:
-            point = efa_api.best_point(points)
-            params = efa_api.build_departure_params(
-                point.get("name", query.from_location),
-                stateless=point.get("stateless"),
-                language=query.language or "de",
-            )
-            entries.append(
-                {
-                    "stateless": point.get("stateless"),
-                    "request": {
-                        "url": f"{efa_api.BASE_URL}/XML_DM_REQUEST",
-                        "params": params,
-                    },
-                }
-            )
-    return entries
-
-
-async def debug_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send collected debug information."""
-    if not DEBUG_INFO:
-        await send_reply(update, "No debug info available")
-        return
-    await send_reply(update, json.dumps(DEBUG_INFO, indent=2, ensure_ascii=False))
-    DEBUG_INFO.clear()
-
-
-async def settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Send the currently stored query parameters."""
-    query: Optional[parser.Query] = context.user_data.get("query")
-    if query is None:
-        await send_reply(update, "No stored parameters")
-        return
-    await send_reply(update, json.dumps(query.__dict__, indent=2, ensure_ascii=False))
-
-
-def parse_query(text: str) -> parser.Query:
-    """Return a parsed query using both parsers."""
-    q = parser.parse(text)
-    if q.type != "trip" or not q.from_location or not q.to_location:
-        try:
-            q = llm_parser.parse_llm(text)
-        except Exception as exc:  # pragma: no cover - network
-            logger.error("LLM parse failed: %s", exc)
-    return q
-
-
-def merge_queries(old: parser.Query, new: parser.Query) -> parser.Query:
-    """Merge two query objects, preferring ``new`` values."""
-    return parser.Query(
-        "trip",
-        new.from_location or old.from_location,
-        new.to_location or old.to_location,
-        new.datetime or old.datetime,
-        new.language or old.language,
-        new.bus if new.bus is not None else old.bus,
-        new.zug if new.zug is not None else old.zug,
-        new.seilbahn if new.seilbahn is not None else old.seilbahn,
-        new.long_distance if new.long_distance is not None else old.long_distance,
-        new.datetime_mode if new.datetime_mode is not None else old.datetime_mode,
-    )
-
-
-def compose_text(q: parser.Query) -> str:
-    """Return a canonical text representation of a query."""
-    lang = q.language or "de"
-    words = LANG_PHRASES.get(lang, LANG_PHRASES["de"])
-    parts = []
-    if q.from_location and q.to_location:
-        parts.append(
-            f"{words['from']} {q.from_location} {words['to']} {q.to_location}"
-        )
-    elif q.from_location:
-        parts.append(f"{words['departures']} {q.from_location}")
-    if q.datetime:
-        try:
-            parts.append(f"{words['at']} " + q.datetime.split("T")[1])
-        except Exception:
-            pass
-    return " ".join(parts)
-
-
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle incoming messages."""
     text = update.message.text.strip()
-    state = context.user_data.get("state")
     session_id = str(update.effective_user.id)
-    if text == "/debug":
-        await debug_command(update, context)
-        return
+    pending = context.user_data.get("pending")
+
     if text == "/search":
-        context.user_data["state"] = "search"
+        context.user_data["pending"] = "search"
         await send_reply(update, "Enter trip query:")
         return
     if text == "/departures":
-        context.user_data["state"] = "departures"
+        context.user_data["pending"] = "departures"
         await send_reply(update, "Enter stop name:")
         return
     if text == "/stops":
-        context.user_data["state"] = "stops"
+        context.user_data["pending"] = "stops"
         await send_reply(update, "Enter search text:")
         return
     if text == "/reset":
-        context.user_data.pop("query", None)
-        context.user_data.pop("state", None)
+        context.user_data.clear()
+        await call_api("reset_session", session_id, "")
         await send_reply(update, "Conversation reset")
         return
 
-    if state == "search":
-        context.user_data.pop("state", None)
-        q = parse_query(text)
-        context.user_data["query"] = q
-        if DEBUG:
-            entries = gather_debug_entries(compose_text(q))
-            DEBUG_INFO.extend(entries)
-            for ent in entries:
-                await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
+    if pending == "search":
+        context.user_data["pending"] = None
+        context.user_data["session_active"] = True
         reply = await call_api("search", session_id, text)
         await send_reply(update, reply)
         return
-    if state == "departures":
-        context.user_data.pop("state", None)
-        lang = parser.detect_language(text)
-        if DEBUG:
-            entries = gather_debug_entries(text, state="departures")
-            DEBUG_INFO.extend(entries)
-            for ent in entries:
-                await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
+    if pending == "departures":
+        context.user_data["pending"] = None
         reply = await call_api("departures", session_id, text)
         await send_reply(update, reply)
+        context.user_data["session_active"] = False
         return
-    if state == "stops":
-        context.user_data.pop("state", None)
-        lang = parser.detect_language(text)
+    if pending == "stops":
+        context.user_data["pending"] = None
         reply = await call_api("stops", session_id, text)
         await send_reply(update, reply)
         return
 
-    # fallback: update server-side query with previous context
-    base_query: Optional[parser.Query] = context.user_data.get("query")
-    if base_query:
-        new_q = parse_query(text)
-        merged = merge_queries(base_query, new_q)
-        context.user_data["query"] = merged
-        final_text = compose_text(merged)
-        if DEBUG:
-            entries = gather_debug_entries(final_text)
-            DEBUG_INFO.extend(entries)
-            for ent in entries:
-                await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
+    if context.user_data.get("session_active"):
         reply = await call_api("update_query", session_id, text)
-        await send_reply(update, reply)
-        return
-    if DEBUG:
-        entries = gather_debug_entries(text)
-        DEBUG_INFO.extend(entries)
-        for ent in entries:
-            await send_reply(update, json.dumps(ent, indent=2, ensure_ascii=False))
-    reply = await call_api("search", session_id, text)
+    else:
+        reply = await call_api("search", session_id, text)
+        context.user_data["session_active"] = True
     await send_reply(update, reply)
 
 
-def run_bot(token: str, start_server: bool) -> None:
+def run_bot(token: str) -> None:
     """Start the Telegram bot."""
-    if start_server:
-        import uvicorn
-
-        def serve() -> None:
-            uvicorn.run("src.main:app", host="0.0.0.0")
-
-        thread = threading.Thread(target=serve, daemon=True)
-        thread.start()
-        logger.info("Started API server")
-
     application = Application.builder().token(token).build()
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("debug", debug_command))
-    application.add_handler(CommandHandler("settings", settings_command))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
     application.run_polling()
 
@@ -327,8 +136,7 @@ def main() -> None:
     """Parse arguments and run the bot."""
     global API_URL
     parser = argparse.ArgumentParser()
-    parser.add_argument("--api-url", default=API_URL, help="API endpoint")
-    parser.add_argument("--start-server", action="store_true", help="start API with uvicorn")
+    parser.add_argument("--api-url", default=API_URL, help="MCP server URL")
     parser.add_argument("--token", default=TOKEN, help="Telegram bot token")
     parser.add_argument("--debug", action="store_true", help="enable debug logging")
     args = parser.parse_args()
@@ -336,16 +144,15 @@ def main() -> None:
     if not args.token:
         parser.error("Telegram token not provided")
     if args.debug:
-        global DEBUG
-        DEBUG = True
         logger.setLevel(logging.DEBUG)
         logging.getLogger("httpx").setLevel(logging.WARNING)
         logging.getLogger("httpcore").setLevel(logging.WARNING)
         logging.getLogger("telegram.ext").setLevel(logging.INFO)
         logger.debug("Debug mode active")
         logger.debug("Args: %s", args)
-    run_bot(args.token, args.start_server)
+    run_bot(args.token)
 
 
 if __name__ == "__main__":
     main()
+
