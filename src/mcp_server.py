@@ -13,15 +13,9 @@ from .services import (
     DeparturesRequest,
     SearchRequest,
     StopsRequest,
-    TripRequest,
-    DepartureMonitorRequest,
-    StopFinderRequest,
     departures_service,
     search_service,
     stops_service,
-    trip_service,
-    departure_monitor_service,
-    stop_finder_service,
 )
 from . import request_logger, parser
 
@@ -33,25 +27,13 @@ class SessionManager:
         self._queries: Dict[str, parser.Query] = {}
 
     def _execute_query(self, q: parser.Query) -> Any:
-        """Return EFA data for ``q`` using the service layer."""
+        """Return EFA data for ``q`` using the high-level services."""
         if q.from_location and q.to_location:
-            req = TripRequest(
-                origin=q.from_location,
-                destination=q.to_location,
-                datetime=q.datetime,
-                bus=q.bus,
-                zug=q.zug,
-                seilbahn=q.seilbahn,
-                long_distance=q.long_distance,
-                datetime_mode=q.datetime_mode,
-                language=q.language or "de",
-            )
-            return trip_service(req)
+            text = compose_text(q)
+            return search_service(SearchRequest(text=text))
         if q.from_location:
-            req = DepartureMonitorRequest(
-                stop=q.from_location, language=q.language or "de"
-            )
-            return departure_monitor_service(req)
+            req = DeparturesRequest(stop=q.from_location, language=q.language or "de")
+            return departures_service(req)
         return {}
 
     def update_query(self, session_id: str, text: str) -> Any:
@@ -86,6 +68,26 @@ def merge_queries(old: parser.Query, new: parser.Query) -> parser.Query:
 
 
 SESSION_MANAGER = SessionManager()
+
+
+def compose_text(q: parser.Query) -> str:
+    """Return a canonical text representation of ``q``."""
+    words = {
+        "de": {"from": "von", "to": "nach", "departures": "Abfahrten", "at": "um"},
+        "it": {"from": "da", "to": "a", "departures": "Partenze", "at": "alle"},
+        "en": {"from": "from", "to": "to", "departures": "Departures", "at": "at"},
+    }.get(q.language or "de")
+    parts: List[str] = []
+    if q.from_location and q.to_location:
+        parts.append(f"{words['from']} {q.from_location} {words['to']} {q.to_location}")
+    elif q.from_location:
+        parts.append(f"{words['departures']} {q.from_location}")
+    if q.datetime:
+        try:
+            parts.append(f"{words['at']} " + q.datetime.split("T")[1])
+        except Exception:
+            pass
+    return " ".join(parts)
 
 
 class UpdateQueryRequest(BaseModel):
@@ -123,21 +125,6 @@ async def list_tools() -> List[types.Tool]:
             inputSchema=StopsRequest.model_json_schema(),
         ),
         types.Tool(
-            name="trip_request",
-            description="Direct trip request via EFA",
-            inputSchema=TripRequest.model_json_schema(),
-        ),
-        types.Tool(
-            name="departure_monitor",
-            description="Direct departure monitor request",
-            inputSchema=DepartureMonitorRequest.model_json_schema(),
-        ),
-        types.Tool(
-            name="stop_finder",
-            description="Direct stop finder request",
-            inputSchema=StopFinderRequest.model_json_schema(),
-        ),
-        types.Tool(
             name="update_query",
             description="Update session query with new text",
             inputSchema=UpdateQueryRequest.model_json_schema(),
@@ -163,12 +150,6 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> Sequence[types.Text
             result = departures_service(DeparturesRequest(**args), fmt)
         elif name == "stops":
             result = stops_service(StopsRequest(**args), fmt)
-        elif name == "trip_request":
-            result = trip_service(TripRequest(**args))
-        elif name == "departure_monitor":
-            result = departure_monitor_service(DepartureMonitorRequest(**args))
-        elif name == "stop_finder":
-            result = stop_finder_service(StopFinderRequest(**args))
         elif name == "update_query":
             req = UpdateQueryRequest(**args)
             result = SESSION_MANAGER.update_query(req.session_id, req.text)

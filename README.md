@@ -1,25 +1,18 @@
 # suedtirolmobilAI
 
-suedtirolmobilAI is a small FastAPI service that interprets natural language
-requests about public transport in South Tyrol. It detects the desired action
-and forwards the query to a Mentz EFA server. ChatGPT can optionally summarize
-the results. The interface is trilingual (German, Italian, English) and can also
-act as a Model Context Protocol (MCP) server.
+`suedtirolmobilAI` interprets natural language requests about public transport in South Tyrol and forwards them to a Mentz EFA server.  All EFA access now happens exclusively through a Model Context Protocol (MCP) server.  A lightweight Telegram bot acts as a client to this MCP server and lets users ask for trips, departures and stop suggestions in German, Italian or English.
 
 ## Features
-- Understands German, Italian and English
-- Journey search, departure monitor and stop suggestions
-- Stateless stop IDs for more precise results
-- Automatically selects the appropriate action
-- Optional ChatGPT summaries
-- MCP server exposing tools for LLMs
+- Trip search, departure monitor and stop suggestions
+- MCP server exposing `search`, `departures`, `stops`, `update_query` and `reset_session`
+- Telegram bot working purely as an MCP client
+- Optional ChatGPT formatting for human friendly summaries
 
 ## Project structure
 ```
-src/             FastAPI application and helper modules
-prompts/         Prompt templates for the LLM
-docs/            Additional documentation
-tests/           Unit and integration tests
+src/             application code
+prompts/         prompt templates for the LLM
+tests/           unit and integration tests
 ```
 
 ## Requirements
@@ -29,132 +22,31 @@ Python 3.8 or later.
 ```bash
 ./install.sh
 ```
-The script creates a virtual environment if necessary and attempts to install
-missing packages via `apt-get` or `yum`.
+The script creates a virtual environment if necessary and installs missing packages.
 
-## Running the service
-Start the HTTP API:
-```bash
-uvicorn src.main:app --host 0.0.0.0 --reload
-```
-Use `--debug` for verbose logging. Alternatively, run `python -m src.main` with
-the default settings.
-
+## Running
 ### MCP server
 ```bash
 python -m src.mcp_server
 ```
-The MCP server provides tools such as `search`, `departures` and `stops` for
-LLM clients.
+The server offers high level tools for LLMs and other clients.
 
-#### Dialog mode
-The server can maintain conversational context for a session using two tools:
-
-- `update_query` – merge new text into the current session query and execute it
-- `reset_session` – clear stored state
-
-Example sequence:
-
-1. `update_query` with `text="von A nach B um 18:00"`
-2. `update_query` with `text="doch von C"`
-3. `update_query` with `text="20 Uhr"`
-4. `update_query` with `text="ohne Bus"`
-5. `update_query` with `text="letzte Verbindung"`
-
-Each call refines the trip parameters, allowing step-by-step adjustments
-to origin, time, transport modes or requesting the last connection of the day.
+### Telegram bot
+```bash
+python -m src.telegram_bot --api-url ws://localhost:8000 --token <TOKEN>
+```
+The bot connects to an MCP server via WebSocket and relays user messages.
 
 ## Configuration
-Important environment variables:
-
+Environment variables:
 - `EFA_BASE_URL` – base URL of the Mentz EFA endpoint
-  ```bash
-  EFA_BASE_URL=https://efa.sta.bz.it/apb
-  ```
 - `OPENAI_API_KEY` – API key for ChatGPT
-  ```bash
-  OPENAI_API_KEY=sk-...
-  ```
 - `OPENAI_MODEL` – model name used for LLM features
-  ```bash
-  OPENAI_MODEL=gpt-4
-  ```
 - `OPENAI_MAX_TOKENS` – maximum token count for ChatGPT responses (default 100)
-  ```bash
-  OPENAI_MAX_TOKENS=120
-  ```
+- `TELEGRAM_TOKEN` – token for the Telegram bot (can also be passed via `--token`)
+- `API_URL` – MCP WebSocket URL (can also be passed via `--api-url`)
 
-Variables can also be stored in a `.env` file in the project directory. A
-template is available as `.env.example`.
-
-## Prompt templates
-Two text files under `prompts/` control LLM behavior:
-- `parser_prompt.txt` – defines which fields are extracted from a request
-  (`{text}` placeholder)
-- `formatter_prompt.txt` – formats the answer in the desired language
-  (`{data}`, `{language}` placeholders)
-
-The parser initially returns date expressions verbatim (“today”, “tomorrow”).
-Processing converts them into ISO timestamps.
-
-## API endpoints
-All endpoints expect POST requests. The `format` parameter controls the output
-(`json` or `text`).
-
-### `/search`
-Example:
-```bash
-curl -X POST http://localhost:8000/search \
-     -H 'Content-Type: application/json' \
-     -d '{"text": "How do I get from Bolzano to Merano at 14:30?"}'
-```
-
-### `/departures`
-```bash
-curl -X POST http://localhost:8000/departures \
-     -H 'Content-Type: application/json' \
-     -d '{"stop": "Bozen", "language": "it", "limit": 5}'
-```
-Optional `language` (`de`, `it`, `en`) and `limit` (default 10).
-
-### `/stops`
-```bash
-curl -X POST http://localhost:8000/stops \
-     -H 'Content-Type: application/json' \
-     -d '{"query": "Brixen", "language": "it"}'
-```
-
-## Using the MCP server with Claude Desktop
-1. Start the server:
-   ```bash
-   python -m src.mcp_server
-   ```
-2. Edit the Claude Desktop configuration file (e.g.
-   `~/Library/Application Support/Claude/config.json` on macOS or
-   `~/.config/Claude/config.json` on Linux) and add an entry under
-   `mcpServers`:
-   ```json
-   {
-     "mcpServers": {
-       "suedtirolmobil": {
-         "command": "python",
-         "args": ["-m", "src.mcp_server"],
-         "cwd": "/absolute/path/to/suedtirolmobilAI",
-         "env": {
-           "EFA_BASE_URL": "https://efa.sta.bz.it/apb",
-           "OPENAI_API_KEY": "sk-..."
-         }
-       }
-     }
-   }
-   ```
-3. Restart Claude Desktop. The `suedtirolmobil` server appears in the tools
-   list and offers the `search`, `departures` and `stops` tools.
-
-## Autostart on Linux
-See [docs/autostart.md](docs/autostart.md) for setting up a `systemd` service.
-Templates in `systemd/` can be copied to `/etc/systemd/system/` or installed
-with `sudo ./install_services.sh`.
+Variables can also be stored in a `.env` file in the project directory.
 
 ## Tests
 ```bash
