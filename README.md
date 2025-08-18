@@ -11,6 +11,7 @@
 ## Project structure
 ```
 src/             application code
+src/stubs/       minimal stand-ins for optional dependencies
 prompts/         prompt templates for the LLM
 tests/           unit and integration tests
 ```
@@ -45,6 +46,7 @@ Environment variables:
 - `OPENAI_MAX_TOKENS` – maximum token count for ChatGPT responses (default 100)
 - `TELEGRAM_TOKEN` – token for the Telegram bot (can also be passed via `--token`)
 - `API_URL` – MCP WebSocket URL (can also be passed via `--api-url`)
+- `LOG_LEVEL` – set to `DEBUG` for verbose service logging
 
 Variables can also be stored in a `.env` file in the project directory.
 
