@@ -1,11 +1,15 @@
 """Service layer for transit queries."""
 from typing import Any, Dict
 
+import logging
 import requests
 from fastapi import HTTPException
 from pydantic import BaseModel
 
 from . import efa_api, parser, llm_parser, llm_formatter, request_logger
+
+
+logger = logging.getLogger(__name__)
 
 
 class SearchRequest(BaseModel):
@@ -34,6 +38,7 @@ def search_service(body: SearchRequest, format: str = "json") -> Any:
 
     A departure monitor request is executed when no destination is provided.
     """
+    logger.debug("search_service called with body=%s format=%s", body, format)
     q = parser.parse(body.text)
     if q.type != "trip" or not q.from_location or not q.to_location:
         try:
@@ -171,6 +176,9 @@ def search_service(body: SearchRequest, format: str = "json") -> Any:
 
 def departures_service(body: DeparturesRequest, format: str = "json") -> Any:
     """Return upcoming departures for a stop."""
+    logger.debug(
+        "departures_service called with body=%s format=%s", body, format
+    )
     sf_data = efa_api.stop_finder(body.stop, language=body.language)
     points = sf_data.get("stopFinder", {}).get("points", [])
     if not points:
@@ -215,6 +223,7 @@ def departures_service(body: DeparturesRequest, format: str = "json") -> Any:
 
 def stops_service(body: StopsRequest, format: str = "json") -> Any:
     """Return stop name suggestions."""
+    logger.debug("stops_service called with body=%s format=%s", body, format)
     params = {
         "name_sf": body.query,
         "odvSugMacro": "true",

@@ -1,6 +1,18 @@
 """Project package setup."""
 
 from pathlib import Path
+import logging
+import os
+
+# Register lightweight stubs for optional third-party libraries.
+# Importing this package adds ``anyio``, ``fastapi`` and others to
+# ``sys.modules`` so modules can ``import`` them without the real
+# dependencies.
+from . import stubs  # noqa: F401  # pylint: disable=unused-import
+
+# Configure basic logging.  The log level can be controlled via the
+# ``LOG_LEVEL`` environment variable, defaulting to ``WARNING``.
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "WARNING").upper())
 
 # ``python-dotenv`` is an optional dependency used during development to
 # populate environment variables from a ``.env`` file.  The tests run in a
