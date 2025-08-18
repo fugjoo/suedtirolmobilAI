@@ -16,6 +16,8 @@ API_URL="${API_URL:-ws://localhost:8000}"
 
 if [ -z "$TOKEN" ]; then
     echo "TELEGRAM_TOKEN must be set in .env" >&2
+
+
     exit 1
 fi
 
