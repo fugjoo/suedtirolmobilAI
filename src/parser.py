@@ -8,10 +8,14 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import Optional, List
 
-from langdetect import DetectorFactory, LangDetectException, detect
+try:  # pragma: no cover - dependency not required in tests
+    from langdetect import DetectorFactory, LangDetectException, detect
 
-# make language detection deterministic
-DetectorFactory.seed = 0
+    # make language detection deterministic when package is available
+    DetectorFactory.seed = 0
+except Exception:  # pragma: no cover
+    detect = None  # type: ignore
+    LangDetectException = Exception  # type: ignore
 
 
 @dataclass
@@ -229,15 +233,28 @@ def relative_iso(text: str, time_str: Optional[str] = None) -> Optional[str]:
 
 def detect_language(text: str) -> str:
     """Return ``de``, ``it`` or ``en`` based on the input text."""
-    try:
-        code = detect(text)
-    except LangDetectException:
+
+    # When ``langdetect`` is available we use it.  Otherwise a very small
+    # heuristic is applied that looks for common language specific keywords.
+    if detect is not None:  # pragma: no branch - simple delegation
+        try:
+            code = detect(text)
+        except LangDetectException:
+            return "de"
+        if code.startswith("de"):
+            return "de"
+        if code.startswith("it"):
+            return "it"
+        if code.startswith("en"):
+            return "en"
         return "de"
-    if code.startswith("de"):
-        return "de"
-    if code.startswith("it"):
+
+    lower = text.lower()
+    italian_markers = {"il", "da", "a", "ultima", "corsa", "treno", "oggi", "domani"}
+    english_markers = {"from", "to", "last", "connection", "today", "tomorrow"}
+    if any(word in lower for word in italian_markers):
         return "it"
-    if code.startswith("en"):
+    if any(word in lower for word in english_markers):
         return "en"
     return "de"
 
