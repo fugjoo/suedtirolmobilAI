@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+source venv/bin/activate
+
 TOKEN=${1:-$TELEGRAM_TOKEN}
 API_URL=${2:-${API_URL:-ws://localhost:8000}}
 if [ -z "$TOKEN" ]; then
