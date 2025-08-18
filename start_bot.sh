@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 set -e
 
+# Load environment variables from .env if present
+if [ -f .env ]; then
+    set -a
+    . ./.env
+    set +a
+fi
+
+# Activate virtual environment
 source venv/bin/activate
 
-TOKEN=${1:-$TELEGRAM_TOKEN}
-API_URL=${2:-${API_URL:-ws://localhost:8000}}
+TOKEN="${TELEGRAM_TOKEN}"
+API_URL="${API_URL:-ws://localhost:8000}"
+
 if [ -z "$TOKEN" ]; then
-    echo "Usage: TELEGRAM_TOKEN env var or first argument token is required" >&2
+    echo "TELEGRAM_TOKEN must be set in .env" >&2
+
+
     exit 1
 fi
 
