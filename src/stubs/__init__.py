@@ -6,11 +6,17 @@ import them without the real dependencies being installed.
 """
 
 from importlib import import_module, util
+import os
 import sys
 
-# Always provide stubs for these modules to avoid pulling in heavy
-# dependencies or performing network operations during tests.
-for _name in ("fastapi", "openai", "requests"):
+# ``fastapi`` is only stubbed when the real package is not explicitly
+# requested.  This allows the development server to use the actual
+# implementation by setting ``USE_REAL_FASTAPI=1``.
+_base_stubs = ["openai", "requests"]
+if not os.getenv("USE_REAL_FASTAPI"):
+    _base_stubs.insert(0, "fastapi")
+
+for _name in _base_stubs:
     _module = import_module(f".{_name}", __name__)
     sys.modules[_name] = _module
 
