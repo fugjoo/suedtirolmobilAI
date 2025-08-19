@@ -12,7 +12,7 @@ fi
 source venv/bin/activate
 
 TOKEN="${TELEGRAM_TOKEN}"
-API_URL="${API_URL:-ws://localhost:8000}"
+API_URL="${API_URL:-http://localhost:8000}"
 
 if [ -z "$TOKEN" ]; then
     echo "TELEGRAM_TOKEN must be set in .env" >&2
@@ -21,7 +21,7 @@ if [ -z "$TOKEN" ]; then
     exit 1
 fi
 
-python -m src.mcp_server &
+USE_REAL_FASTAPI=1 uvicorn src.main:app --port 8000 &
 SERVER_PID=$!
 trap "kill $SERVER_PID" EXIT
 
