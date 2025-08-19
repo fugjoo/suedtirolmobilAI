@@ -9,7 +9,14 @@ from typing import Any
 from mcp.client.session import ClientSession
 from mcp.client.websocket import websocket_client
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
+from telegram.error import Conflict
 
 MAX_MESSAGE_LENGTH = 4096
 
@@ -132,7 +139,10 @@ def run_bot(token: str) -> None:
     application = Application.builder().token(token).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
-    application.run_polling()
+    try:
+        application.run_polling()
+    except Conflict as exc:  # pragma: no cover - network
+        logger.error("Bot stopped: %s", exc)
 
 
 def main() -> None:
