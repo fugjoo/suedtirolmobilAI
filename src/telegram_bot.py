@@ -39,7 +39,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def call_api(
     command: str, session_id: str, text: str, *, json_response: bool = False
 ) -> Any:
-    """Call an MCP tool over WebSocket and return the response."""
+    """Call an MCP tool via WebSocket.
+
+    A user-friendly message is returned if the API server is unreachable.
+    """
     payload = {"session_id": session_id, "text": text}
     try:
         async with websocket_client(API_URL) as (read, write):
@@ -48,7 +51,7 @@ async def call_api(
             result = await session.call_tool(command.lstrip("/"), payload)
     except Exception as exc:  # pragma: no cover - network
         logger.error("Request failed: %s", exc)
-        return str(exc)
+        return "Service temporarily unavailable. Please try again later."
 
     texts = [c.text for c in result.content if hasattr(c, "text")]
     combined = "\n".join(texts)
