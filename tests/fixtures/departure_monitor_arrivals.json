@@ -1,0 +1,19 @@
+{
+  "monitor": {
+    "type": "arrivals",
+    "journeys": [
+      {
+        "id": "journey:3",
+        "servingLine": {"name": "SAD 200", "number": "200", "product": "bus"},
+        "direction": "Bolzano",
+        "platform": "1",
+        "scheduledTime": "2023-09-19T07:40:00+02:00",
+        "realtimeTime": "2023-09-19T07:39:00+02:00",
+        "realtime": true,
+        "realtimeSource": "efa-realtime",
+        "lastUpdated": "2023-09-19T07:38:15+02:00",
+        "remarks": ["Service operating ahead of schedule"]
+      }
+    ]
+  }
+}

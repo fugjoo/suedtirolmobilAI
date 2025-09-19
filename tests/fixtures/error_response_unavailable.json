@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "H730",
+    "message": "Backend temporarily unavailable",
+    "httpStatus": 503
+  }
+}

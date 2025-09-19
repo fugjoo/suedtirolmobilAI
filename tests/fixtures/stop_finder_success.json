@@ -1,0 +1,36 @@
+{
+  "stopFinder": {
+    "points": {
+      "point": [
+        {
+          "ref": {
+            "id": "1001",
+            "gid": "de:altoadige:1001",
+            "name": "Bolzano, Bahnhof",
+            "type": "stop"
+          },
+          "coord": {
+            "lat": 46.498295,
+            "lon": 11.354758
+          },
+          "matchQuality": 100,
+          "productCategories": ["train", "bus"]
+        },
+        {
+          "ref": {
+            "id": "1002",
+            "gid": "de:altoadige:1002",
+            "name": "Bolzano, Waltherplatz",
+            "type": "stop"
+          },
+          "coord": {
+            "lat": 46.49892,
+            "lon": 11.35796
+          },
+          "matchQuality": 92,
+          "productCategories": ["bus"]
+        }
+      ]
+    }
+  }
+}

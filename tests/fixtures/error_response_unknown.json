@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "X999",
+    "message": "An undocumented error occurred",
+    "requestId": "abc-123"
+  }
+}
