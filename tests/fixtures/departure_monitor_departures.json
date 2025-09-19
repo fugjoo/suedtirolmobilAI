@@ -1,0 +1,28 @@
+{
+  "monitor": {
+    "type": "departures",
+    "journeys": [
+      {
+        "id": "journey:1",
+        "servingLine": {"name": "SAD 100", "number": "100", "product": "bus"},
+        "direction": "Merano",
+        "platform": "2",
+        "scheduledTime": "2023-09-19T07:15:00+02:00",
+        "realtimeTime": "2023-09-19T07:17:00+02:00",
+        "realtime": true,
+        "realtimeSource": "efa-realtime",
+        "lastUpdated": "2023-09-19T07:14:30+02:00",
+        "remarks": ["Barrier-free vehicle"]
+      },
+      {
+        "id": "journey:2",
+        "servingLine": {"name": "SAD 201", "number": "201", "product": "bus"},
+        "direction": "Bolzano",
+        "platform": "A",
+        "scheduledTime": "2023-09-19T07:20:00+02:00",
+        "realtime": false,
+        "remarks": []
+      }
+    ]
+  }
+}
